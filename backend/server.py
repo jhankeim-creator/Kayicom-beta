@@ -350,6 +350,29 @@ async def update_order_status(order_id: str, payment_status: Optional[str] = Non
     
     return {"message": "Order updated successfully"}
 
+# Delivery Management Model
+class DeliveryInfo(BaseModel):
+    delivery_details: str  # Credentials, codes, or instructions
+
+@api_router.put("/orders/{order_id}/delivery")
+async def update_order_delivery(order_id: str, delivery_info: DeliveryInfo):
+    """Update order with delivery information and mark as completed"""
+    updates = {
+        "delivery_info": {"details": delivery_info.delivery_details, "delivered_at": datetime.now(timezone.utc).isoformat()},
+        "order_status": "completed",
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    result = await db.orders.update_one({"id": order_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # TODO: Send email to customer with delivery info
+    # This would use the resend API key from settings
+    
+    return {"message": "Order delivered successfully"}
+
+
 # ==================== PAYMENT ENDPOINTS ====================
 
 @api_router.post("/payments/manual-proof")
