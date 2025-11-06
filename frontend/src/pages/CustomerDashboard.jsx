@@ -4,8 +4,8 @@ import { axiosInstance } from '../App';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Package, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -14,8 +14,10 @@ const CustomerDashboard = ({ user, logout, settings }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadOrders();
-  }, []);
+    if (user) {
+      loadOrders();
+    }
+  }, [user]);
 
   const loadOrders = async () => {
     try {
@@ -23,7 +25,7 @@ const CustomerDashboard = ({ user, logout, settings }) => {
       setOrders(response.data);
     } catch (error) {
       console.error('Error loading orders:', error);
-      toast.error('Erè nan chajman kòmand yo');
+      toast.error('Error loading orders');
     } finally {
       setLoading(false);
     }
@@ -45,20 +47,20 @@ const CustomerDashboard = ({ user, logout, settings }) => {
 
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" data-testid="dashboard-title">Kont Mwen</h1>
-          <p className="text-white/80 text-lg mb-12">Byenveni, {user.full_name}!</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" data-testid="dashboard-title">My Account</h1>
+          <p className="text-white/80 text-lg mb-12">Welcome, {user.full_name}!</p>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <Card className="glass-effect border-white/20">
               <CardContent className="p-6 text-center">
-                <p className="text-white/70 mb-2">Total Kòmand</p>
+                <p className="text-white/70 mb-2">Total Orders</p>
                 <p className="text-4xl font-bold text-white" data-testid="total-orders">{orders.length}</p>
               </CardContent>
             </Card>
             <Card className="glass-effect border-white/20">
               <CardContent className="p-6 text-center">
-                <p className="text-white/70 mb-2">Kòmand An Kou</p>
+                <p className="text-white/70 mb-2">Processing Orders</p>
                 <p className="text-4xl font-bold text-white" data-testid="pending-orders">
                   {orders.filter(o => o.order_status === 'processing').length}
                 </p>
@@ -66,7 +68,7 @@ const CustomerDashboard = ({ user, logout, settings }) => {
             </Card>
             <Card className="glass-effect border-white/20">
               <CardContent className="p-6 text-center">
-                <p className="text-white/70 mb-2">Kòmand Konple</p>
+                <p className="text-white/70 mb-2">Completed Orders</p>
                 <p className="text-4xl font-bold text-white" data-testid="completed-orders">
                   {orders.filter(o => o.order_status === 'completed').length}
                 </p>
@@ -77,10 +79,10 @@ const CustomerDashboard = ({ user, logout, settings }) => {
           {/* Orders List */}
           <Card className="glass-effect border-white/20">
             <CardContent className="p-6">
-              <h2 className="text-2xl font-bold text-white mb-6">Kòmand Mwen Yo</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">My Orders</h2>
               
               {loading ? (
-                <div className="text-center text-white py-8">Chajman...</div>
+                <div className="text-center text-white py-8">Loading...</div>
               ) : orders.length > 0 ? (
                 <div className="space-y-4" data-testid="orders-list">
                   {orders.map((order) => (
@@ -89,13 +91,13 @@ const CustomerDashboard = ({ user, logout, settings }) => {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <Package className="text-white" size={20} />
-                            <span className="text-white font-semibold">Kòmand #{order.id.slice(0, 8)}</span>
+                            <span className="text-white font-semibold">Order #{order.id.slice(0, 8)}</span>
                             <Badge variant={getStatusBadge(order.order_status)} className="capitalize">
                               {order.order_status}
                             </Badge>
                           </div>
                           <p className="text-white/70 text-sm">
-                            {order.items.length} atik - {new Date(order.created_at).toLocaleDateString('fr-FR')}
+                            {order.items.length} items - {new Date(order.created_at).toLocaleDateString('en-US')}
                           </p>
                           <p className="text-white font-bold mt-1">${order.total_amount.toFixed(2)}</p>
                         </div>
@@ -103,7 +105,7 @@ const CustomerDashboard = ({ user, logout, settings }) => {
                         <Link to={`/track/${order.id}`}>
                           <Button variant="outline" className="border-white text-white hover:bg-white/10" data-testid={`view-order-${order.id}`}>
                             <Eye size={16} className="mr-2" />
-                            Gade Detay
+                            View Details
                           </Button>
                         </Link>
                       </div>
@@ -113,10 +115,10 @@ const CustomerDashboard = ({ user, logout, settings }) => {
               ) : (
                 <div className="text-center text-white/70 py-8" data-testid="no-orders">
                   <Package className="mx-auto mb-4" size={48} />
-                  <p>Ou pa gen okenn kòmand ankò</p>
+                  <p>You don't have any orders yet</p>
                   <Link to="/products" className="inline-block mt-4">
                     <Button className="bg-white text-purple-600 hover:bg-gray-100">
-                      Kòmanse Achte
+                      Start Shopping
                     </Button>
                   </Link>
                 </div>
