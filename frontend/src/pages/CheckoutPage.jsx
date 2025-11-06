@@ -177,7 +177,7 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
                 </div>
               </RadioGroup>
 
-              {paymentMethod === 'manual' && (
+              {['paypal', 'skrill', 'moncash', 'binance_pay', 'zelle', 'cashapp'].includes(paymentMethod) && (
                 <div className="mt-6 p-4 bg-yellow-400/10 border border-yellow-400/30 rounded-lg">
                   <p className="text-yellow-200 text-sm">
                     <strong>Nòt:</strong> Apre w fin pase kòmand, ou ap dwe soumèt prev peman ou ak ID tranzaksyon nan paj suivi kòmand lan.
