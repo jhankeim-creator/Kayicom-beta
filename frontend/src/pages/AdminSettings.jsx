@@ -298,7 +298,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                       data-testid="save-settings-btn"
                     >
                       <Save className="mr-2" size={20} />
-                      {loading ? 'Sove...' : 'Sove Paramèt'}
+                      {loading ? 'Saving...' : 'Save Settings'}
                     </Button>
                   </div>
                 </form>
