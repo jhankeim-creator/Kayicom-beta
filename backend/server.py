@@ -88,6 +88,8 @@ class ProductUpdate(BaseModel):
     image_url: Optional[str] = None
     stock_available: Optional[bool] = None
     delivery_type: Optional[str] = None
+    subscription_duration_months: Optional[int] = None
+    subscription_auto_check: Optional[bool] = None
     metadata: Optional[Dict[str, Any]] = None
 
 # Order Models
