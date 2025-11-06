@@ -61,6 +61,8 @@ class Product(BaseModel):
     image_url: Optional[str] = None
     stock_available: bool = True
     delivery_type: str = "automatic"  # automatic or manual
+    subscription_duration_months: Optional[int] = None  # For subscriptions: 2, 6, 12, 24 months
+    subscription_auto_check: bool = False  # Auto-check if subscription is still valid
     metadata: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
