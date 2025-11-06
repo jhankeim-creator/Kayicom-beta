@@ -1,14 +1,4 @@
-import { useState, useEffect } from 'react';
-import { axiosInstance } from '../App';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Settings as SettingsIcon, Key, Palette, Package, Mail } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react';\nimport { axiosInstance } from '../App';\nimport Navbar from '../components/Navbar';\nimport Footer from '../components/Footer';\nimport { Card, CardContent } from '@/components/ui/card';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport { Textarea } from '@/components/ui/textarea';\nimport { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';\nimport {\n  Select,\n  SelectContent,\n  SelectItem,\n  SelectTrigger,\n  SelectValue,\n} from '@/components/ui/select';\nimport { Save, Settings as SettingsIcon, Key, Package, Mail, Plus, X } from 'lucide-react';\nimport { toast } from 'sonner';
 
 const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }) => {
   const [loading, setLoading] = useState(false);
