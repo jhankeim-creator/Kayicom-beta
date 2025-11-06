@@ -296,7 +296,7 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
             </div>
             <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">Rated Excellent on Trustpilot</h3>
             <p className="text-gray-400 mb-4">4.8 out of 5 based on 50,000+ reviews</p>
-            <a href="https://kayicom.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition mb-4">
+            <a href="https://kayicom.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 transition mb-4">
               <TrendingUp size={16} />
               <span className="font-semibold">Visit kayicom.com</span>
             </a>
