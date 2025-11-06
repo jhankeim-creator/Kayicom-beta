@@ -107,13 +107,14 @@ class Order(BaseModel):
     items: List[OrderItem]
     total_amount: float
     currency: str = "USD"
-    payment_method: str  # crypto_plisio or manual
+    payment_method: str  # crypto_plisio, paypal, skrill, moncash, binance_pay, zelle, cashapp
     payment_status: str = "pending"  # pending, paid, failed, cancelled
     order_status: str = "pending"  # pending, processing, completed, cancelled
     payment_proof_url: Optional[str] = None
     transaction_id: Optional[str] = None
     plisio_invoice_id: Optional[str] = None
     delivery_info: Optional[Dict[str, Any]] = None
+    subscription_end_date: Optional[datetime] = None  # For subscription orders
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
