@@ -101,8 +101,8 @@ const AdminDashboard = ({ user, logout, settings }) => {
               <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer" data-testid="manage-products">
                 <CardContent className="p-8 text-center">
                   <Package className="mx-auto mb-4 text-white" size={48} />
-                  <h3 className="text-xl font-bold text-white mb-2">Jere Pwodwi</h3>
-                  <p className="text-white/70">Ajoute, modifye oswa efase pwodwi</p>
+                  <h3 className="text-xl font-bold text-white mb-2">Manage Products</h3>
+                  <p className="text-white/70">Add, edit or delete products</p>
                 </CardContent>
               </Card>
             </Link>
