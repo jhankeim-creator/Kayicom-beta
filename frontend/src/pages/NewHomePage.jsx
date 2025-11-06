@@ -69,12 +69,13 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
       {/* Hero Section with Background */}
       <div className="relative overflow-hidden" data-testid="hero-section">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10" />
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: '0.05'
-        }} />
+        {/* Game Collage Background */}
+        <div className="absolute inset-0 grid grid-cols-4 gap-1 opacity-[0.08]" style={{filter: 'blur(1px)'}}>
+          <div style={{backgroundImage: 'url(https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400)', backgroundSize: 'cover', backgroundPosition: 'center'}} />
+          <div style={{backgroundImage: 'url(https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400)', backgroundSize: 'cover', backgroundPosition: 'center'}} />
+          <div style={{backgroundImage: 'url(https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400)', backgroundSize: 'cover', backgroundPosition: 'center'}} />
+          <div style={{backgroundImage: 'url(https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400)', backgroundSize: 'cover', backgroundPosition: 'center'}} />
+        </div>
         
         <div className="relative container mx-auto px-4 py-20 lg:py-32">
           <div className="max-w-5xl mx-auto text-center">
