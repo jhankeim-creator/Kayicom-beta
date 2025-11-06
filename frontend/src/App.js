@@ -50,6 +50,12 @@ function App() {
       setCart(JSON.parse(savedCart));
     }
 
+    // Load language from localStorage
+    const savedLang = localStorage.getItem('language');
+    if (savedLang) {
+      setLanguage(savedLang);
+    }
+
     // Load site settings
     loadSettings();
   }, []);
