@@ -90,7 +90,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                     </div>
 
                     <div>
-                      <Label htmlFor="logo_url" className="text-white">Lyen Logo</Label>
+                      <Label htmlFor="logo_url" className="text-white">Logo URL</Label>
                       <Input
                         id="logo_url"
                         value={formData.logo_url}
