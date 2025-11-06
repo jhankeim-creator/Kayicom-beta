@@ -152,28 +152,28 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
 
             {/* Delivery Info */}
             <div className="mt-6 glass-effect p-6 rounded-lg">
-              <h3 className="text-xl font-bold mb-3">Enfòmasyon Livrezon</h3>
+              <h3 className="text-xl font-bold mb-3">Delivery Information</h3>
               <ul className="space-y-2 text-white/80">
                 {product.delivery_type === 'automatic' ? (
                   <>
                     <li className="flex items-center">
                       <span className="mr-2">⚡</span>
-                      Livrezon otomatik instant
+                      Instant automatic delivery
                     </li>
                     <li className="flex items-center">
                       <span className="mr-2">📬</span>
-                      Kòd ap voye pa email
+                      Code sent by email
                     </li>
                   </>
                 ) : (
                   <>
                     <li className="flex items-center">
                       <span className="mr-2">👤</span>
-                      Livrezon manyel
+                      Manual delivery
                     </li>
                     <li className="flex items-center">
                       <span className="mr-2">⏱️</span>
-                      Tan livrezon: 1-24 è
+                      Delivery time: 1-24 hours
                     </li>
                   </>
                 )}
