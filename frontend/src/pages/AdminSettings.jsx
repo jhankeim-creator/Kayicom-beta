@@ -1,19 +1,7 @@
 import { useState, useEffect } from 'react';\nimport { axiosInstance } from '../App';\nimport Navbar from '../components/Navbar';\nimport Footer from '../components/Footer';\nimport { Card, CardContent } from '@/components/ui/card';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport { Textarea } from '@/components/ui/textarea';\nimport { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';\nimport {\n  Select,\n  SelectContent,\n  SelectItem,\n  SelectTrigger,\n  SelectValue,\n} from '@/components/ui/select';\nimport { Save, Settings as SettingsIcon, Key, Package, Mail, Plus, X } from 'lucide-react';\nimport { toast } from 'sonner';
 
 const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }) => {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    site_name: '',
-    logo_url: '',
-    primary_color: '',
-    secondary_color: '',
-    support_email: '',
-    plisio_api_key: '',
-    mtcgame_api_key: '',
-    gosplit_api_key: '',
-    z2u_api_key: '',
-    resend_api_key: ''
-  });
+  const [loading, setLoading] = useState(false);\n  const [formData, setFormData] = useState({\n    site_name: '',\n    logo_url: '',\n    primary_color: '',\n    secondary_color: '',\n    support_email: '',\n    plisio_api_key: '',\n    mtcgame_api_key: '',\n    gosplit_api_key: '',\n    z2u_api_key: '',\n    resend_api_key: '',\n    product_categories: []\n  });\n  const [newCategory, setNewCategory] = useState('');\n  const [bulkEmail, setBulkEmail] = useState({\n    subject: '',\n    message: '',\n    recipient_type: 'all'\n  });\n  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     if (currentSettings) {
