@@ -43,7 +43,7 @@ const AdminDashboard = ({ user, logout, settings }) => {
           <div className="flex justify-between items-center mb-12">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-2" data-testid="admin-title">Admin Panel</h1>
-              <p className="text-white/80 text-lg">Jere sit ou a</p>
+              <p className="text-white/80 text-lg">Manage your site</p>
             </div>
             <Link to="/admin/settings">
               <Button className="bg-white text-purple-600 hover:bg-gray-100" data-testid="settings-link">
