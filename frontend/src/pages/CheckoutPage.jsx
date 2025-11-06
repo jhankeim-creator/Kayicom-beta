@@ -21,13 +21,13 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
 
   const handleCheckout = async () => {
     if (!user) {
-      toast.error('Ou dwe konekte anvan w achte');
+      toast.error('You must login before purchasing');
       navigate('/login');
       return;
     }
 
     if (cart.length === 0) {
-      toast.error('Panye ou vid');
+      toast.error('Your cart is empty');
       return;
     }
 
