@@ -191,14 +191,14 @@ const AdminProducts = ({ user, logout, settings }) => {
                     </div>
 
                     <div>
-                      <Label htmlFor="delivery_type">Tip Livrezon</Label>
+                      <Label htmlFor="delivery_type">Delivery Type</Label>
                       <Select value={formData.delivery_type} onValueChange={(value) => handleChange('delivery_type', value)}>
                         <SelectTrigger data-testid="product-delivery-select">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="automatic">Otomatik</SelectItem>
-                          <SelectItem value="manual">Manyel</SelectItem>
+                          <SelectItem value="automatic">Automatic</SelectItem>
+                          <SelectItem value="manual">Manual</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
