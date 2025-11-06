@@ -156,6 +156,14 @@ class SettingsUpdate(BaseModel):
     gosplit_api_key: Optional[str] = None
     z2u_api_key: Optional[str] = None
     resend_api_key: Optional[str] = None
+    product_categories: Optional[List[str]] = None
+
+# Bulk Email Model
+class BulkEmailRequest(BaseModel):
+    subject: str
+    message: str
+    recipient_type: str  # all, customers, specific_emails
+    specific_emails: Optional[List[EmailStr]] = None
 
 # ==================== AUTH ENDPOINTS ====================
 
