@@ -181,52 +181,112 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                     </div>
                   </TabsContent>
 
-                  {/* Appearance */}
-                  <TabsContent value="appearance" className="space-y-4">
+                  {/* Categories Management */}
+                  <TabsContent value="categories" className="space-y-4">
                     <div>
-                      <Label htmlFor="primary_color" className="text-white">Koulè Primè</Label>
-                      <div className="flex gap-3">
+                      <Label className="text-white text-lg font-semibold mb-3 block">Product Categories</Label>
+                      <p className="text-gray-400 text-sm mb-4">Manage product categories for your marketplace. These categories will appear in navigation and filters.</p>
+                      
+                      <div className="flex gap-2 mb-4">
                         <Input
-                          id="primary_color"
-                          type="color"
-                          value={formData.primary_color}
-                          onChange={(e) => handleChange('primary_color', e.target.value)}
-                          className="w-20 h-12 cursor-pointer"
-                          data-testid="primary-color-input"
+                          value={newCategory}
+                          onChange={(e) => setNewCategory(e.target.value)}
+                          className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-gray-500"
+                          placeholder="Enter new category name"
+                          data-testid="new-category-input"
                         />
-                        <Input
-                          value={formData.primary_color}
-                          onChange={(e) => handleChange('primary_color', e.target.value)}
-                          className="flex-1 bg-white/10 border-white/20 text-white"
-                          placeholder="#3b82f6"
-                        />
+                        <Button onClick={addCategory} className="gradient-button text-white" data-testid="add-category-btn">
+                          <Plus size={16} className="mr-1" />
+                          Add
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {formData.product_categories.map((cat, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 glass-effect rounded-lg" data-testid={`category-${cat}`}>
+                            <span className="text-white font-medium capitalize">{cat}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeCategory(cat)}
+                              className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                              data-testid={`remove-${cat}`}
+                            >
+                              <X size={16} />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="p-4 bg-blue-400/10 border border-blue-400/30 rounded-lg mt-4">
+                        <p className="text-blue-200 text-sm">
+                          <strong>Note:</strong> Changes to categories will be reflected after saving settings.
+                        </p>
                       </div>
                     </div>
+                  </TabsContent>
 
+                  {/* Bulk Email */}
+                  <TabsContent value="email" className="space-y-4">
                     <div>
-                      <Label htmlFor="secondary_color" className="text-white">Koulè Segòndè</Label>
-                      <div className="flex gap-3">
-                        <Input
-                          id="secondary_color"
-                          type="color"
-                          value={formData.secondary_color}
-                          onChange={(e) => handleChange('secondary_color', e.target.value)}
-                          className="w-20 h-12 cursor-pointer"
-                          data-testid="secondary-color-input"
-                        />
-                        <Input
-                          value={formData.secondary_color}
-                          onChange={(e) => handleChange('secondary_color', e.target.value)}
-                          className="flex-1 bg-white/10 border-white/20 text-white"
-                          placeholder="#8b5cf6"
-                        />
-                      </div>
-                    </div>
+                      <Label className="text-white text-lg font-semibold mb-3 block">Send Bulk Email</Label>
+                      <p className="text-gray-400 text-sm mb-4">Send promotional emails to your customers using Resend.com API.</p>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="recipient_type" className="text-white">Recipients</Label>
+                          <Select value={bulkEmail.recipient_type} onValueChange={(value) => setBulkEmail({...bulkEmail, recipient_type: value})}>
+                            <SelectTrigger className="bg-white/10 border-white/20 text-white" data-testid="recipient-select">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Users</SelectItem>
+                              <SelectItem value="customers">Customers Only</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                    <div className="p-4 bg-yellow-400/10 border border-yellow-400/30 rounded-lg mt-4">
-                      <p className="text-yellow-200 text-sm">
-                        <strong>Nòt:</strong> Chanjman koulè yo ap aplike apre rechajman paj la.
-                      </p>
+                        <div>
+                          <Label htmlFor="email_subject" className="text-white">Subject</Label>
+                          <Input
+                            id="email_subject"
+                            value={bulkEmail.subject}
+                            onChange={(e) => setBulkEmail({...bulkEmail, subject: e.target.value})}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
+                            placeholder="Email subject line"
+                            data-testid="email-subject-input"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="email_message" className="text-white">Message</Label>
+                          <Textarea
+                            id="email_message"
+                            value={bulkEmail.message}
+                            onChange={(e) => setBulkEmail({...bulkEmail, message: e.target.value})}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
+                            placeholder="Your promotional message..."
+                            rows={6}
+                            data-testid="email-message-input"
+                          />
+                        </div>
+
+                        <Button
+                          onClick={handleSendBulkEmail}
+                          disabled={sendingEmail}
+                          className="w-full gradient-button text-white"
+                          data-testid="send-email-btn"
+                        >
+                          <Mail className="mr-2" size={20} />
+                          {sendingEmail ? 'Sending...' : 'Send Bulk Email'}
+                        </Button>
+
+                        <div className="p-4 bg-yellow-400/10 border border-yellow-400/30 rounded-lg">
+                          <p className="text-yellow-200 text-sm">
+                            <strong>Note:</strong> Make sure Resend API key is configured in API Keys tab before sending emails.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </TabsContent>
 
