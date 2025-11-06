@@ -39,7 +39,7 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             <LanguageSwitcher />
             
             <Link to="/cart" className="relative" data-testid="nav-cart">
-              <Button variant="ghost" className="text-gray-300 hover:bg-white/5 hover:text-cyan-400">
+              <Button variant="ghost" className="text-gray-300 hover:bg-white/5 hover:text-pink-400">
                 <ShoppingCart size={20} />
                 {cartItemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
