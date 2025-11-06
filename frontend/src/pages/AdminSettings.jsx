@@ -67,7 +67,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                   {/* General Settings */}
                   <TabsContent value="general" className="space-y-4">
                     <div>
-                      <Label htmlFor="site_name" className="text-white">Non Sit</Label>
+                      <Label htmlFor="site_name" className="text-white">Site Name</Label>
                       <Input
                         id="site_name"
                         value={formData.site_name}
