@@ -101,7 +101,7 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
     return (
       <div className="min-h-screen gradient-bg">
         <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
-        <div className="container mx-auto px-4 py-20 text-center text-white text-xl">Kòmand pa jwenn</div>
+        <div className="container mx-auto px-4 py-20 text-center text-white text-xl">Order not found</div>
       </div>
     );
   }
