@@ -121,7 +121,7 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Kòmand #{order.id.slice(0, 8)}</h2>
+                  <h2 className="text-2xl font-bold text-white">Order #{order.id.slice(0, 8)}</h2>
                   <p className="text-white/70">Date: {new Date(order.created_at).toLocaleDateString('fr-FR')}</p>
                 </div>
                 <div className="flex items-center gap-2">
