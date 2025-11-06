@@ -99,12 +99,11 @@ const AdminOrders = ({ user, logout, settings }) => {
 
     try {
       // Update order with delivery info and mark as completed
-      await axiosInstance.put(`/orders/${selectedOrder.id}/status?order_status=completed`);
+      await axiosInstance.put(`/orders/${selectedOrder.id}/delivery`, {
+        delivery_details: deliveryInfo
+      });
       
-      // Here you would also save delivery_info to the order
-      // For now we'll just complete the order
-      
-      toast.success('Order delivered successfully!');
+      toast.success('Order delivered successfully! Customer will receive the information.');
       setDeliveryDialog(false);
       loadOrders();
     } catch (error) {
