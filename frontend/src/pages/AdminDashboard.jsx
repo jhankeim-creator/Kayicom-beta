@@ -28,10 +28,10 @@ const AdminDashboard = ({ user, logout, settings }) => {
   };
 
   const statCards = [
-    { title: 'Total Kòmand', value: stats?.total_orders || 0, icon: ShoppingBag, color: 'from-blue-500 to-cyan-500', testId: 'stat-orders' },
-    { title: 'Total Pwodwi', value: stats?.total_products || 0, icon: Package, color: 'from-purple-500 to-indigo-500', testId: 'stat-products' },
-    { title: 'Total Kliyan', value: stats?.total_customers || 0, icon: Users, color: 'from-green-500 to-emerald-500', testId: 'stat-customers' },
-    { title: 'Revèni Total', value: `$${stats?.total_revenue?.toFixed(2) || '0.00'}`, icon: DollarSign, color: 'from-yellow-500 to-orange-500', testId: 'stat-revenue' },
+    { title: 'Total Orders', value: stats?.total_orders || 0, icon: ShoppingBag, color: 'from-blue-500 to-cyan-500', testId: 'stat-orders' },
+    { title: 'Total Products', value: stats?.total_products || 0, icon: Package, color: 'from-purple-500 to-indigo-500', testId: 'stat-products' },
+    { title: 'Total Customers', value: stats?.total_customers || 0, icon: Users, color: 'from-green-500 to-emerald-500', testId: 'stat-customers' },
+    { title: 'Total Revenue', value: `$${stats?.total_revenue?.toFixed(2) || '0.00'}`, icon: DollarSign, color: 'from-yellow-500 to-orange-500', testId: 'stat-revenue' },
   ];
 
   return (
