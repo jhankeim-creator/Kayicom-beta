@@ -19,9 +19,9 @@ const Footer = ({ settings }) => {
           <div>
             <h3 className="text-xl font-bold mb-4 text-white">{t('quickLinks')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="/products" className="hover:text-cyan-400 transition">{t('products')}</a></li>
-              <li><a href="/dashboard" className="hover:text-cyan-400 transition">{t('myAccount')}</a></li>
-              <li><a href="/" className="hover:text-cyan-400 transition">{t('support')}</a></li>
+              <li><a href="/products" className="hover:text-pink-400 transition">{t('products')}</a></li>
+              <li><a href="/dashboard" className="hover:text-pink-400 transition">{t('myAccount')}</a></li>
+              <li><a href="/" className="hover:text-pink-400 transition">{t('support')}</a></li>
             </ul>
           </div>
           
