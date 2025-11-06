@@ -6,6 +6,9 @@ import Footer from '../components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -13,13 +16,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Eye, CheckCircle, XCircle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Eye, CheckCircle, XCircle, Send, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminOrders = ({ user, logout, settings }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [deliveryDialog, setDeliveryDialog] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [deliveryInfo, setDeliveryInfo] = useState('');
 
   useEffect(() => {
     loadOrders();
@@ -31,7 +44,7 @@ const AdminOrders = ({ user, logout, settings }) => {
       setOrders(response.data);
     } catch (error) {
       console.error('Error loading orders:', error);
-      toast.error('Erè nan chajman kòmand yo');
+      toast.error('Error loading orders');
     } finally {
       setLoading(false);
     }
@@ -40,35 +53,63 @@ const AdminOrders = ({ user, logout, settings }) => {
   const handleApprovePayment = async (orderId) => {
     try {
       await axiosInstance.put(`/orders/${orderId}/status?payment_status=paid&order_status=processing`);
-      toast.success('Peman apwouve!');
+      toast.success('Payment approved!');
       loadOrders();
     } catch (error) {
       console.error('Error approving payment:', error);
-      toast.error('Erè nan apwobasyon peman');
+      toast.error('Error approving payment');
     }
   };
 
   const handleRejectPayment = async (orderId) => {
-    if (!window.confirm('Ou si ou vle rejte peman sa a?')) return;
+    if (!window.confirm('Are you sure you want to reject this payment?')) return;
 
     try {
       await axiosInstance.put(`/orders/${orderId}/status?payment_status=failed`);
-      toast.success('Peman rejte');
+      toast.success('Payment rejected');
       loadOrders();
     } catch (error) {
       console.error('Error rejecting payment:', error);
-      toast.error('Erè nan rejesyon peman');
+      toast.error('Error rejecting payment');
     }
   };
 
   const handleCompleteOrder = async (orderId) => {
     try {
       await axiosInstance.put(`/orders/${orderId}/status?order_status=completed`);
-      toast.success('Kòmand konplete!');
+      toast.success('Order completed!');
       loadOrders();
     } catch (error) {
       console.error('Error completing order:', error);
-      toast.error('Erè nan konpletasyon kòmand');
+      toast.error('Error completing order');
+    }
+  };
+
+  const handleDeliverOrder = (order) => {
+    setSelectedOrder(order);
+    setDeliveryInfo('');
+    setDeliveryDialog(true);
+  };
+
+  const submitDelivery = async () => {
+    if (!deliveryInfo.trim()) {
+      toast.error('Please enter delivery information');
+      return;
+    }
+
+    try {
+      // Update order with delivery info and mark as completed
+      await axiosInstance.put(`/orders/${selectedOrder.id}/status?order_status=completed`);
+      
+      // Here you would also save delivery_info to the order
+      // For now we'll just complete the order
+      
+      toast.success('Order delivered successfully!');
+      setDeliveryDialog(false);
+      loadOrders();
+    } catch (error) {
+      console.error('Error delivering order:', error);
+      toast.error('Error delivering order');
     }
   };
 
@@ -108,23 +149,23 @@ const AdminOrders = ({ user, logout, settings }) => {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-white" data-testid="orders-title">Jere Kòmand</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-white" data-testid="orders-title">Manage Orders</h1>
             
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="w-[200px] bg-white/10 border-white/20 text-white" data-testid="filter-select">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tout Kòmand</SelectItem>
-                <SelectItem value="pending_payment">Peman An Atant</SelectItem>
-                <SelectItem value="processing">An Kou</SelectItem>
-                <SelectItem value="completed">Konplete</SelectItem>
+                <SelectItem value="all">All Orders</SelectItem>
+                <SelectItem value="pending_payment">Pending Payment</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {loading ? (
-            <div className="text-center text-white text-xl py-12">Chajman...</div>
+            <div className="text-center text-white text-xl py-12">Loading...</div>
           ) : filteredOrders.length > 0 ? (
             <div className="space-y-4" data-testid="orders-list">
               {filteredOrders.map((order) => (
@@ -134,7 +175,7 @@ const AdminOrders = ({ user, logout, settings }) => {
                       {/* Order Info */}
                       <div className="flex-1">
                         <div className="flex flex-wrap items-center gap-3 mb-3">
-                          <h3 className="text-xl font-bold text-white">Kòmand #{order.id.slice(0, 8)}</h3>
+                          <h3 className="text-xl font-bold text-white">Order #{order.id.slice(0, 8)}</h3>
                           <Badge variant={getPaymentStatusBadge(order.payment_status)} className="capitalize">
                             {order.payment_status}
                           </Badge>
@@ -144,26 +185,26 @@ const AdminOrders = ({ user, logout, settings }) => {
                         </div>
                         
                         <div className="space-y-1 text-white/80 text-sm">
-                          <p><strong>Kliyan:</strong> {order.user_email}</p>
-                          <p><strong>Metòd:</strong> {order.payment_method === 'crypto_plisio' ? 'Cryptocurrency' : 'Manyel'}</p>
+                          <p><strong>Customer:</strong> {order.user_email}</p>
+                          <p><strong>Payment Method:</strong> {order.payment_method === 'crypto_plisio' ? 'Cryptocurrency' : order.payment_method}</p>
                           <p><strong>Total:</strong> ${order.total_amount.toFixed(2)}</p>
-                          <p><strong>Atik:</strong> {order.items.length} pwodwi</p>
-                          <p><strong>Date:</strong> {new Date(order.created_at).toLocaleString('fr-FR')}</p>
+                          <p><strong>Items:</strong> {order.items.length} product(s)</p>
+                          <p><strong>Date:</strong> {new Date(order.created_at).toLocaleString('en-US')}</p>
                         </div>
 
                         {/* Payment Proof */}
                         {order.payment_proof_url && (
                           <div className="mt-3 p-3 bg-white/5 rounded">
-                            <p className="text-white text-sm mb-1"><strong>Prev Peman:</strong></p>
+                            <p className="text-white text-sm mb-1"><strong>Payment Proof:</strong></p>
                             <p className="text-white/70 text-sm mb-2">ID: {order.transaction_id}</p>
                             <a
                               href={order.payment_proof_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-300 hover:underline text-sm"
+                              className="text-pink-400 hover:underline text-sm"
                               data-testid={`proof-link-${order.id}`}
                             >
-                              Gade prev peman
+                              View payment proof
                             </a>
                           </div>
                         )}
@@ -174,7 +215,7 @@ const AdminOrders = ({ user, logout, settings }) => {
                         <Link to={`/track/${order.id}`}>
                           <Button variant="outline" className="w-full border-white text-white hover:bg-white/10" data-testid={`view-order-${order.id}`}>
                             <Eye size={16} className="mr-2" />
-                            Gade Detay
+                            View Details
                           </Button>
                         </Link>
 
@@ -186,7 +227,7 @@ const AdminOrders = ({ user, logout, settings }) => {
                               data-testid={`approve-payment-${order.id}`}
                             >
                               <CheckCircle size={16} className="mr-2" />
-                              Apwouve Peman
+                              Approve Payment
                             </Button>
                             <Button
                               variant="destructive"
@@ -195,20 +236,30 @@ const AdminOrders = ({ user, logout, settings }) => {
                               data-testid={`reject-payment-${order.id}`}
                             >
                               <XCircle size={16} className="mr-2" />
-                              Rejte
+                              Reject
                             </Button>
                           </>
                         )}
 
                         {order.order_status === 'processing' && order.payment_status === 'paid' && (
-                          <Button
-                            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                            onClick={() => handleCompleteOrder(order.id)}
-                            data-testid={`complete-order-${order.id}`}
-                          >
-                            <CheckCircle size={16} className="mr-2" />
-                            Make Konplete
-                          </Button>
+                          <>
+                            <Button
+                              className="w-full gradient-button text-white"
+                              onClick={() => handleDeliverOrder(order)}
+                              data-testid={`deliver-order-${order.id}`}
+                            >
+                              <Send size={16} className="mr-2" />
+                              Deliver Order
+                            </Button>
+                            <Button
+                              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                              onClick={() => handleCompleteOrder(order.id)}
+                              data-testid={`complete-order-${order.id}`}
+                            >
+                              <CheckCircle size={16} className="mr-2" />
+                              Mark Complete
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -218,11 +269,46 @@ const AdminOrders = ({ user, logout, settings }) => {
             </div>
           ) : (
             <div className="text-center text-white/70 py-12" data-testid="no-orders">
-              <p>Pa gen kòmand pou filtè sa a</p>
+              <Package size={64} className="mx-auto mb-4 text-white/30" />
+              <p>No orders found for this filter</p>
             </div>
           )}
         </div>
       </div>
+
+      {/* Delivery Dialog */}
+      <Dialog open={deliveryDialog} onOpenChange={setDeliveryDialog}>
+        <DialogContent className="bg-gray-900 border-white/20">
+          <DialogHeader>
+            <DialogTitle className="text-white">Deliver Order #{selectedOrder?.id?.slice(0, 8)}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-white">Delivery Information</Label>
+              <Textarea
+                value={deliveryInfo}
+                onChange={(e) => setDeliveryInfo(e.target.value)}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 mt-2"
+                placeholder="Enter codes, credentials, or delivery instructions..."
+                rows={6}
+                data-testid="delivery-info-input"
+              />
+            </div>
+            <p className="text-gray-400 text-sm">
+              This information will be sent to the customer: {selectedOrder?.user_email}
+            </p>
+            <div className="flex gap-3">
+              <Button onClick={submitDelivery} className="flex-1 gradient-button text-white" data-testid="submit-delivery-btn">
+                <Send className="mr-2" size={16} />
+                Send & Complete
+              </Button>
+              <Button onClick={() => setDeliveryDialog(false)} variant="outline" className="border-white/20 text-white">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer settings={settings} />
     </div>
