@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { axiosInstance } from '../App';
+import { axiosInstance, LanguageContext } from '../App';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
 
 const RegisterPage = ({ login, settings }) => {
+  const { t } = useContext(LanguageContext);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -26,7 +27,7 @@ const RegisterPage = ({ login, settings }) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Mod pase yo pa menm');
+      toast.error('Passwords do not match');
       return;
     }
 
@@ -46,10 +47,10 @@ const RegisterPage = ({ login, settings }) => {
       });
       
       login(loginResponse.data);
-      toast.success('Kont kreye avèk siksè!');
+      toast.success(t('success'));
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erè nan kreyasyon kont');
+      toast.error(error.response?.data?.detail || t('error'));
     } finally {
       setLoading(false);
     }
@@ -58,22 +59,22 @@ const RegisterPage = ({ login, settings }) => {
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <Link to="/" className="inline-flex items-center text-white mb-6 hover:underline" data-testid="back-home">
+        <Link to="/" className="inline-flex items-center text-gray-400 hover:text-cyan-400 mb-6 transition" data-testid="back-home">
           <ArrowLeft className="mr-2" size={20} />
-          Retounen Akèy
+          {t('home')}
         </Link>
 
-        <Card className="glass-effect border-white/20" data-testid="register-form">
+        <Card className="glass-effect border-white/10" data-testid="register-form">
           <CardHeader>
             <CardTitle className="text-2xl text-center text-white">
               {settings?.logo_url && <img src={settings.logo_url} alt="Logo" className="h-12 mx-auto mb-4" />}
-              Kreye Kont sou {settings?.site_name || 'KayiCom'}
+              {t('createAccount')} - {settings?.site_name || 'KayiCom'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="full_name" className="text-white">Non Konplè</Label>
+                <Label htmlFor="full_name" className="text-gray-300">{t('fullName')}</Label>
                 <Input
                   id="full_name"
                   name="full_name"
@@ -81,14 +82,14 @@ const RegisterPage = ({ login, settings }) => {
                   value={formData.full_name}
                   onChange={handleChange}
                   required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                  placeholder="Non ou"
+                  className="bg-gray-900/50 border-white/10 text-white placeholder:text-gray-500"
+                  placeholder="John Doe"
                   data-testid="fullname-input"
                 />
               </div>
 
               <div>
-                <Label htmlFor="email" className="text-white">Email</Label>
+                <Label htmlFor="email" className="text-gray-300">{t('email')}</Label>
                 <Input
                   id="email"
                   name="email"
@@ -96,14 +97,14 @@ const RegisterPage = ({ login, settings }) => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                  placeholder="ou@email.com"
+                  className="bg-gray-900/50 border-white/10 text-white placeholder:text-gray-500"
+                  placeholder="you@email.com"
                   data-testid="email-input"
                 />
               </div>
 
               <div>
-                <Label htmlFor="password" className="text-white">Mod Pase</Label>
+                <Label htmlFor="password" className="text-gray-300">{t('password')}</Label>
                 <Input
                   id="password"
                   name="password"
@@ -111,14 +112,14 @@ const RegisterPage = ({ login, settings }) => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  className="bg-gray-900/50 border-white/10 text-white placeholder:text-gray-500"
                   placeholder="••••••••"
                   data-testid="password-input"
                 />
               </div>
 
               <div>
-                <Label htmlFor="confirmPassword" className="text-white">Konfime Mod Pase</Label>
+                <Label htmlFor="confirmPassword" className="text-gray-300">{t('confirmPassword')}</Label>
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -126,7 +127,7 @@ const RegisterPage = ({ login, settings }) => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  className="bg-gray-900/50 border-white/10 text-white placeholder:text-gray-500"
                   placeholder="••••••••"
                   data-testid="confirm-password-input"
                 />
@@ -134,19 +135,19 @@ const RegisterPage = ({ login, settings }) => {
 
               <Button
                 type="submit"
-                className="w-full bg-white text-purple-600 hover:bg-gray-100"
+                className="w-full gradient-button text-white"
                 disabled={loading}
                 data-testid="register-submit-btn"
               >
-                {loading ? 'Chajman...' : 'Kreye Kont'}
+                {loading ? t('loading') : t('createAccount')}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-white/70">
-                Ou gen kont deja?{' '}
-                <Link to="/login" className="text-white font-semibold hover:underline" data-testid="login-link">
-                  Konekte
+              <p className="text-gray-400">
+                {t('alreadyHaveAccount')}{' '}
+                <Link to="/login" className="text-cyan-400 font-semibold hover:underline" data-testid="login-link">
+                  {t('login')}
                 </Link>
               </p>
             </div>
