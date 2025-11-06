@@ -53,17 +53,17 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
 
       if (paymentMethod === 'crypto_plisio' && order.plisio_invoice_id) {
         // Redirect to Plisio payment
-        toast.success('Redireksyon pou peman...');
+        toast.success('Redirecting to payment...');
         // In production, redirect to Plisio payment page
         navigate(`/track/${order.id}`);
       } else {
         // Manual payment - redirect to order tracking
-        toast.success('Kòmand kreye! Tanpri soumèt prev peman ou.');
+        toast.success('Order created! Please submit your payment proof.');
         navigate(`/track/${order.id}`);
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error(error.response?.data?.detail || 'Erè nan kreye kòmand');
+      toast.error(error.response?.data?.detail || 'Error creating order');
     } finally {
       setLoading(false);
     }
