@@ -60,7 +60,7 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
                 <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-white/10">
                   {user.role === 'admin' && (
                     <DropdownMenuItem asChild>
-                      <Link to="/admin" className="cursor-pointer text-gray-300 hover:text-cyan-400" data-testid="admin-link">
+                      <Link to="/admin" className="cursor-pointer text-gray-300 hover:text-pink-400" data-testid="admin-link">
                         <Settings className="mr-2" size={16} />
                         {t('adminPanel')}
                       </Link>
