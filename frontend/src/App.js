@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { getTranslation } from './utils/i18n';
 
 // Pages
-import HomePage from './pages/HomePage';
+import HomePage from './pages/NewHomePage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
