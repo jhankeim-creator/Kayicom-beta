@@ -27,10 +27,10 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-gray-300 hover:text-cyan-400 transition" data-testid="nav-home">
+            <Link to="/" className="text-gray-300 hover:text-pink-400 transition" data-testid="nav-home">
               <Home className="inline mr-1" size={18} />{t('home')}
             </Link>
-            <Link to="/products" className="text-gray-300 hover:text-cyan-400 transition" data-testid="nav-products">
+            <Link to="/products" className="text-gray-300 hover:text-pink-400 transition" data-testid="nav-products">
               <Package className="inline mr-1" size={18} />{t('products')}
             </Link>
           </div>
