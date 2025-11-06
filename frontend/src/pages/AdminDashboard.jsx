@@ -82,12 +82,12 @@ const AdminDashboard = ({ user, logout, settings }) => {
                 <div className="flex items-center gap-4">
                   <AlertCircle className="text-yellow-400" size={32} />
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white mb-1">Peman an Atant</h3>
-                    <p className="text-white/80">Ou gen {stats.pending_payments} peman ki bezwen revizyon</p>
+                    <h3 className="text-xl font-bold text-white mb-1">Pending Payments</h3>
+                    <p className="text-white/80">You have {stats.pending_payments} payments requiring review</p>
                   </div>
                   <Link to="/admin/orders">
                     <Button className="bg-yellow-400 text-gray-900 hover:bg-yellow-300">
-                      Revize
+                      Review
                     </Button>
                   </Link>
                 </div>
