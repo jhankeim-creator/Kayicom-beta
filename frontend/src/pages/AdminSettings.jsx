@@ -23,11 +23,11 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
       });
 
       await axiosInstance.put('/settings', updates);
-      toast.success('Paramèt sove avèk siksè!');
+      toast.success('Settings saved successfully!');
       await loadSettings();
     } catch (error) {
       console.error('Error saving settings:', error);
-      toast.error('Erè nan sove paramèt yo');
+      toast.error('Error saving settings');
     } finally {
       setLoading(false);
     }
