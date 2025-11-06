@@ -80,7 +80,7 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
               </DropdownMenu>
             ) : (
               <Link to="/login">
-                <Button variant="ghost" className="text-gray-300 hover:bg-white/5 hover:text-cyan-400" data-testid="login-btn">
+                <Button variant="ghost" className="text-gray-300 hover:bg-white/5 hover:text-pink-400" data-testid="login-btn">
                   <User size={20} />
                   <span className="ml-2">{t('login')}</span>
                 </Button>
