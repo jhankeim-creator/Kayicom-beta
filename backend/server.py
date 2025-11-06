@@ -75,6 +75,8 @@ class ProductCreate(BaseModel):
     image_url: Optional[str] = None
     stock_available: bool = True
     delivery_type: str = "automatic"
+    subscription_duration_months: Optional[int] = None
+    subscription_auto_check: bool = False
     metadata: Optional[Dict[str, Any]] = None
 
 class ProductUpdate(BaseModel):
