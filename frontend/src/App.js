@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
+import { getTranslation } from './utils/i18n';
 
 // Pages
 import HomePage from './pages/HomePage';
