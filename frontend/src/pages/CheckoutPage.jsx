@@ -74,9 +74,9 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
       <div className="min-h-screen gradient-bg">
         <Navbar user={user} logout={logout} cartItemCount={cartItemCount} settings={settings} />
         <div className="container mx-auto px-4 py-20 text-center">
-          <h2 className="text-2xl text-white mb-4">Ou dwe konekte pou kontinye</h2>
+          <h2 className="text-2xl text-white mb-4">You must login to continue</h2>
           <Button onClick={() => navigate('/login')} className="bg-white text-purple-600 hover:bg-gray-100">
-            Konekte
+            Login
           </Button>
         </div>
       </div>
