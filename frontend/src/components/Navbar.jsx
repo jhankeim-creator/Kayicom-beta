@@ -67,7 +67,7 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer text-gray-300 hover:text-cyan-400" data-testid="dashboard-link">
+                    <Link to="/dashboard" className="cursor-pointer text-gray-300 hover:text-pink-400" data-testid="dashboard-link">
                       <User className="mr-2" size={16} />
                       {t('myAccount')}
                     </Link>
