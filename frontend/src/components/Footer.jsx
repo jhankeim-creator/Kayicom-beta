@@ -29,11 +29,11 @@ const Footer = ({ settings }) => {
             <h3 className="text-xl font-bold mb-4 text-white">{t('contact')}</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2">
-                <Mail size={16} className="text-cyan-400" />
+                <Mail size={16} className="text-pink-400" />
                 <span>{settings?.support_email || 'support@kayicom.com'}</span>
               </div>
               <div className="flex items-center space-x-2">
-                <MessageCircle size={16} className="text-cyan-400" />
+                <MessageCircle size={16} className="text-pink-400" />
                 <span>{t('support247')}</span>
               </div>
             </div>
