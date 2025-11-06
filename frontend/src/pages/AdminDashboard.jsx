@@ -121,8 +121,8 @@ const AdminDashboard = ({ user, logout, settings }) => {
               <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer" data-testid="site-settings">
                 <CardContent className="p-8 text-center">
                   <Settings className="mx-auto mb-4 text-white" size={48} />
-                  <h3 className="text-xl font-bold text-white mb-2">Paramèt Sit</h3>
-                  <p className="text-white/70">Konfigire API keys ak customization</p>
+                  <h3 className="text-xl font-bold text-white mb-2">Site Settings</h3>
+                  <p className="text-white/70">Configure API keys and customization</p>
                 </CardContent>
               </Card>
             </Link>
