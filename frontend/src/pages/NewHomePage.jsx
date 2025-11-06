@@ -98,7 +98,7 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
               </Link>
               {!user && (
                 <Link to="/register">
-                  <Button size="lg" className="bg-gray-800 border border-cyan-500/30 text-cyan-400 hover:bg-gray-800/80 px-8 py-6 text-lg" data-testid="register-btn">
+                  <Button size="lg" className="bg-gray-800 border border-pink-500/30 text-pink-400 hover:bg-gray-800/80 px-8 py-6 text-lg" data-testid="register-btn">
                     {t('getStarted')}
                   </Button>
                 </Link>
