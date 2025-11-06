@@ -29,7 +29,7 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
       setOrder(response.data);
     } catch (error) {
       console.error('Error loading order:', error);
-      toast.error('Erè nan chajman kòmand');
+      toast.error('Error loading order');
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,7 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
 
   const handleSubmitProof = async () => {
     if (!proofUrl || !transactionId) {
-      toast.error('Tanpri ranpli tout chan yo');
+      toast.error('Please fill all fields');
       return;
     }
 
@@ -50,13 +50,13 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
         payment_proof_url: proofUrl
       });
 
-      toast.success('Prev peman soumèt avèk siksè!');
+      toast.success('Payment proof submitted successfully!');
       loadOrder();
       setProofUrl('');
       setTransactionId('');
     } catch (error) {
       console.error('Error submitting proof:', error);
-      toast.error('Erè nan soumisyon prev peman');
+      toast.error('Error submitting payment proof');
     } finally {
       setSubmitting(false);
     }
