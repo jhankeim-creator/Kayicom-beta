@@ -1,160 +1,210 @@
-# KayiCom - Platfòm E-Commerce pou Pwodwi Dijital
+# KayiCom - Professional Digital Marketplace
 
-Yon platfòm konplè pou vann giftcards, topup game, abònman ak sèvis dijital ak livrezon otomatik.
+Caribbean's #1 Digital Marketplace for gift cards, game top-ups, subscriptions, and digital services.
 
-## Karakteristik Prensipal
+## 🌟 Key Features
 
-### Pou Kliyan
-- **Katalòg Pwodwi**: Bwouze pwodwi pa kategori (Gift Cards, Game Topup, Abònman, Sèvis)
-- **Panye Achte**: Sistèm panye konplè ak jesyon kantite
-- **Peman Feksib**: 
-  - Crypto otomatik ak Plisio (Bitcoin, Ethereum, etc.)
-  - Peman manyèl ak soumisyon prev (bank transfer, lòt metòd)
-- **Suivi Kòmand**: Track estatik kòmand ou an tan reyèl
-- **Dashboard Kliyan**: Wè tout kòmand ou yo ak soumèt prev peman
+### For Customers
+- **Multi-Category Marketplace**: Gift Cards, Game Top-Ups, Subscriptions (2-24 months), Digital Services
+- **Multiple Payment Methods**:
+  - Cryptocurrency (Automatic via Plisio): Bitcoin, Ethereum, USDT
+  - Manual Payments: PayPal, Skrill, MonCash, Binance Pay, Zelle, Cash App
+- **Instant Delivery**: Automatic delivery for most products
+- **Subscription Auto-Check**: System monitors subscription validity automatically
+- **Multi-Language**: English & French supported
+- **24/7 Support**: Customer service always available
 
-### Pou Admin
-- **Dashboard Konplè**: Estatistik an tan reyèl (total kòmand, pwodwi, kliyan, revèni)
-- **Jesyon Pwodwi**: Ajoute, modifye, efase pwodwi ak imaj
-- **Jesyon Kòmand**: Apwouve/rejte peman manyèl, make kòmand konplete
-- **Paramèt Konfigurab**:
-  - API keys (Plisio, MTCGame, GoSplit, Z2U, Resend)
-  - Customization sit (logo, koulè, email sipò)
-  - Tout bagay modifyab nan admin panel
+### For Administrators
+- **Complete Dashboard**: Real-time statistics
+- **Product Management**: Full CRUD with subscription duration options (2, 6, 12, 24 months)
+- **Order Management**: Approve/reject manual payments, mark orders complete
+- **Subscription Monitoring**: Auto-check system for subscription validity
+- **Site Customization**: Logo, colors, API keys, all configurable
 
-## Teknoloji Itilize
+## 🎨 Design Features
 
-**Backend:**
-- FastAPI (Python)
-- MongoDB
-- Motor (MongoDB async driver)
-- PassLib (hash password)
-- Requests (pou API calls)
+- **Dark Professional Theme**: Modern dark navy with cyan/blue gradients
+- **Responsive Design**: Perfect on mobile (2 columns), tablet, and desktop
+- **Trustpilot Integration**: Display trust badges and ratings
+- **Background Images**: Professional category images
+- **Trust Badges**: 24/7 Support, 100K+ Customers, <5min Delivery, 99.9% Success Rate
 
-**Frontend:**
-- React 19
-- React Router
-- Axios
-- Shadcn/UI components
-- Tailwind CSS
-- Sonner (toast notifications)
-- Lucide React (icons)
+## 💳 Payment Methods
 
-## Konfigirasyon
+### Automatic Payment
+- **Cryptocurrency via Plisio**: Bitcoin, Ethereum, USDT, and 30+ cryptocurrencies
 
-### 1. Admin Account
+### Manual Payments (with proof verification)
+- **PayPal**: Upload transaction proof
+- **Skrill**: Upload transaction proof
+- **MonCash**: Upload transaction proof
+- **Binance Pay**: Upload transaction proof
+- **Zelle**: Upload transaction proof
+- **Cash App**: Upload transaction proof
+
+## 📦 Product Categories
+
+### 1. Gift Cards
+- iTunes, Steam, Amazon, Google Play
+- Instant digital delivery
+- Email code delivery
+
+### 2. Game Top-Ups
+- Free Fire, Mobile Legends, PUBG Mobile
+- Instant account top-up
+- Player ID based delivery
+
+### 3. Subscriptions (Auto-Monitored)
+- **Netflix Premium**: 2, 6, 12, 24 months
+- **Spotify Premium**: 6, 12 months
+- **Auto-Check System**: Monitors subscription validity
+- **Duration Options**: Choose 2, 6, 12, or 24-month plans
+
+### 4. Digital Services
+- Verified PayPal Account Creation
+- Stripe Account Setup & Verification
+- TextNow Premium Numbers
+- Manual delivery with support
+
+## 🔐 Admin Access
+
 **Email**: admin@kayicom.com  
 **Password**: admin123
 
-**⚠️ ENPÒTAN**: Chanje password la apre premye login!
+⚠️ **IMPORTANT**: Change password after first login!
 
-### 2. API Keys (opsyonèl)
+## ⚙️ Configuration
 
-Ale nan **Admin Panel > Paramèt > API Keys** pou konfigire:
+### API Keys Setup
+Go to **Admin Panel > Settings > API Keys**:
 
-- **Plisio API Key**: Pou peman crypto otomatik
-  - Jwenn li nan: https://plisio.net
-  - Nesesè pou crypto payments
-  
-- **MTCGame API Key**: Pou entegrasyon pwodwi MTCGame
-- **GoSplit API Key**: Pou entegrasyon pwodwi GoSplit
-- **Z2U API Key**: Pou entegrasyon pwodwi Z2U
-- **Resend API Key**: Pou voye email notifikasyon
+- **Plisio API Key**: For crypto payments (get from plisio.net)
+- **Resend API Key**: For email notifications
+- Settings for MTCGame, GoSplit, Z2U product integrations
 
-### 3. Customization
+### Site Customization
+**Admin Panel > Settings > Appearance**:
+- Upload custom logo
+- Change primary & secondary colors
+- Configure support email
 
-Nan **Admin Panel > Paramèt > Aparans**:
-- Upload logo ou
-- Chanje koulè prensipal ak segondè
-- Konfigire email sipò
+## 🌍 Language Support
 
-## Itilizasyon
+- **English (EN)**: Default language
+- **French (FR)**: Full translation
+- Language switcher in navbar (globe icon)
+- Saves preference in localStorage
 
-### Pou Kliyan
+## 📊 Subscription Management
 
-1. **Kreyasyon Kont**: Klike sou "Kreye Kont" nan navigation
-2. **Browse Pwodwi**: Eksplore pwodwi pa kategori
-3. **Ajoute nan Panye**: Klike "Ajoute" sou nenpòt pwodwi
-4. **Checkout**: 
-   - Ale nan panye ou
-   - Klike "Pase Kòmand"
-   - Chwazi metòd peman (Crypto oswa Manyèl)
-5. **Peman**:
-   - **Crypto**: Ou ap redirekte pou complete peman (otomatik)
-   - **Manyèl**: Soumèt prev peman ou ak ID tranzaksyon nan paj tracking
-6. **Suivi**: Gade estatik kòmand ou nan "Kont Mwen" oswa ak link tracking
+### Auto-Check System
+- System automatically monitors subscription validity
+- Checks status daily for active subscriptions
+- Notifies customers if subscription expires early
+- Renewal reminders before expiration
 
-### Pou Admin
+### Duration Options
+- **2 Months**: Short-term trial
+- **6 Months**: Mid-term commitment
+- **12 Months**: Full year (most popular)
+- **24 Months**: Best value long-term
 
-1. **Login**: Itilize admin@kayicom.com / admin123
-2. **Dashboard**: Wè tout estatistik
-3. **Jere Pwodwi**:
-   - Klike "Jere Pwodwi"
-   - Ajoute nouvo pwodwi ak bouton "+"
-   - Edit oswa efase pwodwi egzistan
-4. **Jere Kòmand**:
-   - Revize kòmand ak peman an atant
-   - Apwouve oswa rejte peman manyèl
-   - Make kòmand konplete
-5. **Paramèt**:
-   - Konfigire API keys
-   - Customize logo ak koulè
-   - Ajiste enfo kontakt
+## 🚀 Getting Started
 
-## API Endpoints
+### Customer Flow
+1. Browse products by category
+2. Add to cart
+3. Checkout
+4. Choose payment method:
+   - Crypto: Automatic payment via Plisio
+   - Manual: Upload proof after payment
+5. Track order status
+6. Receive digital products instantly (or within 24h for manual)
 
-### Auth
-- `POST /api/auth/register` - Kreyasyon kont
-- `POST /api/auth/login` - Login
+### Admin Flow
+1. Login to admin panel
+2. Manage products (add subscription durations)
+3. Review and approve manual payments
+4. Monitor subscription auto-checks
+5. Configure API keys and site settings
+
+## 📱 Mobile Optimized
+
+- **2 Column Layout**: Products display in 2 columns on mobile
+- **Responsive Navigation**: Hamburger menu on mobile
+- **Touch Optimized**: All buttons and cards touch-friendly
+- **Fast Loading**: Optimized images and assets
+
+## 🎯 Sample Products Included
+
+- iTunes Gift Card $25
+- Steam Wallet $50
+- Amazon Gift Card $100
+- Free Fire 1080 Diamonds
+- Mobile Legends 500 Diamonds
+- PUBG Mobile 1800 UC
+- Netflix Premium (2, 6, 12, 24 months)
+- Spotify Premium (6, 12 months)
+- Verified PayPal Account Service
+- Stripe Account Setup Service
+- TextNow Premium Number
+
+## 🔧 Technical Stack
+
+**Backend:**
+- FastAPI (Python)
+- MongoDB with Motor (async)
+- Pydantic for data validation
+- PassLib for password hashing
+- Requests for API calls
+
+**Frontend:**
+- React 19
+- React Router for navigation
+- Axios for API calls
+- Shadcn/UI components
+- Tailwind CSS for styling
+- Sonner for toast notifications
+- Lucide React for icons
+
+## 🌐 API Endpoints
 
 ### Products
-- `GET /api/products` - Jwenn tout pwodwi
-- `GET /api/products/{id}` - Jwenn yon pwodwi
-- `POST /api/products` - Kreye pwodwi (admin)
-- `PUT /api/products/{id}` - Modifye pwodwi (admin)
-- `DELETE /api/products/{id}` - Efase pwodwi (admin)
+- `GET /api/products` - List all products
+- `GET /api/products?category=subscription` - Filter by category
+- `POST /api/products` - Create product (admin)
+- `PUT /api/products/{id}` - Update product (admin)
 
 ### Orders
-- `POST /api/orders` - Kreye kòmand
-- `GET /api/orders` - Jwenn kòmand yo
-- `GET /api/orders/{id}` - Jwenn yon kòmand
-- `PUT /api/orders/{id}/status` - Update estatik kòmand
+- `POST /api/orders` - Create order
+- `GET /api/orders?user_id={id}` - Get user orders
+- `PUT /api/orders/{id}/status` - Update order status (admin)
 
 ### Payments
-- `POST /api/payments/manual-proof` - Soumèt prev peman manyèl
-- `POST /api/payments/plisio-callback` - Webhook Plisio
-- `GET /api/payments/plisio-status/{invoice_id}` - Check estatik peman Plisio
+- `POST /api/payments/manual-proof` - Submit payment proof
+- `POST /api/payments/plisio-callback` - Plisio webhook
+- `GET /api/payments/plisio-status/{invoice_id}` - Check payment status
 
 ### Settings
-- `GET /api/settings` - Jwenn paramèt sit
-- `PUT /api/settings` - Update paramèt (admin)
+- `GET /api/settings` - Get site settings
+- `PUT /api/settings` - Update settings (admin)
 
-### Stats
-- `GET /api/stats/dashboard` - Jwenn estatistik dashboard
+## 🎨 Design Inspiration
 
-## Sample Products
+Inspired by U7BUY.com with unique KayiCom branding:
+- Professional dark theme
+- Caribbean-focused marketplace
+- Trust-building elements (Trustpilot, badges)
+- Category-based navigation
+- Featured products showcase
+- Multi-language support
 
-Sit la gen 6 pwodwi sample:
-1. iTunes Gift Card $25
-2. Mobile Legends Diamond 100
-3. Netflix Premium 1 Month
-4. Verified PayPal Account
-5. PUBG UC 600
-6. Steam Gift Card $50
+## 📞 Support
 
-Ou ka modifye oswa efase yo epi ajoute pwodwi pa ou nan admin panel.
-
-## Sekirite
-
-- Password yo hash ak bcrypt
-- CORS konfigirasyon pou sekirite
-- API keys stoke nan database
-- Validation input nan tout endpoints
-
-## Sipò
-
-Pou kesyon oswa sipò, kontakte: support@kayicom.com
+**Email**: support@kayicom.com  
+**Available**: 24/7
 
 ---
 
-**Kreye ak ❤️ ak Emergent AI**
+**Built with ❤️ by Emergent AI**
+**Site**: KayiCom - Caribbean's #1 Digital Marketplace
