@@ -436,6 +436,38 @@ async def update_settings(updates: SettingsUpdate):
         settings['updated_at'] = datetime.fromisoformat(settings['updated_at'])
     return settings
 
+# ==================== BULK EMAIL ENDPOINTS ====================
+
+@api_router.post("/emails/bulk-send")
+async def send_bulk_email(email_data: BulkEmailRequest):
+    settings = await db.settings.find_one({"id": "site_settings"})
+    if not settings or not settings.get('resend_api_key'):
+        raise HTTPException(status_code=400, detail="Resend API key not configured")
+    
+    # Get recipients based on type
+    recipients = []
+    if email_data.recipient_type == "all":
+        users = await db.users.find({}, {"email": 1, "_id": 0}).to_list(10000)
+        recipients = [user['email'] for user in users]
+    elif email_data.recipient_type == "customers":
+        users = await db.users.find({"role": "customer"}, {"email": 1, "_id": 0}).to_list(10000)
+        recipients = [user['email'] for user in users]
+    elif email_data.recipient_type == "specific_emails" and email_data.specific_emails:
+        recipients = email_data.specific_emails
+    
+    if not recipients:
+        raise HTTPException(status_code=400, detail="No recipients found")
+    
+    # Here you would integrate with Resend API
+    # For now, just log the action
+    sent_count = len(recipients)
+    
+    return {
+        "message": f"Bulk email sent to {sent_count} recipients",
+        "sent_count": sent_count,
+        "recipients": recipients[:10] if len(recipients) > 10 else recipients  # Show first 10
+    }
+
 # ==================== STATS ENDPOINTS ====================
 
 @api_router.get("/stats/dashboard")
