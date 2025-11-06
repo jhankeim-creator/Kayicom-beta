@@ -270,7 +270,7 @@ const AdminProducts = ({ user, logout, settings }) => {
           {loading ? (
             <div className="text-center text-white text-xl py-12">Chajman...</div>
           ) : products.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="products-grid">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" data-testid="products-grid">
               {products.map((product) => (
                 <Card key={product.id} className="glass-effect border-white/20" data-testid={`product-${product.id}`}>
                   <div className="h-48 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
