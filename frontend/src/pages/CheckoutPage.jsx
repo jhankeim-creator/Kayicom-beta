@@ -216,21 +216,21 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
                 disabled={loading}
                 data-testid="place-order-btn"
               >
-                {loading ? 'Pwosesis...' : 'Pase Kòmand'}
+                {loading ? 'Processing...' : 'Place Order'}
               </Button>
 
               <div className="mt-6 space-y-2 text-white/70 text-sm">
                 <p className="flex items-center">
                   <span className="mr-2">✅</span>
-                  Tranzaksyon sekirize
+                  Secure transaction
                 </p>
                 <p className="flex items-center">
                   <span className="mr-2">⚡</span>
-                  Livrezon rapid
+                  Fast delivery
                 </p>
                 <p className="flex items-center">
                   <span className="mr-2">💬</span>
-                  Sipò 24/7
+                  24/7 Support
                 </p>
               </div>
             </CardContent>
