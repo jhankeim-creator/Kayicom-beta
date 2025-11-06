@@ -1,0 +1,22 @@
+import { MessageCircle } from 'lucide-react';
+
+const WhatsAppButton = () => {
+  const phoneNumber = '50939308318'; // WhatsApp number
+  const message = 'Hello! I need support with KayiCom.';
+  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+  return (
+    <a
+      href={whatsappUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+      aria-label="Contact us on WhatsApp"
+    >
+      <MessageCircle size={24} />
+      <span className="font-semibold">Support</span>
+    </a>
+  );
+};
+
+export default WhatsAppButton;
