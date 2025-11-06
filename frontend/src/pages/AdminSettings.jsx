@@ -81,18 +81,22 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
           <Card className="glass-effect border-white/20">
             <CardContent className="p-6">
               <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-6">
                   <TabsTrigger value="general" data-testid="tab-general">
                     <SettingsIcon size={16} className="mr-2" />
-                    Jeneral
+                    General
                   </TabsTrigger>
                   <TabsTrigger value="api" data-testid="tab-api">
                     <Key size={16} className="mr-2" />
                     API Keys
                   </TabsTrigger>
-                  <TabsTrigger value="appearance" data-testid="tab-appearance">
-                    <Palette size={16} className="mr-2" />
-                    Aparans
+                  <TabsTrigger value="categories" data-testid="tab-categories">
+                    <Package size={16} className="mr-2" />
+                    Categories
+                  </TabsTrigger>
+                  <TabsTrigger value="email" data-testid="tab-email">
+                    <Mail size={16} className="mr-2" />
+                    Bulk Email
                   </TabsTrigger>
                 </TabsList>
 
