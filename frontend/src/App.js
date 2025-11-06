@@ -19,6 +19,7 @@ import AdminOrders from './pages/AdminOrders';
 import AdminSettings from './pages/AdminSettings';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import WhatsAppButton from './components/WhatsAppButton';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
