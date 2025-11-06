@@ -145,10 +145,11 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<HomePage user={user} logout={logout} cart={cart} settings={settings} />} />
+    <LanguageContext.Provider value={{ language, switchLanguage, t }}>
+      <BrowserRouter>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<HomePage user={user} logout={logout} cart={cart} settings={settings} />} />
           <Route path="/products" element={<ProductsPage user={user} logout={logout} addToCart={addToCart} cart={cart} settings={settings} />} />
           <Route path="/products/:category" element={<ProductsPage user={user} logout={logout} addToCart={addToCart} cart={cart} settings={settings} />} />
           <Route path="/product/:id" element={<ProductDetailPage user={user} logout={logout} addToCart={addToCart} cart={cart} settings={settings} />} />
