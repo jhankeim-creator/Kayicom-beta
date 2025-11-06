@@ -3,22 +3,7 @@ import { useState, useEffect } from 'react';\nimport { axiosInstance } from '../
 const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }) => {
   const [loading, setLoading] = useState(false);\n  const [formData, setFormData] = useState({\n    site_name: '',\n    logo_url: '',\n    primary_color: '',\n    secondary_color: '',\n    support_email: '',\n    plisio_api_key: '',\n    mtcgame_api_key: '',\n    gosplit_api_key: '',\n    z2u_api_key: '',\n    resend_api_key: '',\n    product_categories: []\n  });\n  const [newCategory, setNewCategory] = useState('');\n  const [bulkEmail, setBulkEmail] = useState({\n    subject: '',\n    message: '',\n    recipient_type: 'all'\n  });\n  const [sendingEmail, setSendingEmail] = useState(false);
 
-  useEffect(() => {
-    if (currentSettings) {
-      setFormData({
-        site_name: currentSettings.site_name || '',
-        logo_url: currentSettings.logo_url || '',
-        primary_color: currentSettings.primary_color || '',
-        secondary_color: currentSettings.secondary_color || '',
-        support_email: currentSettings.support_email || '',
-        plisio_api_key: currentSettings.plisio_api_key || '',
-        mtcgame_api_key: currentSettings.mtcgame_api_key || '',
-        gosplit_api_key: currentSettings.gosplit_api_key || '',
-        z2u_api_key: currentSettings.z2u_api_key || '',
-        resend_api_key: currentSettings.resend_api_key || ''
-      });
-    }
-  }, [currentSettings]);
+  useEffect(() => {\n    if (currentSettings) {\n      setFormData({\n        site_name: currentSettings.site_name || '',\n        logo_url: currentSettings.logo_url || '',\n        primary_color: currentSettings.primary_color || '',\n        secondary_color: currentSettings.secondary_color || '',\n        support_email: currentSettings.support_email || '',\n        plisio_api_key: currentSettings.plisio_api_key || '',\n        mtcgame_api_key: currentSettings.mtcgame_api_key || '',\n        gosplit_api_key: currentSettings.gosplit_api_key || '',\n        z2u_api_key: currentSettings.z2u_api_key || '',\n        resend_api_key: currentSettings.resend_api_key || '',\n        product_categories: currentSettings.product_categories || ['giftcard', 'topup', 'subscription', 'service']\n      });\n    }\n  }, [currentSettings]);\n\n  const addCategory = () => {\n    if (newCategory && !formData.product_categories.includes(newCategory)) {\n      setFormData({...formData, product_categories: [...formData.product_categories, newCategory]});\n      setNewCategory('');\n    }\n  };\n\n  const removeCategory = (cat) => {\n    setFormData({...formData, product_categories: formData.product_categories.filter(c => c !== cat)});\n  };\n\n  const handleSendBulkEmail = async () => {\n    if (!bulkEmail.subject || !bulkEmail.message) {\n      toast.error('Please fill in subject and message');\n      return;\n    }\n\n    setSendingEmail(true);\n    try {\n      const response = await axiosInstance.post('/emails/bulk-send', bulkEmail);\n      toast.success(`Email sent to ${response.data.sent_count} recipients!`);\n      setBulkEmail({subject: '', message: '', recipient_type: 'all'});\n    } catch (error) {\n      toast.error(error.response?.data?.detail || 'Error sending bulk email');\n    } finally {\n      setSendingEmail(false);\n    }\n  };
 
   const handleChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
