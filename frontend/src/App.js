@@ -111,7 +111,7 @@ function App() {
     const newCart = cart.filter(item => item.product.id !== productId);
     setCart(newCart);
     localStorage.setItem('cart', JSON.stringify(newCart));
-    toast.success('Pwodwi retire nan panye');
+    toast.success(t('productRemoved'));
   };
 
   const updateCartQuantity = (productId, quantity) => {
