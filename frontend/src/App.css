@@ -6,9 +6,22 @@
   box-sizing: border-box;
 }
 
+:root {
+  --dark-bg: #0a0e1a;
+  --dark-card: #111827;
+  --dark-card-hover: #1a2332;
+  --primary-cyan: #06b6d4;
+  --primary-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: rgba(255, 255, 255, 0.1);
+}
+
 body {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--dark-bg);
+  color: var(--text-primary);
   min-height: 100vh;
 }
 
@@ -17,41 +30,93 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gradient-bg {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0a0e1a 0%, #111827 100%);
+  position: relative;
+}
+
+.gradient-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 400px;
+  background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 70%);
+  pointer-events: none;
 }
 
 .glass-effect {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-button {
+  background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.gradient-button:hover::before {
+  left: 100%;
+}
+
+.gradient-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3);
 }
 
 .product-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: var(--dark-card);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
 }
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  transition: opacity 0.3s ease, transform 0.2s ease;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: scale(1.02);
+  border-color: var(--primary-cyan);
+  box-shadow: 0 10px 30px rgba(6, 182, 212, 0.2);
 }
 
 .category-card {
   cursor: pointer;
   transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
 }
 
 .category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+}
+
+.feature-icon {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2));
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.feature-icon:hover {
   transform: scale(1.05);
+  border-color: var(--primary-cyan);
 }
 
 /* Scrollbar Styling */
@@ -60,14 +125,43 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--dark-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #667eea;
+  background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #764ba2;
+  background: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));
+}
+
+/* Language Switcher */
+.lang-switcher {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.lang-button {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.lang-button.active {
+  background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
+  color: white;
+  border-color: transparent;
+}
+
+.lang-button:hover:not(.active) {
+  border-color: var(--primary-cyan);
+  color: var(--text-primary);
 }
