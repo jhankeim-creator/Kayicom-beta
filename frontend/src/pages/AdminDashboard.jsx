@@ -111,8 +111,8 @@ const AdminDashboard = ({ user, logout, settings }) => {
               <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer" data-testid="manage-orders">
                 <CardContent className="p-8 text-center">
                   <ShoppingBag className="mx-auto mb-4 text-white" size={48} />
-                  <h3 className="text-xl font-bold text-white mb-2">Jere Kòmand</h3>
-                  <p className="text-white/70">Gade ak jere kòmand kliyan yo</p>
+                  <h3 className="text-xl font-bold text-white mb-2">Manage Orders</h3>
+                  <p className="text-white/70">View and manage customer orders</p>
                 </CardContent>
               </Card>
             </Link>
