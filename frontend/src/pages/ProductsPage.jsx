@@ -73,7 +73,7 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
         {loading ? (
           <div className="text-center text-white text-xl">Chajman pwodwi yo...</div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="products-grid">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" data-testid="products-grid">
             {products.map((product) => (
               <Card key={product.id} className="product-card overflow-hidden bg-white/10 backdrop-blur-lg border-white/20 hover:border-white/40" data-testid={`product-card-${product.id}`}>
                 <div className="h-48 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
