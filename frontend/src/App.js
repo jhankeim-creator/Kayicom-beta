@@ -77,8 +77,16 @@ function App() {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
-    toast.success('Dekonekte avèk siksè');
+    const t = (key) => getTranslation(language, key);
+    toast.success(t('logoutSuccess'));
   };
+
+  const switchLanguage = (lang) => {
+    setLanguage(lang);
+    localStorage.setItem('language', lang);
+  };
+
+  const t = (key) => getTranslation(language, key);
 
   const addToCart = (product, quantity = 1) => {
     const existingItem = cart.find(item => item.product.id === product.id);
