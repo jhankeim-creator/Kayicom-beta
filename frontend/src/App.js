@@ -72,6 +72,7 @@ function App() {
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+    return userData; // Return for redirect logic
   };
 
   const logout = () => {
