@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Gift, Gamepad2, Tv, Wrench, ArrowRight, Zap, Shield, MessageCircle, DollarSign } from 'lucide-react';
+import { Gift, Gamepad2, Tv, Wrench, ArrowRight, Zap, Shield, MessageCircle, DollarSign, Star, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 const NewHomePage = ({ user, logout, cart, settings }) => {
@@ -20,7 +20,7 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
   const loadFeaturedProducts = async () => {
     try {
       const response = await axiosInstance.get('/products');
-      setFeaturedProducts(response.data.slice(0, 6));
+      setFeaturedProducts(response.data.slice(0, 8));
     } catch (error) {
       console.error('Error loading products:', error);
       toast.error('Error loading products');
@@ -35,36 +35,29 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
       icon: Gift, 
       path: '/products/giftcard', 
       gradient: 'from-pink-500 to-rose-500',
-      description: t('giftCardsDesc')
+      bgImage: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400'
     },
     { 
       name: t('gameTopup'), 
       icon: Gamepad2, 
       path: '/products/topup', 
       gradient: 'from-cyan-500 to-blue-500',
-      description: t('gameTopupDesc')
+      bgImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400'
     },
     { 
       name: t('subscriptions'), 
       icon: Tv, 
       path: '/products/subscription', 
       gradient: 'from-purple-500 to-indigo-500',
-      description: t('subscriptionsDesc')
+      bgImage: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=400'
     },
     { 
       name: t('services'), 
       icon: Wrench, 
       path: '/products/service', 
       gradient: 'from-green-500 to-emerald-500',
-      description: t('servicesDesc')
+      bgImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400'
     },
-  ];
-
-  const features = [
-    { icon: Zap, title: t('instantDelivery'), gradient: 'from-yellow-500 to-orange-500' },
-    { icon: Shield, title: t('securePayment'), gradient: 'from-green-500 to-emerald-500' },
-    { icon: MessageCircle, title: t('support247'), gradient: 'from-blue-500 to-cyan-500' },
-    { icon: DollarSign, title: t('competitivePrice'), gradient: 'from-purple-500 to-pink-500' },
   ];
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -73,78 +66,94 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
     <div className="min-h-screen gradient-bg">
       <Navbar user={user} logout={logout} cartItemCount={cartItemCount} settings={settings} />
 
-      {/* Hero Section */}
-      <div className="relative container mx-auto px-4 py-20 lg:py-32" data-testid="hero-section">
-        <div className="text-center max-w-4xl mx-auto relative z-10">
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-            {t('heroTitle').split('#1').map((part, i) => 
-              i === 0 ? (
-                <span key={i}>{part}<span className="gradient-text">#1</span></span>
-              ) : (
-                <span key={i}>{part}</span>
-              )
-            )}
-          </h1>
-          <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto">
-            {t('heroSubtitle')}
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/products">
-              <Button size="lg" className="gradient-button text-white px-8 py-6 text-lg" data-testid="browse-products-btn">
-                {t('exploreProducts')} <ArrowRight className="ml-2" size={20} />
-              </Button>
-            </Link>
-            {!user && (
-              <Link to="/register">
-                <Button size="lg" variant="outline" className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 px-8 py-6 text-lg" data-testid="register-btn">
-                  {t('getStarted')}
+      {/* Hero Section with Background */}
+      <div className="relative overflow-hidden" data-testid="hero-section">
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10" />
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'url(https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: '0.05'
+        }} />
+        
+        <div className="relative container mx-auto px-4 py-20 lg:py-32">
+          <div className="max-w-5xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full px-6 py-2 mb-6">
+              <Star className="text-yellow-400" size={20} fill="currentColor" />
+              <span className="text-cyan-400 font-semibold">Trusted by 100,000+ Gamers</span>
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+              Caribbean's <span className="gradient-text">#1 Digital</span><br />Marketplace
+            </h1>
+            <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto">
+              {t('heroSubtitle')}
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/products">
+                <Button size="lg" className="gradient-button text-white px-8 py-6 text-lg" data-testid="browse-products-btn">
+                  {t('exploreProducts')} <ArrowRight className="ml-2" size={20} />
                 </Button>
               </Link>
-            )}
+              {!user && (
+                <Link to="/register">
+                  <Button size="lg" className="bg-gray-800 border border-cyan-500/30 text-cyan-400 hover:bg-gray-800/80 px-8 py-6 text-lg" data-testid="register-btn">
+                    {t('getStarted')}
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div key={index} className="text-center" data-testid={`feature-${index}`}>
-                <div className={`feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-gradient-to-br ${feature.gradient}`}>
-                  <Icon size={32} className="text-white" />
-                </div>
-                <h3 className="text-base md:text-lg font-semibold text-white">{feature.title}</h3>
-              </div>
-            );
-          })}
+      {/* Trust Badges */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="glass-effect rounded-2xl p-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold gradient-text mb-1">24/7</div>
+              <div className="text-gray-400 text-sm">Support</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold gradient-text mb-1">100K+</div>
+              <div className="text-gray-400 text-sm">Happy Customers</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold gradient-text mb-1">&lt;5min</div>
+              <div className="text-gray-400 text-sm">Avg Delivery</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold gradient-text mb-1">99.9%</div>
+              <div className="text-gray-400 text-sm">Success Rate</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* What We Offer Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">{t('whatWeOffer')}</h2>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">{t('offerSubtitle')}</p>
+      {/* Quick Categories */}
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">Browse by Category</h2>
+          <p className="text-gray-400">Find exactly what you need</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {categories.map((category) => {
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {categories.map((category, index) => {
             const Icon = category.icon;
             return (
               <Link to={category.path} key={category.name}>
-                <Card className="category-card bg-gray-900/50 backdrop-blur-lg overflow-hidden group" data-testid={`category-${category.name.toLowerCase().replace(' ', '-')}`}>
-                  <CardContent className="p-8">
-                    <div className="flex items-start gap-6">
-                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${category.gradient} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
-                        <Icon size={32} className="text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">{category.name}</h3>
-                        <p className="text-gray-400">{category.description}</p>
-                      </div>
-                    </div>
+                <Card className="category-card bg-gray-900/50 backdrop-blur-lg overflow-hidden group relative h-32" data-testid={`category-${category.name.toLowerCase().replace(' ', '-')}`}>
+                  <div className="absolute inset-0" style={{
+                    backgroundImage: `url(${category.bgImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    opacity: '0.1'
+                  }} />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient} opacity-20 group-hover:opacity-30 transition-opacity`} />
+                  <CardContent className="relative p-6 h-full flex flex-col items-center justify-center text-center">
+                    <Icon size={32} className="text-white mb-2" />
+                    <h3 className="text-base md:text-lg font-bold text-white">{category.name}</h3>
                   </CardContent>
                 </Card>
               </Link>
@@ -155,29 +164,46 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
 
       {/* Featured Products */}
       <div className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-center mb-12">{t('featuredProducts')}</h2>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">{t('featuredProducts')}</h2>
+            <p className="text-gray-400">Hot deals and instant delivery</p>
+          </div>
+          <Link to="/products">
+            <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+              View All <ArrowRight size={16} className="ml-2" />
+            </Button>
+          </Link>
+        </div>
+        
         {loading ? (
-          <div className="text-center text-gray-400 text-xl">{t('loading')}</div>
+          <div className="text-center text-gray-400 text-xl py-12">{t('loading')}</div>
         ) : featuredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {featuredProducts.map((product) => (
               <Link to={`/product/${product.id}`} key={product.id}>
                 <Card className="product-card overflow-hidden" data-testid={`product-card-${product.id}`}>
-                  <div className="h-48 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative overflow-hidden">
+                  <div className="h-40 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative overflow-hidden">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                     ) : (
-                      <Gift className="text-gray-600" size={64} />
+                      <Gift className="text-gray-600" size={48} />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent" />
+                    {product.stock_available && (
+                      <div className="absolute top-2 right-2">
+                        <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                          ✓ In Stock
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <CardContent className="p-6 bg-gray-900/50">
-                    <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{product.name}</h3>
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{product.description}</p>
+                  <CardContent className="p-4 bg-gray-900/50">
+                    <h3 className="text-sm md:text-base font-bold text-white mb-2 line-clamp-2">{product.name}</h3>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold gradient-text">${product.price}</span>
-                      <Button size="sm" className="gradient-button text-white" data-testid={`buy-btn-${product.id}`}>
-                        {t('buyNow')}
+                      <span className="text-xl font-bold gradient-text">${product.price}</span>
+                      <Button size="sm" className="gradient-button text-white text-xs" data-testid={`buy-btn-${product.id}`}>
+                        Buy Now
                       </Button>
                     </div>
                   </CardContent>
@@ -186,14 +212,102 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
             ))}
           </div>
         ) : (
-          <div className="text-center text-gray-400 text-xl">No products available</div>
+          <div className="text-center text-gray-400 text-xl py-12">No products available</div>
         )}
       </div>
 
-      {/* Ready to Start CTA */}
-      <div className="container mx-auto px-4 py-20">
+      {/* What We Offer Section - Moved Down */}
+      <div className="bg-gray-900/30 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t('whatWeOffer')}</h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">{t('offerSubtitle')}</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            <Card className="bg-gray-900/50 backdrop-blur-lg border-white/5 overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0">
+                    <Gift size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">{t('internationalGiftCards')}</h3>
+                    <p className="text-gray-400 text-sm">{t('giftCardsDesc')}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gray-900/50 backdrop-blur-lg border-white/5 overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+                    <Gamepad2 size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">{t('automaticGameTopup')}</h3>
+                    <p className="text-gray-400 text-sm">{t('gameTopupDesc')}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gray-900/50 backdrop-blur-lg border-white/5 overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                    <Tv size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">{t('premiumSubscriptions')}</h3>
+                    <p className="text-gray-400 text-sm">{t('subscriptionsDesc')}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gray-900/50 backdrop-blur-lg border-white/5 overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <Wrench size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">{t('digitalServices')}</h3>
+                    <p className="text-gray-400 text-sm">{t('servicesDesc')}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Trustpilot Section */}
+      <div className="container mx-auto px-4 py-16">
         <Card className="glass-effect border-cyan-500/30 overflow-hidden">
-          <CardContent className="p-12 text-center">
+          <CardContent className="p-8 md:p-12 text-center">
+            <div className="flex justify-center mb-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} size={32} className="text-yellow-400 fill-yellow-400" />
+              ))}
+            </div>
+            <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">Rated Excellent on Trustpilot</h3>
+            <p className="text-gray-400 mb-4">4.8 out of 5 based on 50,000+ reviews</p>
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+              <TrendingUp size={16} className="text-green-400" />
+              <span>Trusted by customers worldwide</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* CTA Section */}
+      <div className="container mx-auto px-4 py-12 mb-12">
+        <Card className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-purple-500/20" />
+          <CardContent className="relative p-12 text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">{t('readyToStart')}</h2>
             <Link to="/products">
               <Button size="lg" className="gradient-button text-white px-12 py-6 text-lg">
