@@ -70,15 +70,15 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
       <div className="relative overflow-hidden" data-testid="hero-section">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10" />
         {/* Gaming Hero Background */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+        <div className="absolute inset-0 flex items-center justify-center opacity-50">
           <img 
             src="/assets/gaming-hero.png" 
             alt="Gaming Banner" 
             className="w-full h-full object-cover"
-            style={{filter: 'blur(2px)'}}
+            style={{filter: 'blur(1px)'}}
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/40 to-transparent" />
         
         <div className="relative container mx-auto px-4 py-20 lg:py-32">
           <div className="max-w-5xl mx-auto text-center">
