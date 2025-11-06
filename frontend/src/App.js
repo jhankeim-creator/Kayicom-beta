@@ -104,7 +104,7 @@ function App() {
     
     setCart(newCart);
     localStorage.setItem('cart', JSON.stringify(newCart));
-    toast.success('Pwodwi ajoute nan panye');
+    toast.success(t('productAdded'));
   };
 
   const removeFromCart = (productId) => {
