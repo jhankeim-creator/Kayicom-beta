@@ -190,7 +190,7 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
           {/* Order Summary */}
           <Card className="glass-effect border-white/20" data-testid="checkout-summary">
             <CardContent className="p-6">
-              <h2 className="text-2xl font-bold text-white mb-6">Rezime Kòmand</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">Order Summary</h2>
               
               <div className="space-y-3 mb-6">
                 {cart.map((item) => (
