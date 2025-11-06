@@ -48,7 +48,7 @@ const AdminDashboard = ({ user, logout, settings }) => {
             <Link to="/admin/settings">
               <Button className="bg-white text-purple-600 hover:bg-gray-100" data-testid="settings-link">
                 <Settings className="mr-2" size={20} />
-                Paramèt
+                Settings
               </Button>
             </Link>
           </div>
