@@ -28,10 +28,14 @@ export const axiosInstance = axios.create({
   baseURL: API,
 });
 
+// Create language context
+export const LanguageContext = createContext();
+
 function App() {
   const [user, setUser] = useState(null);
   const [cart, setCart] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [language, setLanguage] = useState('en'); // Default to English
 
   useEffect(() => {
     // Load user from localStorage
