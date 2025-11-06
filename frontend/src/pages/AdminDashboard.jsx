@@ -1,0 +1,138 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { axiosInstance } from '../App';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Package, ShoppingBag, Users, DollarSign, Settings, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
+const AdminDashboard = ({ user, logout, settings }) => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const response = await axiosInstance.get('/stats/dashboard');
+      setStats(response.data);
+    } catch (error) {      console.error('Error loading stats:', error);
+      toast.error('Erè nan chajman estatistik yo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statCards = [
+    { title: 'Total Kòmand', value: stats?.total_orders || 0, icon: ShoppingBag, color: 'from-blue-500 to-cyan-500', testId: 'stat-orders' },
+    { title: 'Total Pwodwi', value: stats?.total_products || 0, icon: Package, color: 'from-purple-500 to-indigo-500', testId: 'stat-products' },
+    { title: 'Total Kliyan', value: stats?.total_customers || 0, icon: Users, color: 'from-green-500 to-emerald-500', testId: 'stat-customers' },
+    { title: 'Revèni Total', value: `$${stats?.total_revenue?.toFixed(2) || '0.00'}`, icon: DollarSign, color: 'from-yellow-500 to-orange-500', testId: 'stat-revenue' },
+  ];
+
+  return (
+    <div className="min-h-screen gradient-bg">
+      <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
+
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2" data-testid="admin-title">Admin Panel</h1>
+              <p className="text-white/80 text-lg">Jere sit ou a</p>
+            </div>
+            <Link to="/admin/settings">
+              <Button className="bg-white text-purple-600 hover:bg-gray-100" data-testid="settings-link">
+                <Settings className="mr-2" size={20} />
+                Paramèt
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stats Grid */}
+          {loading ? (
+            <div className="text-center text-white text-xl py-12">Chajman...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              {statCards.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <Card key={stat.title} className={`overflow-hidden bg-gradient-to-br ${stat.color}`} data-testid={stat.testId}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <Icon className="text-white" size={32} />
+                      </div>
+                      <p className="text-white/90 text-sm mb-1">{stat.title}</p>
+                      <p className="text-3xl font-bold text-white">{stat.value}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Pending Payments Alert */}
+          {stats && stats.pending_payments > 0 && (
+            <Card className="glass-effect border-yellow-400/30 mb-8" data-testid="pending-alert">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <AlertCircle className="text-yellow-400" size={32} />
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-white mb-1">Peman an Atant</h3>
+                    <p className="text-white/80">Ou gen {stats.pending_payments} peman ki bezwen revizyon</p>
+                  </div>
+                  <Link to="/admin/orders">
+                    <Button className="bg-yellow-400 text-gray-900 hover:bg-yellow-300">
+                      Revize
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Link to="/admin/products">
+              <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer" data-testid="manage-products">
+                <CardContent className="p-8 text-center">
+                  <Package className="mx-auto mb-4 text-white" size={48} />
+                  <h3 className="text-xl font-bold text-white mb-2">Jere Pwodwi</h3>
+                  <p className="text-white/70">Ajoute, modifye oswa efase pwodwi</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link to="/admin/orders">
+              <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer" data-testid="manage-orders">
+                <CardContent className="p-8 text-center">
+                  <ShoppingBag className="mx-auto mb-4 text-white" size={48} />
+                  <h3 className="text-xl font-bold text-white mb-2">Jere Kòmand</h3>
+                  <p className="text-white/70">Gade ak jere kòmand kliyan yo</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link to="/admin/settings">
+              <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer" data-testid="site-settings">
+                <CardContent className="p-8 text-center">
+                  <Settings className="mx-auto mb-4 text-white" size={48} />
+                  <h3 className="text-xl font-bold text-white mb-2">Paramèt Sit</h3>
+                  <p className="text-white/70">Konfigire API keys ak customization</p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <Footer settings={settings} />
+    </div>
+  );
+};
+
+export default AdminDashboard;
