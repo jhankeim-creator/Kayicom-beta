@@ -78,7 +78,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                     </div>
 
                     <div>
-                      <Label htmlFor="support_email" className="text-white">Email Sipò</Label>
+                      <Label htmlFor="support_email" className="text-white">Support Email</Label>
                       <Input
                         id="support_email"
                         type="email"
