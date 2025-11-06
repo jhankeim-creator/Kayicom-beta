@@ -97,25 +97,80 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
               <h2 className="text-2xl font-bold text-white mb-6">Chwazi Metòd Peman</h2>
               
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-4 rounded-lg glass-effect cursor-pointer" data-testid="payment-crypto">
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-crypto">
                     <RadioGroupItem value="crypto_plisio" id="crypto" />
                     <Label htmlFor="crypto" className="flex items-center space-x-3 cursor-pointer flex-1">
-                      <Wallet className="text-white" size={24} />
+                      <Wallet className="text-cyan-400" size={20} />
                       <div>
-                        <div className="text-white font-semibold">Cryptocurrency (Otomatik)</div>
-                        <div className="text-white/70 text-sm">Bitcoin, Ethereum, ak plis</div>
+                        <div className="text-white font-semibold text-sm">Cryptocurrency (Automatic)</div>
+                        <div className="text-white/70 text-xs">Bitcoin, Ethereum, USDT</div>
                       </div>
                     </Label>
                   </div>
 
-                  <div className="flex items-center space-x-3 p-4 rounded-lg glass-effect cursor-pointer" data-testid="payment-manual">
-                    <RadioGroupItem value="manual" id="manual" />
-                    <Label htmlFor="manual" className="flex items-center space-x-3 cursor-pointer flex-1">
-                      <CreditCard className="text-white" size={24} />
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-paypal">
+                    <RadioGroupItem value="paypal" id="paypal" />
+                    <Label htmlFor="paypal" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-blue-400" size={20} />
                       <div>
-                        <div className="text-white font-semibold">Peman Manyel</div>
-                        <div className="text-white/70 text-sm">Bank transfer, lòt metòd (bezwen prev)</div>
+                        <div className="text-white font-semibold text-sm">PayPal</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-skrill">
+                    <RadioGroupItem value="skrill" id="skrill" />
+                    <Label htmlFor="skrill" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-purple-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">Skrill</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-moncash">
+                    <RadioGroupItem value="moncash" id="moncash" />
+                    <Label htmlFor="moncash" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-green-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">MonCash</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-binance">
+                    <RadioGroupItem value="binance_pay" id="binance" />
+                    <Label htmlFor="binance" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <Wallet className="text-yellow-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">Binance Pay</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-zelle">
+                    <RadioGroupItem value="zelle" id="zelle" />
+                    <Label htmlFor="zelle" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-indigo-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">Zelle</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-cashapp">
+                    <RadioGroupItem value="cashapp" id="cashapp" />
+                    <Label htmlFor="cashapp" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-green-500" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">Cash App</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
                       </div>
                     </Label>
                   </div>
