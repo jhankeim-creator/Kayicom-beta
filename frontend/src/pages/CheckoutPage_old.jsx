@@ -8,27 +8,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { CreditCard, Wallet, Gamepad2 } from 'lucide-react';
+import { CreditCard, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('crypto_plisio');
   const [loading, setLoading] = useState(false);
-  const [playerIds, setPlayerIds] = useState({});
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const total = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-
-  // Check if any item needs player ID
-  const needsPlayerIds = cart.some(item => item.product.requires_player_id);
-
-  const handlePlayerIdChange = (productId, value) => {
-    setPlayerIds(prev => ({
-      ...prev,
-      [productId]: value
-    }));
-  };
 
   const handleCheckout = async () => {
     if (!user) {
@@ -42,14 +31,6 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
       return;
     }
 
-    // Validate player IDs for products that require them
-    for (const item of cart) {
-      if (item.product.requires_player_id && !playerIds[item.product.id]) {
-        toast.error(`Please enter Player ID for ${item.product.name}`);
-        return;
-      }
-    }
-
     setLoading(true);
 
     try {
@@ -57,8 +38,7 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
         product_id: item.product.id,
         product_name: item.product.name,
         quantity: item.quantity,
-        price: item.product.price,
-        player_id: playerIds[item.product.id] || null
+        price: item.product.price
       }));
 
       const response = await axiosInstance.post(`/orders?user_id=${user.user_id}&user_email=${user.email}`, {
@@ -72,9 +52,12 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
       clearCart();
 
       if (paymentMethod === 'crypto_plisio' && order.plisio_invoice_id) {
+        // Redirect to Plisio payment
         toast.success('Redirecting to payment...');
+        // In production, redirect to Plisio payment page
         navigate(`/track/${order.id}`);
       } else {
+        // Manual payment - redirect to order tracking
         toast.success('Order created! Please submit your payment proof.');
         navigate(`/track/${order.id}`);
       }
@@ -105,47 +88,92 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
       <Navbar user={user} logout={logout} cartItemCount={cartItemCount} settings={settings} />
 
       <div className="container mx-auto px-4 py-12">
-        <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-12" data-testid="checkout-title">
-          Checkout
-        </h1>
+        <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-12" data-testid="checkout-title">Peman</h1>
 
-        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {/* Payment Method */}
-          <Card className="glass-effect border-white/20" data-testid="payment-method-card">
+          <Card className="glass-effect border-white/20" data-testid="payment-methods">
             <CardContent className="p-6">
-              <h2 className="text-2xl font-bold text-white mb-6">Payment Method</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">Chwazi Metòd Peman</h2>
               
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                <div className="space-y-4">
-                  {/* Crypto Payment */}
-                  <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
-                    paymentMethod === 'crypto_plisio' ? 'border-cyan-400 bg-cyan-400/10' : 'border-white/20 hover:border-white/40'
-                  }`}>
-                    <RadioGroupItem value="crypto_plisio" className="mt-1" />
-                    <div className="ml-4">
-                      <div className="flex items-center gap-2">
-                        <Wallet className="text-cyan-400" size={20} />
-                        <span className="text-white font-semibold">Cryptocurrency (Automatic)</span>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-crypto">
+                    <RadioGroupItem value="crypto_plisio" id="crypto" />
+                    <Label htmlFor="crypto" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <Wallet className="text-cyan-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">Cryptocurrency (Automatic)</div>
+                        <div className="text-white/70 text-xs">Bitcoin, Ethereum, USDT</div>
                       </div>
-                      <p className="text-white/70 text-sm mt-1">Bitcoin, Ethereum, USDT - Instant delivery</p>
-                    </div>
-                  </label>
+                    </Label>
+                  </div>
 
-                  {/* Manual Payment Methods */}
-                  {['paypal', 'skrill', 'moncash', 'binance_pay', 'zelle', 'cashapp'].map(method => (
-                    <label key={method} className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
-                      paymentMethod === method ? 'border-pink-400 bg-pink-400/10' : 'border-white/20 hover:border-white/40'
-                    }`}>
-                      <RadioGroupItem value={method} className="mt-1" />
-                      <div className="ml-4">
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="text-pink-400" size={20} />
-                          <span className="text-white font-semibold capitalize">{method.replace('_', ' ')}</span>
-                        </div>
-                        <p className="text-white/70 text-sm mt-1">Manual verification - Proof required</p>
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-paypal">
+                    <RadioGroupItem value="paypal" id="paypal" />
+                    <Label htmlFor="paypal" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-blue-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">PayPal</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
                       </div>
-                    </label>
-                  ))}
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-skrill">
+                    <RadioGroupItem value="skrill" id="skrill" />
+                    <Label htmlFor="skrill" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-purple-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">Skrill</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-moncash">
+                    <RadioGroupItem value="moncash" id="moncash" />
+                    <Label htmlFor="moncash" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-green-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">MonCash</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-binance">
+                    <RadioGroupItem value="binance_pay" id="binance" />
+                    <Label htmlFor="binance" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <Wallet className="text-yellow-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">Binance Pay</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-zelle">
+                    <RadioGroupItem value="zelle" id="zelle" />
+                    <Label htmlFor="zelle" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-indigo-400" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">Zelle</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg glass-effect cursor-pointer" data-testid="payment-cashapp">
+                    <RadioGroupItem value="cashapp" id="cashapp" />
+                    <Label htmlFor="cashapp" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <CreditCard className="text-green-500" size={20} />
+                      <div>
+                        <div className="text-white font-semibold text-sm">Cash App</div>
+                        <div className="text-white/70 text-xs">Manual verification required</div>
+                      </div>
+                    </Label>
+                  </div>
                 </div>
               </RadioGroup>
 
@@ -154,34 +182,6 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
                   <p className="text-yellow-200 text-sm">
                     <strong>Note:</strong> After placing your order, you will need to submit your payment proof and transaction ID on the order tracking page.
                   </p>
-                </div>
-              )}
-
-              {/* Player ID Section */}
-              {needsPlayerIds && (
-                <div className="mt-6 border-t border-white/20 pt-6">
-                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Gamepad2 className="text-cyan-400" size={24} />
-                    Player IDs Required
-                  </h3>
-                  <div className="space-y-4">
-                    {cart.filter(item => item.product.requires_player_id).map(item => (
-                      <div key={item.product.id}>
-                        <Label htmlFor={`player-id-${item.product.id}`} className="text-white">
-                          Player ID for {item.product.name}
-                        </Label>
-                        <Input
-                          id={`player-id-${item.product.id}`}
-                          value={playerIds[item.product.id] || ''}
-                          onChange={(e) => handlePlayerIdChange(item.product.id, e.target.value)}
-                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50 mt-2"
-                          placeholder="Enter your Player ID / User ID"
-                          required
-                          data-testid={`player-id-${item.product.id}`}
-                        />
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </CardContent>
