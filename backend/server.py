@@ -63,6 +63,9 @@ class Product(BaseModel):
     delivery_type: str = "automatic"  # automatic or manual
     subscription_duration_months: Optional[int] = None  # For subscriptions: 2, 6, 12, 24 months
     subscription_auto_check: bool = False  # Auto-check if subscription is still valid
+    variant_name: Optional[str] = None  # For variants like "100 Diamonds", "500 UC", etc
+    parent_product_id: Optional[str] = None  # Link to parent product for variants
+    requires_player_id: bool = False  # For topup products that need player ID
     metadata: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
