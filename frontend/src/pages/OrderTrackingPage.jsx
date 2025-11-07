@@ -3,12 +3,12 @@ import { useParams } from 'react-router-dom';
 import { axiosInstance } from '../App';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, Clock, Package, Truck, XCircle, Upload } from 'lucide-react';
+import { Package, Clock, CheckCircle, AlertCircle, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 const OrderTrackingPage = ({ user, logout, settings }) => {
@@ -20,7 +20,9 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadOrder();
+    if (orderId) {
+      loadOrder();
+    }
   }, [orderId]);
 
   const loadOrder = async () => {
@@ -63,36 +65,30 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="text-yellow-400" size={24} />;
-      case 'processing':
-        return <Truck className="text-blue-400" size={24} />;
-      case 'completed':
-        return <CheckCircle className="text-green-400" size={24} />;
-      case 'cancelled':
-        return <XCircle className="text-red-400" size={24} />;
-      default:
-        return <Package className="text-gray-400" size={24} />;
+    switch(status) {
+      case 'pending': return <Clock className="text-yellow-400" size={24} />;
+      case 'processing': return <Clock className="text-blue-400" size={24} />;
+      case 'completed': return <CheckCircle className="text-green-400" size={24} />;
+      case 'cancelled': return <AlertCircle className="text-red-400" size={24} />;
+      default: return <Package className="text-gray-400" size={24} />;
     }
   };
 
   const getPaymentStatusBadge = (status) => {
     const badges = {
-      'pending': 'bg-yellow-400/20 text-yellow-400',
-      'pending_verification': 'bg-blue-400/20 text-blue-400',
-      'paid': 'bg-green-400/20 text-green-400',
-      'failed': 'bg-red-400/20 text-red-400',
-      'cancelled': 'bg-gray-400/20 text-gray-400'
+      'pending': 'bg-yellow-500/20 text-yellow-400',
+      'pending_verification': 'bg-blue-500/20 text-blue-400',
+      'paid': 'bg-green-500/20 text-green-400',
+      'failed': 'bg-red-500/20 text-red-400'
     };
-    return badges[status] || badges['pending'];
+    return badges[status] || 'bg-gray-500/20 text-gray-400';
   };
 
   if (loading) {
     return (
       <div className="min-h-screen gradient-bg">
         <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
-        <div className="container mx-auto px-4 py-20 text-center text-white text-xl">Chajman...</div>
+        <div className="container mx-auto px-4 py-20 text-center text-white text-xl">Loading...</div>
       </div>
     );
   }
@@ -122,7 +118,7 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-white">Order #{order.id.slice(0, 8)}</h2>
-                  <p className="text-white/70">Date: {new Date(order.created_at).toLocaleDateString('fr-FR')}</p>
+                  <p className="text-white/70">Date: {new Date(order.created_at).toLocaleDateString('en-US')}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(order.order_status)}
@@ -132,14 +128,14 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80">Estati Peman:</span>
+                  <span className="text-white/80">Payment Status:</span>
                   <span className={`px-3 py-1 rounded text-sm font-semibold ${getPaymentStatusBadge(order.payment_status)}`} data-testid="payment-status">
                     {order.payment_status}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80">Metòd Peman:</span>
-                  <span className="text-white font-semibold">{order.payment_method === 'crypto_plisio' ? 'Cryptocurrency' : 'Manyel'}</span>
+                  <span className="text-white/80">Payment Method:</span>
+                  <span className="text-white font-semibold">{order.payment_method === 'crypto_plisio' ? 'Cryptocurrency' : order.payment_method}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-white/80">Total:</span>
@@ -149,16 +145,43 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
             </CardContent>
           </Card>
 
+          {/* Delivery Information - Shows when order is completed */}
+          {order.delivery_info && order.delivery_info.details && (
+            <Card className="glass-effect border-green-500/30 border-2" data-testid="delivery-info">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <CheckCircle className="text-green-400" size={28} />
+                  <h3 className="text-2xl font-bold text-green-400">Order Delivered!</h3>
+                </div>
+                <p className="text-white/70 text-sm mb-4">
+                  Delivered on: {new Date(order.delivery_info.delivered_at).toLocaleString('en-US')}
+                </p>
+                <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                  <Label className="text-white font-semibold mb-2 block">Your Delivery Details:</Label>
+                  <pre className="text-green-300 whitespace-pre-wrap break-words font-mono text-sm">
+                    {order.delivery_info.details}
+                  </pre>
+                </div>
+                <p className="text-white/60 text-xs mt-3">
+                  💡 Please save this information. Contact support if you have any issues.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Order Items */}
           <Card className="glass-effect border-white/20" data-testid="order-items">
             <CardContent className="p-6">
-              <h3 className="text-xl font-bold text-white mb-4">Atik yo</h3>
+              <h3 className="text-xl font-bold text-white mb-4">Order Items</h3>
               <div className="space-y-3">
                 {order.items.map((item, index) => (
                   <div key={index} className="flex justify-between items-center text-white" data-testid={`order-item-${index}`}>
                     <div>
                       <p className="font-semibold">{item.product_name}</p>
-                      <p className="text-white/70 text-sm">Kantite: {item.quantity}</p>
+                      <p className="text-white/70 text-sm">Quantity: {item.quantity}</p>
+                      {item.player_id && (
+                        <p className="text-green-400 text-sm">Player ID: {item.player_id}</p>
+                      )}
                     </div>
                     <p className="font-bold">${(item.price * item.quantity).toFixed(2)}</p>
                   </div>
@@ -168,62 +191,68 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
           </Card>
 
           {/* Manual Payment Proof Upload */}
-          {order.payment_method === 'manual' && order.payment_status === 'pending' && (
+          {['paypal', 'skrill', 'moncash', 'binance_pay', 'zelle', 'cashapp'].includes(order.payment_method) && order.payment_status === 'pending' && (
             <Card className="glass-effect border-white/20" data-testid="payment-proof-form">
               <CardContent className="p-6">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center">
                   <Upload className="mr-2" size={24} />
-                  Soumèt Prev Peman
+                  Submit Payment Proof
                 </h3>
                 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="transactionId" className="text-white">ID Tranzaksyon</Label>
+                    <Label htmlFor="transactionId" className="text-white">Transaction ID</Label>
                     <Input
                       id="transactionId"
                       value={transactionId}
                       onChange={(e) => setTransactionId(e.target.value)}
                       className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                      placeholder="Antre ID tranzaksyon ou"
+                      placeholder="Enter your transaction ID"
                       data-testid="transaction-id-input"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="proofUrl" className="text-white">Lyen Prev (Screenshot/Imaj)</Label>
+                    <Label htmlFor="proofUrl" className="text-white">Proof Link (Screenshot/Image)</Label>
                     <Textarea
                       id="proofUrl"
                       value={proofUrl}
                       onChange={(e) => setProofUrl(e.target.value)}
                       className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                      placeholder="Kole lyen imaj prev peman ou (imgur, etc.)"
+                      placeholder="Paste your payment proof image link (imgur, etc.)"
                       rows={3}
                       data-testid="proof-url-input"
                     />
                   </div>
 
-                  <Button
+                  <Button 
                     onClick={handleSubmitProof}
                     disabled={submitting}
                     className="w-full bg-white text-purple-600 hover:bg-gray-100"
                     data-testid="submit-proof-btn"
                   >
-                    {submitting ? 'Soumsyon...' : 'Soumèt Prev Peman'}
+                    {submitting ? 'Submitting...' : 'Submit Proof'}
                   </Button>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Payment Proof Submitted */}
+          {/* Payment Proof Display */}
           {order.payment_proof_url && (
-            <Card className="glass-effect border-white/20" data-testid="submitted-proof">
+            <Card className="glass-effect border-white/20">
               <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-white mb-4">Prev Peman Soumèt</h3>
-                <div className="space-y-2 text-white">
-                  <p><strong>ID Tranzaksyon:</strong> {order.transaction_id}</p>
-                  <p><strong>Prev:</strong> <a href={order.payment_proof_url} target="_blank" rel="noopener noreferrer" className="underline">Gade prev</a></p>
-                  <p className="text-white/70 text-sm mt-2">Ekip nou ap revize prev ou. Ou ap resevwa notifikasyon byento.</p>
+                <h3 className="text-xl font-bold text-white mb-4">Payment Proof Submitted</h3>
+                <div className="space-y-2">
+                  <p className="text-white/70">Transaction ID: <span className="text-white font-semibold">{order.transaction_id}</span></p>
+                  <a 
+                    href={order.payment_proof_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:underline"
+                  >
+                    View Payment Proof
+                  </a>
                 </div>
               </CardContent>
             </Card>
