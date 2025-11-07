@@ -116,7 +116,7 @@ const CartPage = ({ user, logout, cart, removeFromCart, updateCartQuantity, sett
 
                   <Link to="/products" className="block mt-4">
                     <Button variant="outline" className="w-full border-white text-white hover:bg-white/10" data-testid="continue-shopping">
-                      Kontinye Achte
+                      Continue Shopping
                     </Button>
                   </Link>
                 </CardContent>
