@@ -107,6 +107,7 @@ class OrderItem(BaseModel):
     product_name: str
     quantity: int
     price: float
+    player_id: Optional[str] = None  # For topup products
 
 class Order(BaseModel):
     model_config = ConfigDict(extra="ignore")
