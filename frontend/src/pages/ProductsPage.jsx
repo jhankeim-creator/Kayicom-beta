@@ -26,18 +26,18 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
       setProducts(response.data);
     } catch (error) {
       console.error('Error loading products:', error);
-      toast.error('Erè nan chajman pwodwi yo');
+      toast.error('Error loading products');
     } finally {
       setLoading(false);
     }
   };
 
   const categories = [
-    { value: '', label: 'Tout' },
+    { value: '', label: 'All' },
     { value: 'giftcard', label: 'Gift Cards' },
-    { value: 'topup', label: 'Game Topup' },
-    { value: 'subscription', label: 'Abònman' },
-    { value: 'service', label: 'Sèvis' },
+    { value: 'topup', label: 'Game Top-Up' },
+    { value: 'subscription', label: 'Subscriptions' },
+    { value: 'service', label: 'Services' },
   ];
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -48,7 +48,7 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
 
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-8" data-testid="products-title">
-          Tout Pwodwi
+          All Products
         </h1>
 
         {/* Category Filter */}
@@ -71,7 +71,7 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="text-center text-white text-xl">Chajman pwodwi yo...</div>
+          <div className="text-center text-white text-xl">Loading products...</div>
         ) : products.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" data-testid="products-grid">
             {products.map((product) => (
@@ -89,26 +89,27 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-2xl font-bold text-white">${product.price}</span>
                     {product.stock_available ? (
-                      <span className="text-xs text-green-400 bg-green-400/20 px-2 py-1 rounded">Disponib</span>
+                      <span className="text-xs text-green-400 bg-green-400/20 px-2 py-1 rounded">Available</span>
                     ) : (
-                      <span className="text-xs text-red-400 bg-red-400/20 px-2 py-1 rounded">Epize</span>
+                      <span className="text-xs text-red-400 bg-red-400/20 px-2 py-1 rounded">Out of Stock</span>
                     )}
                   </div>
                   <div className="flex gap-2">
                     <Link to={`/product/${product.id}`} className="flex-1">
                       <Button size="sm" variant="outline" className="w-full border-white text-white hover:bg-white/10" data-testid={`view-btn-${product.id}`}>
-                        Detay
+                        Details
                       </Button>
                     </Link>
-                    <Button
-                      size="sm"
-                      className="flex-1 bg-white text-purple-600 hover:bg-gray-100"
-                      onClick={() => addToCart(product)}
-                      disabled={!product.stock_available}
-                      data-testid={`add-cart-btn-${product.id}`}
+                    <Button 
+                      size="sm" 
+                      className="bg-white text-purple-600 hover:bg-gray-100"
+                      onClick={() => {
+                        addToCart(product);
+                        toast.success('Product added to cart');
+                      }}
+                      data-testid={`add-to-cart-${product.id}`}
                     >
-                      <ShoppingCart size={16} className="mr-1" />
-                      Ajoute
+                      <ShoppingCart size={16} />
                     </Button>
                   </div>
                 </CardContent>
@@ -116,7 +117,10 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
             ))}
           </div>
         ) : (
-          <div className="text-center text-white text-xl" data-testid="no-products">Pa gen pwodwi nan kategori sa a</div>
+          <div className="text-center text-white/70 py-12" data-testid="no-products">
+            <Package className="mx-auto mb-4" size={64} />
+            <p>No products available in this category</p>
+          </div>
         )}
       </div>
 
