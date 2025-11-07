@@ -93,11 +93,11 @@ const CartPage = ({ user, logout, cart, removeFromCart, updateCartQuantity, sett
             <div className="lg:col-span-1">
               <Card className="glass-effect border-white/20 sticky top-24" data-testid="order-summary">
                 <CardContent className="p-6">
-                  <h2 className="text-2xl font-bold text-white mb-6">Rezime Kòmand</h2>
+                  <h2 className="text-2xl font-bold text-white mb-6">Order Summary</h2>
                   
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between text-white">
-                      <span>Subtotal ({cartItemCount} atik):</span>
+                      <span>Subtotal ({cartItemCount} items):</span>
                       <span className="font-semibold" data-testid="subtotal">${total.toFixed(2)}</span>
                     </div>
                     <div className="border-t border-white/20 pt-3">
@@ -110,7 +110,7 @@ const CartPage = ({ user, logout, cart, removeFromCart, updateCartQuantity, sett
 
                   <Link to="/checkout">
                     <Button className="w-full bg-white text-purple-600 hover:bg-gray-100 py-6 text-lg" data-testid="checkout-btn">
-                      Pase Kòmand
+                      Checkout
                     </Button>
                   </Link>
 
