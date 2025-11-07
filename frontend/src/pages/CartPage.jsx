@@ -14,15 +14,15 @@ const CartPage = ({ user, logout, cart, removeFromCart, updateCartQuantity, sett
       <Navbar user={user} logout={logout} cartItemCount={cartItemCount} settings={settings} />
 
       <div className="container mx-auto px-4 py-12">
-        <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-12" data-testid="cart-title">Panye Achte</h1>
+        <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-12" data-testid="cart-title">Shopping Cart</h1>
 
         {cart.length === 0 ? (
           <div className="text-center py-20" data-testid="empty-cart">
             <ShoppingBag className="mx-auto mb-6 text-white" size={80} />
-            <h2 className="text-2xl text-white mb-4">Panye ou vid</h2>
+            <h2 className="text-2xl text-white mb-4">Your cart is empty</h2>
             <Link to="/products">
               <Button className="bg-white text-purple-600 hover:bg-gray-100" data-testid="continue-shopping-btn">
-                Kontinye Achte
+                Continue Shopping
               </Button>
             </Link>
           </div>
