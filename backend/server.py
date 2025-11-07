@@ -80,6 +80,9 @@ class ProductCreate(BaseModel):
     delivery_type: str = "automatic"
     subscription_duration_months: Optional[int] = None
     subscription_auto_check: bool = False
+    variant_name: Optional[str] = None
+    parent_product_id: Optional[str] = None
+    requires_player_id: bool = False
     metadata: Optional[Dict[str, Any]] = None
 
 class ProductUpdate(BaseModel):
