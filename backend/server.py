@@ -96,6 +96,9 @@ class ProductUpdate(BaseModel):
     delivery_type: Optional[str] = None
     subscription_duration_months: Optional[int] = None
     subscription_auto_check: Optional[bool] = None
+    variant_name: Optional[str] = None
+    parent_product_id: Optional[str] = None
+    requires_player_id: Optional[bool] = None
     metadata: Optional[Dict[str, Any]] = None
 
 # Order Models
