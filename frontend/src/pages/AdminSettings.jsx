@@ -265,6 +265,178 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                     </div>
                   </TabsContent>
 
+
+                  {/* Payment Gateways Tab */}
+                  <TabsContent value="payments" className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-4">Payment Gateway Configuration</h3>
+                      <p className="text-gray-400 mb-6">Configure payment methods, wallets, and instructions for customers.</p>
+                      
+                      {/* PayPal */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>💳</span> PayPal
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input type="checkbox" defaultChecked className="w-4 h-4" />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-white/70 text-sm">PayPal Email</Label>
+                            <Input
+                              placeholder="your@paypal.com"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Instructions for Customers</Label>
+                            <Textarea
+                              placeholder="Send payment to the email above with order ID in notes"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* AirTM */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>💸</span> AirTM
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input type="checkbox" defaultChecked className="w-4 h-4" />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-white/70 text-sm">AirTM Email/Username</Label>
+                            <Input
+                              placeholder="your@email.com"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Instructions</Label>
+                            <Textarea
+                              placeholder="Send via AirTM to the email above"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Skrill */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>💰</span> Skrill
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input type="checkbox" defaultChecked className="w-4 h-4" />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-white/70 text-sm">Skrill Email</Label>
+                            <Input
+                              placeholder="your@skrill.com"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Instructions</Label>
+                            <Textarea
+                              placeholder="Send to Skrill email above"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* BTC */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>₿</span> Bitcoin (BTC)
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input type="checkbox" defaultChecked className="w-4 h-4" />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-white/70 text-sm">BTC Wallet Address</Label>
+                            <Input
+                              placeholder="bc1q..."
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Instructions</Label>
+                            <Textarea
+                              placeholder="Send BTC to the address above"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* USDT */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>₮</span> USDT (Multiple Chains)
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input type="checkbox" defaultChecked className="w-4 h-4" />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-white/70 text-sm">BEP20 Wallet (Binance Smart Chain)</Label>
+                            <Input
+                              placeholder="0x..."
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">TRC20 Wallet (Tron)</Label>
+                            <Input
+                              placeholder="T..."
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">MATIC Wallet (Polygon)</Label>
+                            <Input
+                              placeholder="0x..."
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button 
+                        onClick={() => toast.success('Payment settings saved!')} 
+                        className="w-full bg-white text-purple-600 hover:bg-gray-100"
+                      >
+                        Save Payment Settings
+                      </Button>
+                    </div>
+                  </TabsContent>
+
                   <TabsContent value="email" className="space-y-4">
                     <div>
                       <Label className="text-white text-lg font-semibold mb-3 block">Send Bulk Email</Label>
