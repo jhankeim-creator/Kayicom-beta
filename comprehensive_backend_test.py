@@ -353,7 +353,7 @@ class KayiComBackendTester:
             if response.status_code == 200:
                 orders = response.json()
                 print(f"✅ Orders retrieved successfully. Count: {len(orders)}")
-                self.test_orders = orders
+                self.orders_data = orders
                 
                 if orders:
                     # Show sample order structure
