@@ -31,7 +31,12 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     gosplit_api_key: '',
     z2u_api_key: '',
     resend_api_key: '',
-    product_categories: []
+    product_categories: [],
+    payment_gateways: {
+      paypal: { enabled: true, email: '', instructions: '' },
+      airtm: { enabled: true, email: '', instructions: '' },
+      skrill: { enabled: true, email: '', instructions: '' }
+    }
   });
   const [newCategory, setNewCategory] = useState('');
   const [bulkEmail, setBulkEmail] = useState({
