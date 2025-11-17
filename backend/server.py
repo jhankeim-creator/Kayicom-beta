@@ -844,11 +844,46 @@ async def update_crypto_config(updates: Dict[str, Any]):
 
 @api_router.post("/crypto/buy")
 async def buy_crypto(request: CryptoBuyRequest, user_id: str, user_email: str):
-    """User buys USDT"""
+    """User buys USDT - Generate Plisio invoice automatically"""
     # Get config
     config = await db.crypto_config.find_one({"id": "crypto_config"})
     if not config:
         raise HTTPException(status_code=500, detail="Crypto config not found")
+    
+    # Get Plisio API key from settings
+    settings = await db.settings.find_one({"id": "site_settings"})
+    plisio_api_key = settings.get("plisio_api_key") if settings else None
+    
+    # If Plisio is configured, create invoice automatically
+    plisio_invoice = None
+    if plisio_api_key:
+        try:
+            from plisio_helper import PlisioHelper
+            plisio = PlisioHelper(plisio_api_key)
+            
+            # Map chain to Plisio currency
+            currency_map = {
+                "BEP20": "USDT_BSC",
+                "TRC20": "USDT_TRX", 
+                "MATIC": "USDT_POLYGON"
+            }
+            plisio_currency = currency_map.get(request.chain, "USDT_TRX")
+            
+            # Create Plisio invoice
+            invoice_response = await plisio.create_invoice(
+                amount=request.amount_usd,
+                currency=plisio_currency,
+                order_name=f"Buy {request.amount_usd} USD worth of USDT",
+                order_number=f"BUY-{str(uuid.uuid4())[:8]}",
+                email=user_email
+            )
+            
+            if invoice_response.get("success"):
+                plisio_invoice = invoice_response
+                # Use Plisio wallet address instead
+                request.wallet_address = invoice_response.get("wallet_address", request.wallet_address)
+        except Exception as e:
+            print(f"Plisio error (continuing without): {str(e)}")
     
     # Check limits
     if request.amount_usd < config['min_buy_usd'] or request.amount_usd > config['max_buy_usd']:
