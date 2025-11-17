@@ -21,7 +21,7 @@ const AdminDashboard = ({ user, logout, settings }) => {
       const response = await axiosInstance.get('/stats/dashboard');
       setStats(response.data);
     } catch (error) {      console.error('Error loading stats:', error);
-      toast.error('Erè nan chajman estatistik yo');
+      toast.error('Error loading stats');
     } finally {
       setLoading(false);
     }
