@@ -88,7 +88,7 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-              Caribbean's <span className="gradient-text">#1 Digital</span><br />Marketplace
+              World's Leading <span className="gradient-text">Digital</span><br />Marketplace
             </h1>
             <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto">
               {t('heroSubtitle')}
