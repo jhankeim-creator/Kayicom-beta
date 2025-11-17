@@ -331,7 +331,9 @@ async def login(credentials: LoginRequest):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    if not pwd_context.verify(credentials.password, user['password_hash']):
+    # Support both 'password' and 'password_hash' field names
+    password_field = 'password_hash' if 'password_hash' in user else 'password'
+    if not pwd_context.verify(credentials.password, user[password_field]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     return {
