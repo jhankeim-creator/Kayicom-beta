@@ -986,6 +986,15 @@ async def update_crypto_transaction_status(
     if update_data.tx_hash:
         updates['tx_hash'] = update_data.tx_hash
     
+    result = await db.crypto_transactions.update_one(
+        {"id": transaction_id},
+        {"$set": updates}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    
+    return {"message": "Transaction status updated"}
 
 
 # File Upload Endpoint
