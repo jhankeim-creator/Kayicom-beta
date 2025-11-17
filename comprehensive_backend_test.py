@@ -362,7 +362,7 @@ class KayiComBackendTester:
                 
                 # Test create order
                 print("\nTesting POST /api/orders...")
-                if self.test_products:
+                if self.products_data:
                     order_data = {
                         "items": [{
                             "product_id": self.test_products[0]['id'],
