@@ -380,7 +380,12 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <span>💰</span> Skrill
                           </h4>
                           <label className="flex items-center gap-2">
-                            <input type="checkbox" defaultChecked className="w-4 h-4" />
+                            <input 
+                              type="checkbox" 
+                              checked={formData.payment_gateways.skrill.enabled}
+                              onChange={(e) => handlePaymentGatewayChange('skrill', 'enabled', e.target.checked)}
+                              className="w-4 h-4" 
+                            />
                             <span className="text-white text-sm">Enabled</span>
                           </label>
                         </div>
@@ -389,6 +394,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Skrill Email</Label>
                             <Input
                               placeholder="your@skrill.com"
+                              value={formData.payment_gateways.skrill.email}
+                              onChange={(e) => handlePaymentGatewayChange('skrill', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
                           </div>
@@ -396,6 +403,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions</Label>
                             <Textarea
                               placeholder="Send to Skrill email above"
+                              value={formData.payment_gateways.skrill.instructions}
+                              onChange={(e) => handlePaymentGatewayChange('skrill', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
                             />
