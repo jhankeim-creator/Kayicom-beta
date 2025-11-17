@@ -319,7 +319,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Session management improvement"
+    - "Plisio integration testing completed"
   stuck_tasks: []
   test_all: false
   test_priority: "completed"
