@@ -365,10 +365,10 @@ class KayiComBackendTester:
                 if self.products_data:
                     order_data = {
                         "items": [{
-                            "product_id": self.test_products[0]['id'],
-                            "product_name": self.test_products[0]['name'],
+                            "product_id": self.products_data[0]['id'],
+                            "product_name": self.products_data[0]['name'],
                             "quantity": 1,
-                            "price": self.test_products[0]['price']
+                            "price": self.products_data[0]['price']
                         }],
                         "payment_method": "paypal"
                     }
