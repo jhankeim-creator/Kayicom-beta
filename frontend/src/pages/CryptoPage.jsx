@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -22,7 +21,8 @@ const CryptoPage = ({ user, logout, settings }) => {
   const [paymentMethod, setPaymentMethod] = useState('paypal');
   const [receivingInfo, setReceivingInfo] = useState('');
   const [transactionId, setTransactionId] = useState('');
-  const [paymentProof, setPaymentProof] = useState('');
+  const [paymentProofFile, setPaymentProofFile] = useState(null);
+  const [uploadingProof, setUploadingProof] = useState(false);
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState([]);
 
@@ -48,6 +48,26 @@ const CryptoPage = ({ user, logout, settings }) => {
       setTransactions(response.data);
     } catch (error) {
       console.error('Error loading transactions:', error);
+    }
+  };
+
+  const handleFileUpload = async (file) => {
+    if (!file) return null;
+    
+    setUploadingProof(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const response = await axiosInstance.post('/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setUploadingProof(false);
+      return response.data.url;
+    } catch (error) {
+      setUploadingProof(false);
+      toast.error('Error uploading file');
+      return null;
     }
   };
 
@@ -83,12 +103,25 @@ const CryptoPage = ({ user, logout, settings }) => {
       return;
     }
 
-    if (!transactionId || !paymentProof) {
-      toast.error('Please enter transaction ID and payment proof');
+    if (!transactionId) {
+      toast.error('Please enter transaction ID');
+      return;
+    }
+
+    if (!paymentProofFile) {
+      toast.error('Please upload payment proof');
       return;
     }
 
     setLoading(true);
+    
+    // Upload file first
+    const proofUrl = await handleFileUpload(paymentProofFile);
+    if (!proofUrl) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await axiosInstance.post('/crypto/buy', {
         chain,
@@ -96,13 +129,13 @@ const CryptoPage = ({ user, logout, settings }) => {
         wallet_address: walletAddress,
         payment_method: paymentMethod,
         transaction_id: transactionId,
-        payment_proof: paymentProof
+        payment_proof: proofUrl
       });
       toast.success('Buy order submitted! Admin will process your request.');
       setAmountUsd('');
       setWalletAddress('');
       setTransactionId('');
-      setPaymentProof('');
+      setPaymentProofFile(null);
       loadTransactions();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Error submitting buy order');
@@ -127,12 +160,25 @@ const CryptoPage = ({ user, logout, settings }) => {
       return;
     }
 
-    if (!transactionId || !paymentProof) {
-      toast.error('Please enter transaction ID and payment proof');
+    if (!transactionId) {
+      toast.error('Please enter transaction ID');
+      return;
+    }
+
+    if (!paymentProofFile) {
+      toast.error('Please upload payment proof');
       return;
     }
 
     setLoading(true);
+    
+    // Upload file first
+    const proofUrl = await handleFileUpload(paymentProofFile);
+    if (!proofUrl) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await axiosInstance.post('/crypto/sell', {
         chain,
@@ -140,13 +186,13 @@ const CryptoPage = ({ user, logout, settings }) => {
         payment_method: paymentMethod,
         receiving_info: receivingInfo,
         transaction_id: transactionId,
-        payment_proof: paymentProof
+        payment_proof: proofUrl
       });
       toast.success('Sell order submitted! Admin will process your request.');
       setAmountCrypto('');
       setReceivingInfo('');
       setTransactionId('');
-      setPaymentProof('');
+      setPaymentProofFile(null);
       loadTransactions();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Error submitting sell order');
@@ -162,7 +208,7 @@ const CryptoPage = ({ user, logout, settings }) => {
     <div className="min-h-screen gradient-bg">
       <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="w-full max-w-[1400px] mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-4">
             Buy & Sell USDT
@@ -267,22 +313,26 @@ const CryptoPage = ({ user, logout, settings }) => {
                   </div>
 
                   <div>
-                    <Label className="text-white">Payment Proof (Screenshot URL or Description)</Label>
-                    <Textarea
-                      placeholder="Paste image URL or describe your payment proof"
-                      value={paymentProof}
-                      onChange={(e) => setPaymentProof(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white mt-1"
-                      rows={3}
-                    />
+                    <Label className="text-white">Payment Proof (Upload Screenshot)</Label>
+                    <div className="mt-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setPaymentProofFile(e.target.files[0])}
+                        className="block w-full text-white bg-white/10 border border-white/20 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-pink-500 file:text-white hover:file:bg-pink-600"
+                      />
+                      {paymentProofFile && (
+                        <p className="text-green-400 text-sm mt-2">✓ {paymentProofFile.name}</p>
+                      )}
+                    </div>
                   </div>
 
                   <Button
                     onClick={handleBuy}
-                    disabled={loading}
+                    disabled={loading || uploadingProof}
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                   >
-                    {loading ? 'Processing...' : 'Submit Buy Order'}
+                    {loading || uploadingProof ? 'Processing...' : 'Submit Buy Order'}
                   </Button>
                 </TabsContent>
 
@@ -342,7 +392,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                       </div>
                       <div className="flex items-center space-x-2 bg-white/5 p-3 rounded-lg">
                         <RadioGroupItem value="skrill" id="sell-skrill" />
-                        <label htmlFor="sell-skrill" className="text-white cursor-pointer flex-1">💰 Skrill</label>
+                        <label htmlFor="skrill" className="text-white cursor-pointer flex-1">💰 Skrill</label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -368,22 +418,26 @@ const CryptoPage = ({ user, logout, settings }) => {
                   </div>
 
                   <div>
-                    <Label className="text-white">Payment Proof (Screenshot URL or Description)</Label>
-                    <Textarea
-                      placeholder="Paste image URL or describe your crypto transfer proof"
-                      value={paymentProof}
-                      onChange={(e) => setPaymentProof(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white mt-1"
-                      rows={3}
-                    />
+                    <Label className="text-white">Payment Proof (Upload Screenshot)</Label>
+                    <div className="mt-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setPaymentProofFile(e.target.files[0])}
+                        className="block w-full text-white bg-white/10 border border-white/20 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-pink-500 file:text-white hover:file:bg-pink-600"
+                      />
+                      {paymentProofFile && (
+                        <p className="text-green-400 text-sm mt-2">✓ {paymentProofFile.name}</p>
+                      )}
+                    </div>
                   </div>
 
                   <Button
                     onClick={handleSell}
-                    disabled={loading}
+                    disabled={loading || uploadingProof}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    {loading ? 'Processing...' : 'Submit Sell Order'}
+                    {loading || uploadingProof ? 'Processing...' : 'Submit Sell Order'}
                   </Button>
                 </TabsContent>
               </Tabs>

@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, Home, Package, Settings } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Home, Package, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,17 +16,17 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
 
   return (
     <nav className="sticky top-0 z-50 glass-effect shadow-lg border-b border-white/5">
-      <div className="container mx-auto px-4 py-4">
+      <div className="w-full max-w-[1400px] mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2" data-testid="nav-logo">
             {settings?.logo_url ? (
-              <img src={settings.logo_url} alt="Logo" className="h-10 w-auto" />
+              <img src={settings.logo_url} alt="Logo" className="h-12 w-auto" />
             ) : (
               <h1 className="text-2xl font-bold gradient-text">{settings?.site_name || 'KayiCom'}</h1>
             )}
           </Link>
 
-          {/* Desktop Menu - CLEAN */}
+          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8 text-base">
             <Link to="/" className="text-white hover:text-pink-400 transition" data-testid="nav-home">
               Home
@@ -39,23 +39,21 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             </Link>
           </div>
           
-          {/* Mobile Menu - More Visible */}
-          <div className="flex md:hidden items-center gap-3 text-white">
-            <Link to="/products" className="hover:text-pink-400 flex flex-col items-center text-xs">
-              <Package size={22} />
-              <span>Shop</span>
+          {/* Mobile Menu */}
+          <div className="flex md:hidden items-center gap-2">
+            <Link to="/products" className="text-white hover:text-pink-400 p-2">
+              <Package size={20} />
             </Link>
-            <Link to="/crypto" className="hover:text-pink-400 flex flex-col items-center text-xs">
+            <Link to="/crypto" className="text-white hover:text-pink-400 p-2">
               <span className="text-xl">💱</span>
-              <span className="font-bold">Crypto</span>
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             <LanguageSwitcher />
             
             <Link to="/cart" className="relative" data-testid="nav-cart">
-              <Button variant="ghost" className="text-gray-300 hover:bg-white/5 hover:text-pink-400">
+              <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400">
                 <ShoppingCart size={20} />
                 {cartItemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -68,9 +66,9 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="text-gray-300 hover:bg-white/5 hover:text-pink-400" data-testid="user-menu">
+                  <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400" data-testid="user-menu">
                     <User size={20} />
-                    <span className="ml-2 hidden md:inline">{user.full_name}</span>
+                    <span className="ml-2 hidden lg:inline">{user.full_name}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-white/10">
@@ -106,9 +104,9 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
               </DropdownMenu>
             ) : (
               <Link to="/login">
-                <Button variant="ghost" className="text-gray-300 hover:bg-white/5 hover:text-pink-400" data-testid="login-btn">
+                <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400" data-testid="login-btn">
                   <User size={20} />
-                  <span className="ml-2">{t('login')}</span>
+                  <span className="ml-2 hidden md:inline">{t('login')}</span>
                 </Button>
               </Link>
             )}
