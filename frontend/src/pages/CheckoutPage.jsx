@@ -131,21 +131,60 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
                     </div>
                   </label>
 
-                  {/* Manual Payment Methods */}
-                  {['paypal', 'skrill', 'moncash', 'binance_pay', 'zelle', 'cashapp'].map(method => (
-                    <label key={method} className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
-                      paymentMethod === method ? 'border-pink-400 bg-pink-400/10' : 'border-white/20 hover:border-white/40'
+                  {/* Manual Payment Methods - Only show enabled ones */}
+                  {settings?.payment_gateways?.paypal?.enabled && (
+                    <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
+                      paymentMethod === 'paypal' ? 'border-pink-400 bg-pink-400/10' : 'border-white/20 hover:border-white/40'
                     }`}>
-                      <RadioGroupItem value={method} className="mt-1" />
+                      <RadioGroupItem value="paypal" className="mt-1" />
                       <div className="ml-4">
                         <div className="flex items-center gap-2">
                           <CreditCard className="text-pink-400" size={20} />
-                          <span className="text-white font-semibold capitalize">{method.replace('_', ' ')}</span>
+                          <span className="text-white font-semibold">PayPal</span>
                         </div>
                         <p className="text-white/70 text-sm mt-1">Manual verification - Proof required</p>
+                        {settings.payment_gateways.paypal.email && (
+                          <p className="text-white/60 text-xs mt-1">Send to: {settings.payment_gateways.paypal.email}</p>
+                        )}
                       </div>
                     </label>
-                  ))}
+                  )}
+
+                  {settings?.payment_gateways?.airtm?.enabled && (
+                    <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
+                      paymentMethod === 'airtm' ? 'border-pink-400 bg-pink-400/10' : 'border-white/20 hover:border-white/40'
+                    }`}>
+                      <RadioGroupItem value="airtm" className="mt-1" />
+                      <div className="ml-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="text-pink-400" size={20} />
+                          <span className="text-white font-semibold">AirTM</span>
+                        </div>
+                        <p className="text-white/70 text-sm mt-1">Manual verification - Proof required</p>
+                        {settings.payment_gateways.airtm.email && (
+                          <p className="text-white/60 text-xs mt-1">Send to: {settings.payment_gateways.airtm.email}</p>
+                        )}
+                      </div>
+                    </label>
+                  )}
+
+                  {settings?.payment_gateways?.skrill?.enabled && (
+                    <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
+                      paymentMethod === 'skrill' ? 'border-pink-400 bg-pink-400/10' : 'border-white/20 hover:border-white/40'
+                    }`}>
+                      <RadioGroupItem value="skrill" className="mt-1" />
+                      <div className="ml-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="text-pink-400" size={20} />
+                          <span className="text-white font-semibold">Skrill</span>
+                        </div>
+                        <p className="text-white/70 text-sm mt-1">Manual verification - Proof required</p>
+                        {settings.payment_gateways.skrill.email && (
+                          <p className="text-white/60 text-xs mt-1">Send to: {settings.payment_gateways.skrill.email}</p>
+                        )}
+                      </div>
+                    </label>
+                  )}
                 </div>
               </RadioGroup>
 
