@@ -167,6 +167,25 @@ class SiteSettings(BaseModel):
     z2u_api_key: Optional[str] = None
     resend_api_key: Optional[str] = None
     product_categories: Optional[List[str]] = ["giftcard", "topup", "subscription", "service"]
+    # Payment Gateway Settings
+    payment_gateways: Optional[dict] = {
+        "paypal": {"enabled": True, "email": "", "instructions": ""},
+        "airtm": {"enabled": True, "email": "", "instructions": ""},
+        "skrill": {"enabled": True, "email": "", "instructions": ""},
+        "crypto_usdt": {"enabled": True, "wallet": "", "instructions": ""}
+    }
+    # Crypto Exchange Settings
+    crypto_settings: Optional[dict] = {
+        "buy_rate_usdt": 1.0,
+        "sell_rate_usdt": 0.98,
+        "transaction_fee_percent": 2.0,
+        "min_transaction_usd": 10.0,
+        "wallets": {
+            "BEP20": "",
+            "TRC20": "",
+            "MATIC": ""
+        }
+    }
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SettingsUpdate(BaseModel):
