@@ -178,6 +178,91 @@ class BulkEmailRequest(BaseModel):
     recipient_type: str  # all, customers, specific_emails
     specific_emails: Optional[List[EmailStr]] = None
 
+
+# Withdrawal Models
+class Withdrawal(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    user_email: str
+    amount: float
+    method: str  # usdt_bep20, btc, paypal
+    wallet_address: Optional[str] = None  # For crypto
+    paypal_email: Optional[str] = None  # For PayPal
+    status: str = "pending"  # pending, approved, rejected, completed
+    admin_notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class WithdrawalRequest(BaseModel):
+    amount: float
+    method: str
+    wallet_address: Optional[str] = None
+    paypal_email: Optional[str] = None
+
+# Crypto Transaction Models
+class CryptoTransaction(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    user_email: str
+    transaction_type: str  # buy or sell
+    crypto_type: str = "USDT"
+    chain: str  # BEP20, TRC20, MATIC
+    amount_crypto: float
+    amount_usd: float
+    exchange_rate: float
+    fee: float
+    total_usd: float  # amount_usd + fee for buy, amount_usd - fee for sell
+    payment_method: Optional[str] = None  # For buy: paypal, moncash, btc, usdt
+    wallet_address: Optional[str] = None
+    transaction_hash: Optional[str] = None
+    status: str = "pending"  # pending, processing, completed, failed
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CryptoBuyRequest(BaseModel):
+    chain: str
+    amount_usd: float
+    payment_method: str
+    wallet_address: str
+
+class CryptoSellRequest(BaseModel):
+    chain: str
+    amount_crypto: float
+    payment_method: str  # paypal, moncash, usdt, btc
+    receiving_info: str  # Email or wallet address for receiving payment
+
+# Crypto Config Model
+class CryptoConfig(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = "crypto_config"
+    # Exchange rates (USD per 1 USDT)
+    buy_rate_bep20: float = 1.02
+    sell_rate_bep20: float = 0.98
+    buy_rate_trc20: float = 1.02
+    sell_rate_trc20: float = 0.98
+    buy_rate_matic: float = 1.02
+    sell_rate_matic: float = 0.98
+    # Fees
+    buy_fee_percent: float = 2.0
+    sell_fee_percent: float = 2.0
+    # Limits
+    min_buy_usd: float = 10.0
+    max_buy_usd: float = 10000.0
+    min_sell_usdt: float = 10.0
+    max_sell_usdt: float = 10000.0
+    # Confirmations required
+    bep20_confirmations: int = 15
+    trc20_confirmations: int = 20
+    matic_confirmations: int = 10
+    # Wallets
+    wallet_bep20: Optional[str] = None
+    wallet_trc20: Optional[str] = None
+    wallet_matic: Optional[str] = None
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 # ==================== AUTH ENDPOINTS ====================
 
 @api_router.post("/auth/register", response_model=User)
