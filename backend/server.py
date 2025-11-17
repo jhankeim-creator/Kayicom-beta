@@ -1048,6 +1048,9 @@ async def complete_order_with_referral_check(order_id: str):
     
     return {"message": "Order completed"}
 
+# Include the router (must be after all endpoints are defined)
+app.include_router(api_router)
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
