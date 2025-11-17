@@ -18,6 +18,7 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
   const [proofUrl, setProofUrl] = useState('');
   const [transactionId, setTransactionId] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (orderId) {
