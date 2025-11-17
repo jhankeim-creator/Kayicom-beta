@@ -258,12 +258,16 @@ class CryptoBuyRequest(BaseModel):
     amount_usd: float
     payment_method: str
     wallet_address: str
+    transaction_id: Optional[str] = None
+    payment_proof: Optional[str] = None
 
 class CryptoSellRequest(BaseModel):
     chain: str
     amount_crypto: float
     payment_method: str  # paypal, moncash, usdt, btc
     receiving_info: str  # Email or wallet address for receiving payment
+    transaction_id: Optional[str] = None
+    payment_proof: Optional[str] = None
 
 # Crypto Config Model
 class CryptoConfig(BaseModel):
