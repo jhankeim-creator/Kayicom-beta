@@ -17,6 +17,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminProducts from './pages/AdminProducts';
 import AdminOrders from './pages/AdminOrders';
 import AdminSettings from './pages/AdminSettings';
+import AdminWithdrawals from './pages/AdminWithdrawals';
+import AdminCrypto from './pages/AdminCrypto';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ReferralPage from './pages/ReferralPage';
