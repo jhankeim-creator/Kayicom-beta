@@ -329,13 +329,18 @@ async def register(user_data: UserCreate):
 async def login(credentials: LoginRequest):
     user = await db.users.find_one({"email": credentials.email})
     if not user:
+        logging.error(f"Login failed: user not found for {credentials.email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Support both 'password' and 'password_hash' field names
     password_field = 'password_hash' if 'password_hash' in user else 'password'
+    logging.info(f"Login attempt for {credentials.email}, using field: {password_field}")
+    
     if not pwd_context.verify(credentials.password, user[password_field]):
+        logging.error(f"Login failed: incorrect password for {credentials.email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    logging.info(f"Login successful for {credentials.email}")
     return {
         "user_id": user['id'],
         "id": user['id'],
