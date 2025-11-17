@@ -174,6 +174,26 @@ function App() {
           />
           
           <Route
+            path="/referral"
+            element={
+              <ProtectedRoute>
+                <ReferralPage user={user} logout={logout} settings={settings} />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/withdraw"
+            element={
+              <ProtectedRoute>
+                <WithdrawPage user={user} logout={logout} settings={settings} />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route path="/crypto" element={<CryptoPage user={user} logout={logout} settings={settings} />} />
+          
+          <Route
             path="/admin"
             element={
               <ProtectedRoute adminOnly>
