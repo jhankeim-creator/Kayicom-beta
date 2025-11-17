@@ -662,7 +662,7 @@ async def get_referral_info(user_id: str):
         "referral_code": user.get('referral_code'),
         "referral_balance": user.get('referral_balance', 0.0),
         "total_referrals": referral_count,
-        "referral_link": f"https://kayicom.com/register?ref={user.get('referral_code')}"
+        "referral_link": f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/register?ref={user.get('referral_code')}"
     }
 
 @api_router.post("/auth/register-with-referral")
