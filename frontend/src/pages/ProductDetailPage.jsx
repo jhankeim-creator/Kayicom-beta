@@ -24,7 +24,7 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
       setProduct(response.data);
     } catch (error) {
       console.error('Error loading product:', error);
-      toast.error('Erè nan chajman pwodwi a');
+      toast.error('Error loading product');
     } finally {
       setLoading(false);
     }
