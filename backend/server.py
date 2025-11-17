@@ -26,6 +26,11 @@ db = client[os.environ['DB_NAME']]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Create the main app
+
+import base64
+from fastapi import File, UploadFile
+import mimetypes
+
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
