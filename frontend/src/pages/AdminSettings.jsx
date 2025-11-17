@@ -59,7 +59,12 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
         gosplit_api_key: currentSettings.gosplit_api_key || '',
         z2u_api_key: currentSettings.z2u_api_key || '',
         resend_api_key: currentSettings.resend_api_key || '',
-        product_categories: currentSettings.product_categories || ['giftcard', 'topup', 'subscription', 'service']
+        product_categories: currentSettings.product_categories || ['giftcard', 'topup', 'subscription', 'service'],
+        payment_gateways: currentSettings.payment_gateways || {
+          paypal: { enabled: true, email: '', instructions: '' },
+          airtm: { enabled: true, email: '', instructions: '' },
+          skrill: { enabled: true, email: '', instructions: '' }
+        }
       });
     }
   }, [currentSettings]);
