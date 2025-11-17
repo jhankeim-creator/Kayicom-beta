@@ -21,7 +21,11 @@ const ReferralPage = ({ user, logout, settings }) => {
 
   const loadReferralInfo = async () => {
     try {
-      const response = await axiosInstance.get(`/referral/info?user_id=${user.user_id}`);
+      // Get user ID from localStorage
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = userData.id || user.id;
+      
+      const response = await axiosInstance.get(`/referral/info?user_id=${userId}`);
       setReferralInfo(response.data);
     } catch (error) {
       console.error('Error loading referral info:', error);
