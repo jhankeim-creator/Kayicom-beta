@@ -126,7 +126,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
           <Card className="glass-effect border-white/20">
             <CardContent className="p-6">
               <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-6">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-6">
                   <TabsTrigger value="general" data-testid="tab-general">
                     <SettingsIcon size={16} className="mr-2" />
                     General
@@ -134,6 +134,10 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                   <TabsTrigger value="api" data-testid="tab-api">
                     <Key size={16} className="mr-2" />
                     API Keys
+                  </TabsTrigger>
+                  <TabsTrigger value="payments" data-testid="tab-payments">
+                    <Key size={16} className="mr-2" />
+                    Payments
                   </TabsTrigger>
                   <TabsTrigger value="categories" data-testid="tab-categories">
                     <Package size={16} className="mr-2" />
