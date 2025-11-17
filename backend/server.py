@@ -916,19 +916,31 @@ async def buy_crypto(request: CryptoBuyRequest, user_id: str, user_email: str):
         "transaction_id": request.transaction_id,
         "payment_proof": request.payment_proof,
         "status": "pending",
+        "plisio_invoice": plisio_invoice,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.crypto_transactions.insert_one(transaction)
     
-    return {
+    response = {
         "message": "Crypto buy order created",
         "transaction_id": transaction['id'],
         "amount_crypto": amount_crypto,
         "total_usd": total_usd,
         "wallet_to_send": config.get(f"wallet_{request.chain.lower()}")
     }
+    
+    # Add Plisio info if available
+    if plisio_invoice:
+        response["plisio"] = {
+            "wallet_address": plisio_invoice.get("wallet_address"),
+            "invoice_url": plisio_invoice.get("invoice_url"),
+            "qr_code": plisio_invoice.get("qr_code"),
+            "amount_crypto": plisio_invoice.get("amount_crypto")
+        }
+    
+    return response
 
 @api_router.post("/crypto/sell")
 async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str):
