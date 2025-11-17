@@ -406,25 +406,55 @@ class KayiComBackendTester:
         
         results = {}
         
-        # Define test methods in order
-        test_methods = [
-            ('Authentication & Users', self.test_authentication),
-            ('Referral System (JUST FIXED)', self.test_referral_system),
-            ('Products', self.test_products),
-            ('Settings (NEW payment_gateways & crypto_settings)', self.test_settings),
-            ('Crypto Endpoints', self.test_crypto_endpoints),
-            ('Withdrawal Endpoints', self.test_withdrawal_endpoints),
-            ('Orders', self.test_orders)
-        ]
-        
-        # Run all tests
-        for test_name, test_method in test_methods:
-            try:
-                print(f"\n{'='*70}")
-                results[test_name] = test_method()
-            except Exception as e:
-                print(f"❌ {test_name} failed with exception: {str(e)}")
-                results[test_name] = False
+        # Run tests one by one to avoid issues
+        print(f"\n{'='*70}")
+        try:
+            results['Authentication & Users'] = self.test_authentication()
+        except Exception as e:
+            print(f"❌ Authentication & Users failed with exception: {str(e)}")
+            results['Authentication & Users'] = False
+            
+        print(f"\n{'='*70}")
+        try:
+            results['Referral System (JUST FIXED)'] = self.test_referral_system()
+        except Exception as e:
+            print(f"❌ Referral System failed with exception: {str(e)}")
+            results['Referral System (JUST FIXED)'] = False
+            
+        print(f"\n{'='*70}")
+        try:
+            results['Products'] = self.test_products()
+        except Exception as e:
+            print(f"❌ Products failed with exception: {str(e)}")
+            results['Products'] = False
+            
+        print(f"\n{'='*70}")
+        try:
+            results['Settings (NEW payment_gateways & crypto_settings)'] = self.test_settings()
+        except Exception as e:
+            print(f"❌ Settings failed with exception: {str(e)}")
+            results['Settings (NEW payment_gateways & crypto_settings)'] = False
+            
+        print(f"\n{'='*70}")
+        try:
+            results['Crypto Endpoints'] = self.test_crypto_endpoints()
+        except Exception as e:
+            print(f"❌ Crypto Endpoints failed with exception: {str(e)}")
+            results['Crypto Endpoints'] = False
+            
+        print(f"\n{'='*70}")
+        try:
+            results['Withdrawal Endpoints'] = self.test_withdrawal_endpoints()
+        except Exception as e:
+            print(f"❌ Withdrawal Endpoints failed with exception: {str(e)}")
+            results['Withdrawal Endpoints'] = False
+            
+        print(f"\n{'='*70}")
+        try:
+            results['Orders'] = self.test_orders()
+        except Exception as e:
+            print(f"❌ Orders failed with exception: {str(e)}")
+            results['Orders'] = False
         
         # Print comprehensive summary
         print("\n" + "=" * 70)
