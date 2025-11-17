@@ -319,16 +319,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Get all orders endpoint"
-    - "Update order status endpoint"
-    - "Order delivery endpoint"
-    - "Manual payment proof upload"
-    - "Admin Orders page - View orders"
-    - "Admin Orders - Payment approval"
-    - "Admin Orders - Delivery management"
+    - "Session management improvement"
   stuck_tasks: []
-  test_all: true
-  test_priority: "high_first"
+  test_all: false
+  test_priority: "completed"
 
 agent_communication:
   - agent: "main"
