@@ -302,12 +302,12 @@ const CryptoPage = ({ user, logout, settings }) => {
                       <Label className="text-white mb-3 block">Receive Payment Via</Label>
                       <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                         <div className="space-y-2">
-                          {['paypal', 'moncash', 'usdt', 'btc'].map(method => (
+                          {['paypal', 'airtm', 'skrill', 'usdt', 'btc'].map(method => (
                             <label key={method} className={`flex items-center p-3 rounded border-2 cursor-pointer ${
                               paymentMethod === method ? 'border-pink-400 bg-pink-400/10' : 'border-white/20'
                             }`}>
                               <RadioGroupItem value={method} />
-                              <span className="ml-3 text-white capitalize">{method}</span>
+                              <span className="ml-3 text-white capitalize">{method === 'airtm' ? 'AirTM' : method}</span>
                             </label>
                           ))}
                         </div>
