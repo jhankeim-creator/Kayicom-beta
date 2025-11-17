@@ -137,7 +137,7 @@ class KayiComBackendTester:
             if response.status_code == 200:
                 products = response.json()
                 print(f"✅ Products retrieved successfully. Count: {len(products)}")
-                self.test_products = products
+                self.products_data = products
                 
                 if products:
                     # Test individual product
