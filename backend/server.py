@@ -331,13 +331,14 @@ async def login(credentials: LoginRequest):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    if not pwd_context.verify(credentials.password, user['password']):
+    if not pwd_context.verify(credentials.password, user['password_hash']):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     return {
         "user_id": user['id'],
+        "id": user['id'],
         "email": user['email'],
-        "full_name": user['full_name'],
+        "username": user.get('username', user.get('full_name', 'User')),
         "role": user['role']
     }
 
