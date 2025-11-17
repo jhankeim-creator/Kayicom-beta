@@ -106,6 +106,8 @@ class ProductUpdate(BaseModel):
     variant_name: Optional[str] = None
     parent_product_id: Optional[str] = None
     requires_player_id: Optional[bool] = None
+    region: Optional[str] = None
+    is_subscription: Optional[bool] = None
     metadata: Optional[Dict[str, Any]] = None
 
 # Order Models
