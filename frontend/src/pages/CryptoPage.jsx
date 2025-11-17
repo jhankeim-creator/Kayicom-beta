@@ -222,32 +222,39 @@ const CryptoPage = ({ user, logout, settings }) => {
             Trade USDT on BEP20, TRC20, and MATIC networks. No KYC required.
           </p>
 
-          {/* Plisio Invoice Display */}
+          {/* Payment Instructions Display */}
           {plisioInvoice && (
             <Card className="glass-effect border-green-500/50 mb-8">
               <CardContent className="p-6">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-green-400 mb-4">✅ Payment Address Generated!</h2>
-                  <p className="text-white/80 mb-4">Send exactly <span className="text-white font-bold">{plisioInvoice.amount_crypto} USDT</span> to:</p>
+                  <h2 className="text-2xl font-bold text-green-400 mb-4">✅ Order Submitted!</h2>
+                  <p className="text-white/80 mb-6">Please send payment of <span className="text-green-400 font-bold">${amountUsd || plisioInvoice.amount_usd}</span> to:</p>
                   
-                  <div className="bg-white/10 p-4 rounded-lg mb-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <code className="text-white text-sm break-all">{plisioInvoice.wallet_address}</code>
-                      <Button
-                        size="sm"
-                        onClick={() => copyToClipboard(plisioInvoice.wallet_address, 'Address')}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <Copy size={16} />
-                      </Button>
+                  <div className="bg-blue-500/10 border border-blue-500/30 p-6 rounded-lg mb-6">
+                    <p className="text-blue-300 font-semibold mb-2">Payment Method: {paymentMethod.toUpperCase()}</p>
+                    <p className="text-white/70 mb-4">Send payment to admin via your selected method</p>
+                    
+                    <div className="bg-white/5 p-4 rounded-lg mb-4">
+                      <p className="text-white/70 text-sm mb-2">Your USDT will be sent to:</p>
+                      <div className="flex items-center justify-center gap-2">
+                        <code className="text-white text-sm break-all">{walletAddress}</code>
+                        <Button
+                          size="sm"
+                          onClick={() => copyToClipboard(walletAddress, 'Your wallet')}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-lg">
+                      <p className="text-yellow-300 text-sm">
+                        ⚠️ <strong>Important:</strong> After sending payment, please upload proof in your dashboard. 
+                        Admin will verify and send USDT to your wallet address.
+                      </p>
                     </div>
                   </div>
-
-                  {plisioInvoice.qr_code && (
-                    <div className="mb-4">
-                      <img src={plisioInvoice.qr_code} alt="QR Code" className="mx-auto w-48 h-48" />
-                    </div>
-                  )}
 
                   {plisioInvoice.invoice_url && (
                     <a 
@@ -256,7 +263,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
                     >
-                      Track Payment <ExternalLink size={16} />
+                      View Full Invoice <ExternalLink size={16} />
                     </a>
                   )}
                 </div>
