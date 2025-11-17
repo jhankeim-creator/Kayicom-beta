@@ -639,6 +639,392 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+
+# ==================== REFERRAL ENDPOINTS ====================
+
+@api_router.get("/referral/info")
+async def get_referral_info(user_id: str):
+    """Get user's referral code and balance"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Count referrals
+    referral_count = await db.users.count_documents({"referred_by": user['referral_code']})
+    
+    return {
+        "referral_code": user.get('referral_code'),
+        "referral_balance": user.get('referral_balance', 0.0),
+        "total_referrals": referral_count,
+        "referral_link": f"https://kayicom.com/register?ref={user.get('referral_code')}"
+    }
+
+@api_router.post("/auth/register-with-referral")
+async def register_with_referral(user_data: UserCreate, referral_code: Optional[str] = None):
+    """Register user with optional referral code"""
+    existing = await db.users.find_one({"email": user_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    hashed_password = pwd_context.hash(user_data.password)
+    
+    user = User(
+        email=user_data.email,
+        full_name=user_data.full_name,
+        role="customer"
+    )
+    
+    doc = user.model_dump()
+    doc['password'] = hashed_password
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['referral_balance'] = 0.0
+    
+    # Set referrer if valid code provided
+    if referral_code:
+        referrer = await db.users.find_one({"referral_code": referral_code})
+        if referrer:
+            doc['referred_by'] = referral_code
+    
+    await db.users.insert_one(doc)
+    return user
+
+# ==================== WITHDRAWAL ENDPOINTS ====================
+
+@api_router.post("/withdrawals/request")
+async def request_withdrawal(withdrawal: WithdrawalRequest, user_id: str, user_email: str):
+    """User requests withdrawal"""
+    # Check minimum
+    if withdrawal.amount < 5.0:
+        raise HTTPException(status_code=400, detail="Minimum withdrawal is $5")
+    
+    # Check user balance
+    user = await db.users.find_one({"id": user_id})
+    if not user or user.get('referral_balance', 0.0) < withdrawal.amount:
+        raise HTTPException(status_code=400, detail="Insufficient balance")
+    
+    # Validate method-specific fields
+    if withdrawal.method in ['usdt_bep20', 'btc'] and not withdrawal.wallet_address:
+        raise HTTPException(status_code=400, detail="Wallet address required")
+    if withdrawal.method == 'paypal' and not withdrawal.paypal_email:
+        raise HTTPException(status_code=400, detail="PayPal email required")
+    
+    # Create withdrawal request
+    withdrawal_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user_email,
+        "amount": withdrawal.amount,
+        "method": withdrawal.method,
+        "wallet_address": withdrawal.wallet_address,
+        "paypal_email": withdrawal.paypal_email,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.withdrawals.insert_one(withdrawal_doc)
+    
+    # Deduct from balance (pending)
+    await db.users.update_one(
+        {"id": user_id},
+        {"$inc": {"referral_balance": -withdrawal.amount}}
+    )
+    
+    return {"message": "Withdrawal request submitted", "withdrawal_id": withdrawal_doc['id']}
+
+@api_router.get("/withdrawals/user/{user_id}")
+async def get_user_withdrawals(user_id: str):
+    """Get user's withdrawal history"""
+    withdrawals = await db.withdrawals.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return withdrawals
+
+@api_router.get("/withdrawals/all")
+async def get_all_withdrawals():
+    """Admin: Get all withdrawal requests"""
+    withdrawals = await db.withdrawals.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    return withdrawals
+
+@api_router.put("/withdrawals/{withdrawal_id}/status")
+async def update_withdrawal_status(withdrawal_id: str, status: str, admin_notes: Optional[str] = None):
+    """Admin: Update withdrawal status"""
+    if status not in ['approved', 'completed', 'rejected']:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    
+    withdrawal = await db.withdrawals.find_one({"id": withdrawal_id})
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="Withdrawal not found")
+    
+    updates = {
+        "status": status,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if admin_notes:
+        updates['admin_notes'] = admin_notes
+    
+    # If rejected, refund balance
+    if status == 'rejected' and withdrawal['status'] == 'pending':
+        await db.users.update_one(
+            {"id": withdrawal['user_id']},
+            {"$inc": {"referral_balance": withdrawal['amount']}}
+        )
+    
+    await db.withdrawals.update_one({"id": withdrawal_id}, {"$set": updates})
+    
+    return {"message": f"Withdrawal {status}"}
+
+# ==================== CRYPTO ENDPOINTS ====================
+
+@api_router.get("/crypto/config")
+async def get_crypto_config():
+    """Get crypto exchange rates and config"""
+    config = await db.crypto_config.find_one({"id": "crypto_config"}, {"_id": 0})
+    if not config:
+        # Create default config
+        default_config = CryptoConfig().model_dump()
+        default_config['updated_at'] = default_config['updated_at'].isoformat()
+        await db.crypto_config.insert_one(default_config)
+        return default_config
+    return config
+
+@api_router.put("/crypto/config")
+async def update_crypto_config(updates: Dict[str, Any]):
+    """Admin: Update crypto config"""
+    updates['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.crypto_config.update_one(
+        {"id": "crypto_config"},
+        {"$set": updates},
+        upsert=True
+    )
+    
+    return {"message": "Crypto config updated"}
+
+@api_router.post("/crypto/buy")
+async def buy_crypto(request: CryptoBuyRequest, user_id: str, user_email: str):
+    """User buys USDT"""
+    # Get config
+    config = await db.crypto_config.find_one({"id": "crypto_config"})
+    if not config:
+        raise HTTPException(status_code=500, detail="Crypto config not found")
+    
+    # Check limits
+    if request.amount_usd < config['min_buy_usd'] or request.amount_usd > config['max_buy_usd']:
+        raise HTTPException(status_code=400, detail=f"Amount must be between ${config['min_buy_usd']} and ${config['max_buy_usd']}")
+    
+    # Get rate
+    rate_key = f"buy_rate_{request.chain.lower()}"
+    exchange_rate = config.get(rate_key, 1.02)
+    
+    # Calculate
+    amount_crypto = request.amount_usd / exchange_rate
+    fee = request.amount_usd * (config['buy_fee_percent'] / 100)
+    total_usd = request.amount_usd + fee
+    
+    # Create transaction
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user_email,
+        "transaction_type": "buy",
+        "crypto_type": "USDT",
+        "chain": request.chain,
+        "amount_crypto": amount_crypto,
+        "amount_usd": request.amount_usd,
+        "exchange_rate": exchange_rate,
+        "fee": fee,
+        "total_usd": total_usd,
+        "payment_method": request.payment_method,
+        "wallet_address": request.wallet_address,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.crypto_transactions.insert_one(transaction)
+    
+    return {
+        "message": "Crypto buy order created",
+        "transaction_id": transaction['id'],
+        "amount_crypto": amount_crypto,
+        "total_usd": total_usd,
+        "wallet_to_send": config.get(f"wallet_{request.chain.lower()}")
+    }
+
+@api_router.post("/crypto/sell")
+async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str):
+    """User sells USDT"""
+    config = await db.crypto_config.find_one({"id": "crypto_config"})
+    if not config:
+        raise HTTPException(status_code=500, detail="Crypto config not found")
+    
+    # Check limits
+    if request.amount_crypto < config['min_sell_usdt'] or request.amount_crypto > config['max_sell_usdt']:
+        raise HTTPException(status_code=400, detail=f"Amount must be between {config['min_sell_usdt']} and {config['max_sell_usdt']} USDT")
+    
+    # Get rate
+    rate_key = f"sell_rate_{request.chain.lower()}"
+    exchange_rate = config.get(rate_key, 0.98)
+    
+    # Calculate
+    amount_usd = request.amount_crypto * exchange_rate
+    fee = amount_usd * (config['sell_fee_percent'] / 100)
+    total_usd = amount_usd - fee
+    
+    # Create transaction
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user_email,
+        "transaction_type": "sell",
+        "crypto_type": "USDT",
+        "chain": request.chain,
+        "amount_crypto": request.amount_crypto,
+        "amount_usd": amount_usd,
+        "exchange_rate": exchange_rate,
+        "fee": fee,
+        "total_usd": total_usd,
+        "payment_method": request.payment_method,
+        "metadata": {"receiving_info": request.receiving_info},
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.crypto_transactions.insert_one(transaction)
+    
+    return {
+        "message": "Crypto sell order created. Send USDT to our wallet",
+        "transaction_id": transaction['id'],
+        "total_usd_to_receive": total_usd,
+        "wallet_address": config.get(f"wallet_{request.chain.lower()}")
+    }
+
+@api_router.get("/crypto/transactions/user/{user_id}")
+async def get_user_crypto_transactions(user_id: str):
+    """Get user's crypto transactions"""
+    transactions = await db.crypto_transactions.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return transactions
+
+@api_router.get("/crypto/transactions/all")
+async def get_all_crypto_transactions():
+    """Admin: Get all crypto transactions"""
+    transactions = await db.crypto_transactions.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    return transactions
+
+@api_router.put("/crypto/transactions/{transaction_id}/status")
+async def update_crypto_transaction_status(
+    transaction_id: str,
+    status: str,
+    transaction_hash: Optional[str] = None
+):
+    """Admin: Update crypto transaction status"""
+    if status not in ['processing', 'completed', 'failed']:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    
+    updates = {
+        "status": status,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if transaction_hash:
+        updates['transaction_hash'] = transaction_hash
+    
+    result = await db.crypto_transactions.update_one(
+        {"id": transaction_id},
+        {"$set": updates}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    
+    return {"message": f"Transaction status updated to {status}"}
+
+# ==================== REFERRAL PAYOUT TRACKING ====================
+
+async def check_and_credit_referral(order: dict):
+    """Check if order qualifies for referral payout and credit referrer"""
+    # Check if user was referred
+    user = await db.users.find_one({"id": order['user_id']})
+    if not user or not user.get('referred_by'):
+        return
+    
+    # Check if order contains subscription
+    has_subscription = False
+    for item in order['items']:
+        product = await db.products.find_one({"id": item['product_id']})
+        if product and product.get('is_subscription'):
+            has_subscription = True
+            break
+    
+    if not has_subscription:
+        return
+    
+    # Check if this is first subscription purchase
+    previous_subscription_orders = await db.orders.find({
+        "user_id": order['user_id'],
+        "items.product_id": {"$in": [p['product_id'] for p in order['items'] if p.get('is_subscription')]}
+    }).to_list(10)
+    
+    if len(previous_subscription_orders) > 1:  # More than current order
+        return
+    
+    # Credit referrer $1
+    referrer_code = user['referred_by']
+    await db.users.update_one(
+        {"referral_code": referrer_code},
+        {"$inc": {"referral_balance": 1.0}}
+    )
+    
+    # Log referral payout
+    await db.referral_payouts.insert_one({
+        "id": str(uuid.uuid4()),
+        "referrer_code": referrer_code,
+        "referred_user_id": order['user_id'],
+        "order_id": order['id'],
+        "amount": 1.0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+
+# Modify order status endpoint to trigger referral check
+@api_router.put("/orders/{order_id}/complete")
+async def complete_order_with_referral_check(order_id: str):
+    """Complete order and check for referral payout"""
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Update order status
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "order_status": "completed",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Check and credit referral
+    await check_and_credit_referral(order)
+    
+    return {"message": "Order completed"}
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
