@@ -14,16 +14,17 @@ const ReferralPage = ({ user, logout, settings }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadReferralInfo();
-    }
-  }, [user]);
+    loadReferralInfo();
+  }, []);
 
   const loadReferralInfo = async () => {
     try {
-      const userId = user.user_id || user.id;
+      // Get from localStorage directly
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = storedUser.user_id || storedUser.id;
+      
       if (!userId) {
-        throw new Error('No user ID');
+        throw new Error('No user ID found');
       }
       
       const response = await axiosInstance.get(`/referral/info?user_id=${userId}`);
