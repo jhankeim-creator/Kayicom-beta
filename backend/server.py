@@ -43,6 +43,9 @@ class User(UserBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     role: str = "customer"  # customer or admin
+    referral_code: str = Field(default_factory=lambda: str(uuid.uuid4())[:8].upper())
+    referred_by: Optional[str] = None  # referral_code of referrer
+    referral_balance: float = 0.0  # Balance from referrals
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class LoginRequest(BaseModel):
