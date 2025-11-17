@@ -39,7 +39,11 @@ const RegisterPage = ({ login, settings }) => {
     setLoading(true);
 
     try {
-      await axiosInstance.post('/auth/register', {
+      const endpoint = referralCode 
+        ? `/auth/register-with-referral?referral_code=${referralCode}`
+        : '/auth/register';
+      
+      await axiosInstance.post(endpoint, {
         full_name: formData.full_name,
         email: formData.email,
         password: formData.password
