@@ -295,7 +295,6 @@ const CryptoPage = ({ user, logout, settings }) => {
                       <SelectContent>
                         <SelectItem value="BEP20">BEP20 (Binance Smart Chain)</SelectItem>
                         <SelectItem value="TRC20">TRC20 (Tron)</SelectItem>
-                        <SelectItem value="MATIC">MATIC (Polygon)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -380,7 +379,6 @@ const CryptoPage = ({ user, logout, settings }) => {
                       <SelectContent>
                         <SelectItem value="BEP20">BEP20 (Binance Smart Chain)</SelectItem>
                         <SelectItem value="TRC20">TRC20 (Tron)</SelectItem>
-                        <SelectItem value="MATIC">MATIC (Polygon)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
