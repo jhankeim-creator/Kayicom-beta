@@ -38,6 +38,36 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
     }
   };
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File too large. Max 5MB');
+      return;
+    }
+    
+    setUploading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axiosInstance.post('/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setProofUrl(response.data.url);
+      toast.success('Image uploaded!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmitProof = async () => {
     if (!proofUrl || !transactionId) {
       toast.error('Please fill all fields');
