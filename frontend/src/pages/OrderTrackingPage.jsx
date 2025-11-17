@@ -244,16 +244,49 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
                   </div>
 
                   <div>
-                    <Label htmlFor="proofUrl" className="text-white">Proof Link (Screenshot/Image)</Label>
-                    <Textarea
-                      id="proofUrl"
-                      value={proofUrl}
-                      onChange={(e) => setProofUrl(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                      placeholder="Paste your payment proof image link (imgur, etc.)"
-                      rows={3}
-                      data-testid="proof-url-input"
-                    />
+                    <Label htmlFor="proofUrl" className="text-white">Payment Proof</Label>
+                    <div className="space-y-3 mt-2">
+                      {/* File Upload Button */}
+                      <div className="flex gap-3">
+                        <label className="flex-1">
+                          <div className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-3 rounded cursor-pointer text-center font-semibold">
+                            {uploading ? 'Uploading...' : '📤 Upload Screenshot'}
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            disabled={uploading}
+                          />
+                        </label>
+                      </div>
+                      
+                      {/* OR Divider */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 border-t border-white/20"></div>
+                        <span className="text-white/50 text-sm">OR</span>
+                        <div className="flex-1 border-t border-white/20"></div>
+                      </div>
+                      
+                      {/* Link Input */}
+                      <Input
+                        id="proofUrl"
+                        value={proofUrl}
+                        onChange={(e) => setProofUrl(e.target.value)}
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        placeholder="Paste image link (imgur, etc.)"
+                        data-testid="proof-url-input"
+                      />
+                      
+                      {/* Preview */}
+                      {proofUrl && (
+                        <div className="mt-2">
+                          <p className="text-white/70 text-xs mb-2">Preview:</p>
+                          <img src={proofUrl} alt="Proof" className="max-h-32 rounded border border-white/20" />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <Button 
