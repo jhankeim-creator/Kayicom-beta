@@ -221,6 +221,49 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
             </CardContent>
           </Card>
 
+          {/* Plisio Crypto Payment Instructions */}
+          {order.payment_method === 'crypto_plisio' && order.payment_status === 'pending' && order.plisio_invoice_id && (
+            <Card className="glass-effect border-cyan-500/30 border-2" data-testid="plisio-payment-card">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Package className="text-cyan-400" size={28} />
+                  <h3 className="text-2xl font-bold text-cyan-400">Complete Your Crypto Payment</h3>
+                </div>
+                
+                <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-5 space-y-4">
+                  <p className="text-white/90 text-lg font-semibold">
+                    Payment Amount: <span className="text-cyan-300">${order.total_amount.toFixed(2)} USD</span>
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <p className="text-white/80 text-sm">
+                      Click the button below to complete your payment via Plisio:
+                    </p>
+                    <a 
+                      href={`https://plisio.net/invoice/${order.plisio_invoice_id}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <Button className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-4 text-lg">
+                        🔗 Open Payment Invoice
+                      </Button>
+                    </a>
+                  </div>
+                  
+                  <div className="border-t border-cyan-500/30 pt-4 mt-4">
+                    <p className="text-white/70 text-sm">
+                      💡 You can pay with Bitcoin, Ethereum, USDT, and other cryptocurrencies.
+                    </p>
+                    <p className="text-white/70 text-sm mt-2">
+                      ⏱️ Your order will be automatically confirmed once payment is received.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Manual Payment Proof Upload */}
           {['paypal', 'skrill', 'moncash', 'binance_pay', 'zelle', 'cashapp'].includes(order.payment_method) && order.payment_status === 'pending' && (
             <Card className="glass-effect border-white/20" data-testid="payment-proof-form">
