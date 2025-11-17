@@ -341,7 +341,12 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <span>💸</span> AirTM
                           </h4>
                           <label className="flex items-center gap-2">
-                            <input type="checkbox" defaultChecked className="w-4 h-4" />
+                            <input 
+                              type="checkbox" 
+                              checked={formData.payment_gateways.airtm.enabled}
+                              onChange={(e) => handlePaymentGatewayChange('airtm', 'enabled', e.target.checked)}
+                              className="w-4 h-4" 
+                            />
                             <span className="text-white text-sm">Enabled</span>
                           </label>
                         </div>
@@ -350,6 +355,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">AirTM Email/Username</Label>
                             <Input
                               placeholder="your@email.com"
+                              value={formData.payment_gateways.airtm.email}
+                              onChange={(e) => handlePaymentGatewayChange('airtm', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
                           </div>
@@ -357,6 +364,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions</Label>
                             <Textarea
                               placeholder="Send via AirTM to the email above"
+                              value={formData.payment_gateways.airtm.instructions}
+                              onChange={(e) => handlePaymentGatewayChange('airtm', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
                             />
