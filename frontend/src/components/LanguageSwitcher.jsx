@@ -1,28 +1,54 @@
 import { useContext } from 'react';
 import { LanguageContext } from '../App';
-import { Globe } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 const LanguageSwitcher = () => {
   const { language, switchLanguage } = useContext(LanguageContext);
 
+  const languages = {
+    en: { name: 'English', flag: '🇺🇸' },
+    fr: { name: 'Français', flag: '🇫🇷' }
+  };
+
+  const currentLang = languages[language];
+
   return (
-    <div className="lang-switcher" data-testid="language-switcher">
-      <Globe size={18} className="text-gray-400" />
-      <button
-        onClick={() => switchLanguage('en')}
-        className={`lang-button ${language === 'en' ? 'active' : ''}`}
-        data-testid="lang-en"
-      >
-        EN
-      </button>
-      <button
-        onClick={() => switchLanguage('fr')}
-        className={`lang-button ${language === 'fr' ? 'active' : ''}`}
-        data-testid="lang-fr"
-      >
-        FR
-      </button>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="ghost" 
+          className="text-gray-300 hover:bg-white/5 hover:text-pink-400 flex items-center gap-2"
+          data-testid="language-switcher"
+        >
+          <span className="text-xl">{currentLang.flag}</span>
+          <span className="hidden md:inline">{language.toUpperCase()}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40 bg-gray-900 border-white/10">
+        <DropdownMenuItem 
+          onClick={() => switchLanguage('en')}
+          className={`cursor-pointer text-gray-300 hover:text-pink-400 ${language === 'en' ? 'bg-white/5' : ''}`}
+          data-testid="lang-en"
+        >
+          <span className="text-xl mr-2">🇺🇸</span>
+          English
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={() => switchLanguage('fr')}
+          className={`cursor-pointer text-gray-300 hover:text-pink-400 ${language === 'fr' ? 'bg-white/5' : ''}`}
+          data-testid="lang-fr"
+        >
+          <span className="text-xl mr-2">🇫🇷</span>
+          Français
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
