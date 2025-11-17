@@ -417,23 +417,21 @@ async def create_order(order_data: OrderCreate, user_id: str, user_email: str):
         settings = await db.settings.find_one({"id": "site_settings"})
         if settings and settings.get('plisio_api_key'):
             try:
-                # Create Plisio invoice
-                plisio_response = requests.get(
-                    "https://api.plisio.net/api/v1/invoices/new",
-                    params={
-                        "api_key": settings['plisio_api_key'],
-                        "order_name": f"Order {order.id}",
-                        "order_number": order.id,
-                        "amount": total,
-                        "currency": "USD",
-                        "source_currency": "USD",
-                        "callback_url": f"{os.environ.get('BACKEND_URL', '')}/api/payments/plisio-callback"
-                    }
+                from plisio_helper import PlisioHelper
+                plisio = PlisioHelper(settings['plisio_api_key'])
+                
+                # Create Plisio invoice for USDT payment
+                invoice_response = await plisio.create_invoice(
+                    amount=total,
+                    currency="USDT_TRX",  # Default to TRC20 for orders
+                    order_name=f"Order {order.id}",
+                    order_number=order.id,
+                    email=user_email
                 )
-                if plisio_response.status_code == 200:
-                    plisio_data = plisio_response.json()
-                    if plisio_data.get('status') == 'success':
-                        order.plisio_invoice_id = plisio_data['data']['txn_id']
+                
+                if invoice_response.get("success"):
+                    order.plisio_invoice_id = invoice_response.get("invoice_id")
+                    order.plisio_invoice_url = invoice_response.get("invoice_url")
             except Exception as e:
                 logging.error(f"Plisio error: {e}")
     
