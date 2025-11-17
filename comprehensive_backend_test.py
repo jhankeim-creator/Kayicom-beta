@@ -19,8 +19,8 @@ class KayiComBackendTester:
         self.session = requests.Session()
         self.admin_user = None
         self.test_user_id = None
-        self.test_products = []
-        self.test_orders = []
+        self.products_data = []
+        self.orders_data = []
         
     def test_authentication(self):
         """Test authentication endpoints"""
