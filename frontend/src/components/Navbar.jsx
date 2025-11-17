@@ -33,6 +33,9 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             <Link to="/products" className="text-gray-300 hover:text-pink-400 transition" data-testid="nav-products">
               <Package className="inline mr-1" size={18} />{t('products')}
             </Link>
+            <Link to="/crypto" className="text-gray-300 hover:text-pink-400 transition">
+              💱 Crypto
+            </Link>
           </div>
 
           <div className="flex items-center space-x-4">
