@@ -952,6 +952,27 @@ async def update_crypto_transaction_status(
     if transaction_hash:
         updates['transaction_hash'] = transaction_hash
     
+
+
+# File Upload Endpoint
+@api_router.post("/upload/image")
+async def upload_image(file: UploadFile = File(...)):
+    """Upload image and return base64 data URL"""
+    try:
+        # Read file content
+        contents = await file.read()
+        
+        # Get mime type
+        mime_type = file.content_type or mimetypes.guess_type(file.filename)[0] or 'image/jpeg'
+        
+        # Convert to base64
+        base64_data = base64.b64encode(contents).decode('utf-8')
+        data_url = f"data:{mime_type};base64,{base64_data}"
+        
+        return {"url": data_url, "filename": file.filename}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
     result = await db.crypto_transactions.update_one(
         {"id": transaction_id},
         {"$set": updates}
