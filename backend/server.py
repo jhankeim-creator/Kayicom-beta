@@ -872,6 +872,8 @@ async def buy_crypto(request: CryptoBuyRequest, user_id: str, user_email: str):
         "total_usd": total_usd,
         "payment_method": request.payment_method,
         "wallet_address": request.wallet_address,
+        "transaction_id": request.transaction_id,
+        "payment_proof": request.payment_proof,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
