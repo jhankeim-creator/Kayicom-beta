@@ -324,11 +324,30 @@ const CryptoPage = ({ user, logout, settings }) => {
                   <div>
                     <Label className="text-white">Your {chain} Wallet Address (to receive USDT)</Label>
                     <Input
-                      placeholder="Enter wallet address to receive USDT"
+                      placeholder="Enter your wallet address to receive USDT"
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
                       className="bg-white/10 border-white/20 text-white mt-1"
                     />
+                    <p className="text-white/50 text-xs mt-1">⚠️ Make sure this is YOUR {chain} wallet address</p>
+                  </div>
+
+                  <div>
+                    <Label className="text-white">Payment Method</Label>
+                    <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-2 space-y-2">
+                      <div className="flex items-center space-x-2 bg-white/5 p-3 rounded-lg">
+                        <RadioGroupItem value="paypal" id="buy-paypal" />
+                        <label htmlFor="buy-paypal" className="text-white cursor-pointer flex-1">💳 Paypal</label>
+                      </div>
+                      <div className="flex items-center space-x-2 bg-white/5 p-3 rounded-lg">
+                        <RadioGroupItem value="airtm" id="buy-airtm" />
+                        <label htmlFor="buy-airtm" className="text-white cursor-pointer flex-1">💸 AirTM</label>
+                      </div>
+                      <div className="flex items-center space-x-2 bg-white/5 p-3 rounded-lg">
+                        <RadioGroupItem value="skrill" id="buy-skrill" />
+                        <label htmlFor="buy-skrill" className="text-white cursor-pointer flex-1">💰 Skrill</label>
+                      </div>
+                    </RadioGroup>
                   </div>
 
                   <Button
@@ -336,11 +355,11 @@ const CryptoPage = ({ user, logout, settings }) => {
                     disabled={loading}
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                   >
-                    {loading ? 'Generating Payment Address...' : 'Generate Payment Address'}
+                    {loading ? 'Processing...' : 'Continue to Payment'}
                   </Button>
 
                   <p className="text-white/60 text-sm text-center">
-                    ℹ️ We'll generate a unique crypto address for you to send payment
+                    ℹ️ You'll receive payment instructions after clicking Continue
                   </p>
                 </TabsContent>
 
