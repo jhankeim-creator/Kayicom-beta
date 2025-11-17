@@ -55,7 +55,7 @@ const AdminDashboard = ({ user, logout, settings }) => {
 
           {/* Stats Grid */}
           {loading ? (
-            <div className="text-center text-white text-xl py-12">Chajman...</div>
+            <div className="text-center text-white text-xl py-12">Loading...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               {statCards.map((stat) => {
