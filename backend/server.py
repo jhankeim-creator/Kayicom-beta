@@ -627,9 +627,6 @@ async def get_dashboard_stats():
         "pending_payments": pending_payments
     }
 
-# Include the router
-app.include_router(api_router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
