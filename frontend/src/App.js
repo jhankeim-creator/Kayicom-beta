@@ -230,6 +230,36 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
+          <Route
+            path="/admin/withdrawals"
+            element={
+              <ProtectedRoute adminOnly>
+                <div className="min-h-screen gradient-bg">
+                  <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
+                  <div className="container mx-auto px-4 py-12">
+                    <AdminWithdrawals />
+                  </div>
+                  <Footer settings={settings} />
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/admin/crypto"
+            element={
+              <ProtectedRoute adminOnly>
+                <div className="min-h-screen gradient-bg">
+                  <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
+                  <div className="container mx-auto px-4 py-12">
+                    <AdminCrypto />
+                  </div>
+                  <Footer settings={settings} />
+                </div>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
         <Toaster position="top-right" richColors />
           <WhatsAppButton />
