@@ -19,6 +19,9 @@ import AdminOrders from './pages/AdminOrders';
 import AdminSettings from './pages/AdminSettings';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ReferralPage from './pages/ReferralPage';
+import WithdrawPage from './pages/WithdrawPage';
+import CryptoPage from './pages/CryptoPage';
 import WhatsAppButton from './components/WhatsAppButton';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
