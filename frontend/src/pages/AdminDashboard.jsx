@@ -126,6 +126,26 @@ const AdminDashboard = ({ user, logout, settings }) => {
                 </CardContent>
               </Card>
             </Link>
+            
+            <Link to="/admin/withdrawals">
+              <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer">
+                <CardContent className="p-8 text-center">
+                  <DollarSign className="mx-auto mb-4 text-green-400" size={48} />
+                  <h3 className="text-xl font-bold text-white mb-2">Withdrawals</h3>
+                  <p className="text-white/70">Manage user withdrawal requests</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link to="/admin/crypto">
+              <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer">
+                <CardContent className="p-8 text-center">
+                  <span className="text-5xl mb-4 block">💱</span>
+                  <h3 className="text-xl font-bold text-white mb-2">Crypto</h3>
+                  <p className="text-white/70">Manage crypto transactions & config</p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>
