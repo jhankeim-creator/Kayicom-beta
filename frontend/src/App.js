@@ -267,6 +267,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
+          <Route
+            path="/admin/crypto-transactions"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminCryptoTransactions user={user} logout={logout} settings={settings} />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
         <Toaster position="top-right" richColors />
           <WhatsAppButton />
