@@ -10,7 +10,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BASE_URL = "https://kayishop.preview.emergentagent.com/api"
+BASE_URL = "https://marketplace-plus-3.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@kayicom.com"
 ADMIN_PASSWORD = "admin123"
 
