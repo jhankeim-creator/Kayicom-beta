@@ -75,6 +75,16 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
                       {t('myAccount')}
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/referral" className="cursor-pointer text-gray-300 hover:text-pink-400">
+                      👥 Referral
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/withdraw" className="cursor-pointer text-gray-300 hover:text-pink-400">
+                      💰 Withdraw
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout} className="cursor-pointer text-gray-300 hover:text-pink-400" data-testid="logout-btn">
                     <LogOut className="mr-2" size={16} />
                     {t('logout')}
