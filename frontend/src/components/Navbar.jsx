@@ -26,6 +26,7 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             )}
           </Link>
 
+          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-gray-300 hover:text-pink-400 transition" data-testid="nav-home">
               <Home className="inline mr-1" size={18} />{t('home')}
@@ -35,6 +36,16 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             </Link>
             <Link to="/crypto" className="text-gray-300 hover:text-pink-400 transition">
               💱 Crypto
+            </Link>
+          </div>
+          
+          {/* Mobile Menu Links */}
+          <div className="flex md:hidden items-center space-x-4">
+            <Link to="/products" className="text-gray-300 hover:text-pink-400">
+              <Package size={20} />
+            </Link>
+            <Link to="/crypto" className="text-gray-300 hover:text-pink-400">
+              <span className="text-xl">💱</span>
             </Link>
           </div>
 
