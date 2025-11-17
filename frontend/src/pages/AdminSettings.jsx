@@ -102,6 +102,19 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     setFormData({ ...formData, [field]: value });
   };
 
+  const handlePaymentGatewayChange = (gateway, field, value) => {
+    setFormData({
+      ...formData,
+      payment_gateways: {
+        ...formData.payment_gateways,
+        [gateway]: {
+          ...formData.payment_gateways[gateway],
+          [field]: value
+        }
+      }
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
