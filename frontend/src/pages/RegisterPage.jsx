@@ -10,6 +10,11 @@ import { ArrowLeft } from 'lucide-react';
 
 const RegisterPage = ({ login, settings }) => {
   const { t } = useContext(LanguageContext);
+  
+  // Get referral code from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const referralCode = urlParams.get('ref');
+  
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
