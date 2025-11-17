@@ -145,7 +145,7 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
                   data-testid="add-to-cart-btn"
                 >
                   <ShoppingCart className="mr-2" size={24} />
-                  Ajoute nan Panye
+                  Add to Cart
                 </Button>
               </div>
             </div>
