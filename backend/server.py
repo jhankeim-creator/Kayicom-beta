@@ -820,7 +820,13 @@ async def get_crypto_config():
         default_config = CryptoConfig().model_dump()
         default_config['updated_at'] = default_config['updated_at'].isoformat()
         await db.crypto_config.insert_one(default_config)
-        return default_config
+        config = default_config
+    
+    # Get wallet addresses from settings
+    settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0})
+    if settings and settings.get('crypto_settings'):
+        config['crypto_settings'] = settings['crypto_settings']
+    
     return config
 
 @api_router.put("/crypto/config")
