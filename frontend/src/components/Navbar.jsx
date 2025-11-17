@@ -34,7 +34,7 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             <Link to="/products" className="text-white hover:text-pink-400 transition" data-testid="nav-products">
               Products
             </Link>
-            <Link to="/crypto" className="text-white font-semibold bg-gradient-to-r from-cyan-500 to-pink-500 px-4 py-2 rounded-lg hover:opacity-90 transition">
+            <Link to="/crypto" className="text-white hover:text-pink-400 transition" data-testid="nav-crypto">
               💱 Crypto
             </Link>
           </div>
@@ -45,7 +45,7 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
               <Package size={22} />
               <span>Shop</span>
             </Link>
-            <Link to="/crypto" className="hover:text-pink-400 flex flex-col items-center text-xs bg-gradient-to-r from-cyan-500 to-pink-500 px-3 py-1 rounded-lg">
+            <Link to="/crypto" className="hover:text-pink-400 flex flex-col items-center text-xs">
               <span className="text-xl">💱</span>
               <span className="font-bold">Crypto</span>
             </Link>
