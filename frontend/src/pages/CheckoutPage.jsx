@@ -188,10 +188,18 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
                 </div>
               </RadioGroup>
 
-              {['paypal', 'skrill', 'moncash', 'binance_pay', 'zelle', 'cashapp'].includes(paymentMethod) && (
+              {['paypal', 'airtm', 'skrill'].includes(paymentMethod) && settings?.payment_gateways?.[paymentMethod] && (
                 <div className="mt-6 p-4 bg-yellow-400/10 border border-yellow-400/30 rounded-lg">
+                  <p className="text-yellow-200 text-sm mb-2">
+                    <strong>Payment Instructions:</strong>
+                  </p>
+                  {settings.payment_gateways[paymentMethod].instructions && (
+                    <p className="text-white/80 text-sm mb-2">
+                      {settings.payment_gateways[paymentMethod].instructions}
+                    </p>
+                  )}
                   <p className="text-yellow-200 text-sm">
-                    <strong>Note:</strong> After placing your order, you will need to submit your payment proof and transaction ID on the order tracking page.
+                    After placing your order, submit your payment proof and transaction ID on the order tracking page.
                   </p>
                 </div>
               )}
