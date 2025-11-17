@@ -27,25 +27,37 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-gray-300 hover:text-pink-400 transition" data-testid="nav-home">
-              <Home className="inline mr-1" size={18} />{t('home')}
+          <div className="hidden md:flex items-center space-x-6 text-base font-medium">
+            <Link to="/" className="text-white hover:text-pink-400 transition" data-testid="nav-home">
+              <Home className="inline mr-1" size={18} />Home
             </Link>
-            <Link to="/products" className="text-gray-300 hover:text-pink-400 transition" data-testid="nav-products">
-              <Package className="inline mr-1" size={18} />{t('products')}
+            <Link to="/products" className="text-white hover:text-pink-400 transition" data-testid="nav-products">
+              <Package className="inline mr-1" size={18} />Products
             </Link>
-            <Link to="/crypto" className="text-gray-300 hover:text-pink-400 transition">
+            <Link to="/crypto" className="text-white hover:text-pink-400 transition font-semibold bg-gradient-to-r from-cyan-500 to-pink-500 px-4 py-2 rounded-lg">
               💱 Crypto
             </Link>
+            {user && (
+              <>
+                <Link to="/referral" className="text-white hover:text-pink-400 transition">
+                  👥 Referral
+                </Link>
+                <Link to="/withdraw" className="text-white hover:text-pink-400 transition">
+                  💰 Withdraw
+                </Link>
+              </>
+            )}
           </div>
           
-          {/* Mobile Menu Links */}
-          <div className="flex md:hidden items-center space-x-4">
-            <Link to="/products" className="text-gray-300 hover:text-pink-400">
-              <Package size={20} />
+          {/* Mobile Menu - More Visible */}
+          <div className="flex md:hidden items-center gap-3 text-white">
+            <Link to="/products" className="hover:text-pink-400 flex flex-col items-center text-xs">
+              <Package size={22} />
+              <span>Shop</span>
             </Link>
-            <Link to="/crypto" className="text-gray-300 hover:text-pink-400">
+            <Link to="/crypto" className="hover:text-pink-400 flex flex-col items-center text-xs bg-gradient-to-r from-cyan-500 to-pink-500 px-3 py-1 rounded-lg">
               <span className="text-xl">💱</span>
+              <span className="font-bold">Crypto</span>
             </Link>
           </div>
 
