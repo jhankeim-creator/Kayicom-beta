@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Copy, TrendingUp, TrendingDown, Upload } from 'lucide-react';
+import { Copy, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CryptoPage = ({ user, logout, settings }) => {
@@ -25,6 +25,7 @@ const CryptoPage = ({ user, logout, settings }) => {
   const [uploadingProof, setUploadingProof] = useState(false);
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState([]);
+  const [plisioInvoice, setPlisioInvoice] = useState(null);
 
   useEffect(() => {
     loadConfig();
@@ -108,24 +109,7 @@ const CryptoPage = ({ user, logout, settings }) => {
       return;
     }
 
-    if (!transactionId) {
-      toast.error('Please enter transaction ID');
-      return;
-    }
-
-    if (!paymentProofFile) {
-      toast.error('Please upload payment proof');
-      return;
-    }
-
     setLoading(true);
-    
-    // Upload file first
-    const proofUrl = await handleFileUpload(paymentProofFile);
-    if (!proofUrl) {
-      setLoading(false);
-      return;
-    }
 
     try {
       const response = await axiosInstance.post('/crypto/buy', {
@@ -133,14 +117,18 @@ const CryptoPage = ({ user, logout, settings }) => {
         amount_usd: parseFloat(amountUsd),
         wallet_address: walletAddress,
         payment_method: paymentMethod,
-        transaction_id: transactionId,
-        payment_proof: proofUrl
+        transaction_id: transactionId || '',
+        payment_proof: ''
       });
-      toast.success('Buy order submitted! Admin will process your request.');
-      setAmountUsd('');
-      setWalletAddress('');
-      setTransactionId('');
-      setPaymentProofFile(null);
+      
+      // Check if Plisio invoice was generated
+      if (response.data.plisio) {
+        setPlisioInvoice(response.data.plisio);
+        toast.success('Payment address generated! Send crypto to the address below.');
+      } else {
+        toast.success('Buy order submitted! Admin will process your request.');
+      }
+      
       loadTransactions();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Error submitting buy order');
@@ -177,7 +165,6 @@ const CryptoPage = ({ user, logout, settings }) => {
 
     setLoading(true);
     
-    // Upload file first
     const proofUrl = await handleFileUpload(paymentProofFile);
     if (!proofUrl) {
       setLoading(false);
@@ -226,6 +213,48 @@ const CryptoPage = ({ user, logout, settings }) => {
           <p className="text-white/80 text-center mb-12">
             Trade USDT on BEP20, TRC20, and MATIC networks. No KYC required.
           </p>
+
+          {/* Plisio Invoice Display */}
+          {plisioInvoice && (
+            <Card className="glass-effect border-green-500/50 mb-8">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-green-400 mb-4">✅ Payment Address Generated!</h2>
+                  <p className="text-white/80 mb-4">Send exactly <span className="text-white font-bold">{plisioInvoice.amount_crypto} USDT</span> to:</p>
+                  
+                  <div className="bg-white/10 p-4 rounded-lg mb-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <code className="text-white text-sm break-all">{plisioInvoice.wallet_address}</code>
+                      <Button
+                        size="sm"
+                        onClick={() => copyToClipboard(plisioInvoice.wallet_address, 'Address')}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Copy size={16} />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {plisioInvoice.qr_code && (
+                    <div className="mb-4">
+                      <img src={plisioInvoice.qr_code} alt="QR Code" className="mx-auto w-48 h-48" />
+                    </div>
+                  )}
+
+                  {plisioInvoice.invoice_url && (
+                    <a 
+                      href={plisioInvoice.invoice_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
+                    >
+                      Track Payment <ExternalLink size={16} />
+                    </a>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="glass-effect border-white/20 mb-8">
             <CardContent className="p-6">
@@ -285,7 +314,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                   )}
 
                   <div>
-                    <Label className="text-white">Your {chain} Wallet Address</Label>
+                    <Label className="text-white">Your {chain} Wallet Address (to receive USDT)</Label>
                     <Input
                       placeholder="Enter wallet address to receive USDT"
                       value={walletAddress}
@@ -294,56 +323,17 @@ const CryptoPage = ({ user, logout, settings }) => {
                     />
                   </div>
 
-                  <div>
-                    <Label className="text-white">Payment Method</Label>
-                    <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-2 space-y-2">
-                      <div className="flex items-center space-x-2 bg-white/5 p-3 rounded-lg">
-                        <RadioGroupItem value="paypal" id="paypal" />
-                        <label htmlFor="paypal" className="text-white cursor-pointer flex-1">💳 Paypal</label>
-                      </div>
-                      <div className="flex items-center space-x-2 bg-white/5 p-3 rounded-lg">
-                        <RadioGroupItem value="airtm" id="airtm" />
-                        <label htmlFor="airtm" className="text-white cursor-pointer flex-1">💸 AirTM</label>
-                      </div>
-                      <div className="flex items-center space-x-2 bg-white/5 p-3 rounded-lg">
-                        <RadioGroupItem value="skrill" id="skrill" />
-                        <label htmlFor="skrill" className="text-white cursor-pointer flex-1">💰 Skrill</label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  <div>
-                    <Label className="text-white">Transaction ID</Label>
-                    <Input
-                      placeholder="Enter your payment transaction ID"
-                      value={transactionId}
-                      onChange={(e) => setTransactionId(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-white">Payment Proof (Upload Screenshot)</Label>
-                    <div className="mt-1">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setPaymentProofFile(e.target.files[0])}
-                        className="block w-full text-white bg-white/10 border border-white/20 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-pink-500 file:text-white hover:file:bg-pink-600"
-                      />
-                      {paymentProofFile && (
-                        <p className="text-green-400 text-sm mt-2">✓ {paymentProofFile.name}</p>
-                      )}
-                    </div>
-                  </div>
-
                   <Button
                     onClick={handleBuy}
-                    disabled={loading || uploadingProof}
+                    disabled={loading}
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                   >
-                    {loading || uploadingProof ? 'Processing...' : 'Submit Buy Order'}
+                    {loading ? 'Generating Payment Address...' : 'Generate Payment Address'}
                   </Button>
+
+                  <p className="text-white/60 text-sm text-center">
+                    ℹ️ We'll generate a unique crypto address for you to send payment
+                  </p>
                 </TabsContent>
 
                 <TabsContent value="sell" className="space-y-4">
@@ -361,7 +351,6 @@ const CryptoPage = ({ user, logout, settings }) => {
                     </Select>
                   </div>
 
-                  {/* SHOW ADMIN WALLET ADDRESS */}
                   {getAdminWallet() && (
                     <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
                       <Label className="text-blue-300 font-semibold">Send USDT to this {chain} address:</Label>
@@ -422,7 +411,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                       </div>
                       <div className="flex items-center space-x-2 bg-white/5 p-3 rounded-lg">
                         <RadioGroupItem value="skrill" id="sell-skrill" />
-                        <label htmlFor="skrill" className="text-white cursor-pointer flex-1">💰 Skrill</label>
+                        <label htmlFor="sell-skrill" className="text-white cursor-pointer flex-1">💰 Skrill</label>
                       </div>
                     </RadioGroup>
                   </div>
