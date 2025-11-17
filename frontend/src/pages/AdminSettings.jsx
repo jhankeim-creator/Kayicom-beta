@@ -302,7 +302,12 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <span>💳</span> PayPal
                           </h4>
                           <label className="flex items-center gap-2">
-                            <input type="checkbox" defaultChecked className="w-4 h-4" />
+                            <input 
+                              type="checkbox" 
+                              checked={formData.payment_gateways.paypal.enabled}
+                              onChange={(e) => handlePaymentGatewayChange('paypal', 'enabled', e.target.checked)}
+                              className="w-4 h-4" 
+                            />
                             <span className="text-white text-sm">Enabled</span>
                           </label>
                         </div>
@@ -311,6 +316,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">PayPal Email</Label>
                             <Input
                               placeholder="your@paypal.com"
+                              value={formData.payment_gateways.paypal.email}
+                              onChange={(e) => handlePaymentGatewayChange('paypal', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
                           </div>
@@ -318,6 +325,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions for Customers</Label>
                             <Textarea
                               placeholder="Send payment to the email above with order ID in notes"
+                              value={formData.payment_gateways.paypal.instructions}
+                              onChange={(e) => handlePaymentGatewayChange('paypal', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
                             />
