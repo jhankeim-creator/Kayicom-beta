@@ -4,6 +4,8 @@ import axios from 'axios';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { getTranslation } from './utils/i18n';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 // Pages
 import HomePage from './pages/NewHomePage';
