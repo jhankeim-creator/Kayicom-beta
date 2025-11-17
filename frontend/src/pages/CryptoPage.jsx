@@ -224,20 +224,40 @@ const CryptoPage = ({ user, logout, settings }) => {
 
           {/* Payment Instructions Display */}
           {plisioInvoice && (
-            <Card className="glass-effect border-green-500/50 mb-8">
+            <Card className="glass-effect border-cyan-500/50 mb-8">
               <CardContent className="p-6">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-green-400 mb-4">✅ Order Submitted!</h2>
-                  <p className="text-white/80 mb-6">Please send payment of <span className="text-green-400 font-bold">${amountUsd || plisioInvoice.amount_usd}</span> to:</p>
+                  <h2 className="text-2xl font-bold text-cyan-400 mb-4">💰 Crypto Payment Ready!</h2>
+                  <p className="text-white/90 mb-6 text-lg">
+                    Send <span className="text-cyan-300 font-bold">{plisioInvoice.amount_crypto} USDT</span> to complete your order
+                  </p>
                   
-                  <div className="bg-blue-500/10 border border-blue-500/30 p-6 rounded-lg mb-6">
-                    <p className="text-blue-300 font-semibold mb-2">Payment Method: {paymentMethod.toUpperCase()}</p>
-                    <p className="text-white/70 mb-4">Send payment to admin via your selected method</p>
-                    
-                    <div className="bg-white/5 p-4 rounded-lg mb-4">
+                  <div className="bg-cyan-500/10 border border-cyan-500/30 p-6 rounded-lg mb-6 space-y-4">
+                    <div className="bg-white/5 p-5 rounded-lg">
+                      <p className="text-white/70 text-sm mb-3 font-semibold">📍 Send Payment To This Address:</p>
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <code className="text-cyan-300 text-base break-all font-mono bg-black/30 px-3 py-2 rounded">
+                          {plisioInvoice.wallet_address}
+                        </code>
+                        <Button
+                          size="sm"
+                          onClick={() => copyToClipboard(plisioInvoice.wallet_address, 'Payment address')}
+                          className="bg-cyan-600 hover:bg-cyan-700"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <p className="text-white/60 text-xs mt-3">
+                        💡 Copy this address to your crypto wallet
+                      </p>
+                    </div>
+
+                    <div className="bg-white/5 p-4 rounded-lg">
                       <p className="text-white/70 text-sm mb-2">Your USDT will be sent to:</p>
-                      <div className="flex items-center justify-center gap-2">
-                        <code className="text-white text-sm break-all">{walletAddress}</code>
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <code className="text-white text-sm break-all bg-black/30 px-3 py-2 rounded">
+                          {walletAddress}
+                        </code>
                         <Button
                           size="sm"
                           onClick={() => copyToClipboard(walletAddress, 'Your wallet')}
@@ -247,13 +267,6 @@ const CryptoPage = ({ user, logout, settings }) => {
                         </Button>
                       </div>
                     </div>
-
-                    <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-lg">
-                      <p className="text-yellow-300 text-sm">
-                        ⚠️ <strong>Important:</strong> After sending payment, please upload proof in your dashboard. 
-                        Admin will verify and send USDT to your wallet address.
-                      </p>
-                    </div>
                   </div>
 
                   {plisioInvoice.invoice_url && (
@@ -261,11 +274,19 @@ const CryptoPage = ({ user, logout, settings }) => {
                       href={plisioInvoice.invoice_url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
+                      className="inline-block w-full"
                     >
-                      View Full Invoice <ExternalLink size={16} />
+                      <Button className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-4 text-lg">
+                        🔗 Open Full Payment Invoice
+                      </Button>
                     </a>
                   )}
+                  
+                  <div className="mt-4 text-left bg-green-500/10 border border-green-500/30 p-4 rounded-lg">
+                    <p className="text-green-300 text-sm">
+                      ✅ <strong>Automatic Confirmation:</strong> Your order will be automatically confirmed once payment is received on the blockchain.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
