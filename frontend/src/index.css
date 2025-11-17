@@ -95,3 +95,10 @@ code {
         border-bottom-color: inherit;
     }
 }
+
+/* Site-wide max-width and centering */
+.container {
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
