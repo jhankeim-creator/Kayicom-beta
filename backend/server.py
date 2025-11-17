@@ -58,7 +58,7 @@ class Product(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     description: str
-    category: str  # giftcard, topup, subscription, service
+    category: str  # giftcard, topup, subscription, service, crypto
     price: float
     currency: str = "USD"
     image_url: Optional[str] = None
@@ -69,6 +69,8 @@ class Product(BaseModel):
     variant_name: Optional[str] = None  # For variants like "100 Diamonds", "500 UC", etc
     parent_product_id: Optional[str] = None  # Link to parent product for variants
     requires_player_id: bool = False  # For topup products that need player ID
+    region: Optional[str] = None  # For gift cards: US, EU, ASIA, etc.
+    is_subscription: bool = False  # Track if this triggers referral payout
     metadata: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
