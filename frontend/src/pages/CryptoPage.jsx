@@ -112,7 +112,7 @@ const CryptoPage = ({ user, logout, settings }) => {
     setLoading(true);
 
     try {
-      const response = await axiosInstance.post('/crypto/buy', {
+      const response = await axiosInstance.post(`/crypto/buy?user_id=${user.user_id || user.id}&user_email=${user.email}`, {
         chain,
         amount_usd: parseFloat(amountUsd),
         wallet_address: walletAddress,
@@ -121,17 +121,25 @@ const CryptoPage = ({ user, logout, settings }) => {
         payment_proof: ''
       });
       
+      console.log('Buy response:', response.data);
+      
       // Check if Plisio invoice was generated
       if (response.data.plisio) {
         setPlisioInvoice(response.data.plisio);
-        toast.success('Payment address generated! Send crypto to the address below.');
+        setAmountUsd('');
+        setWalletAddress('');
+        toast.success('✅ Payment address generated! Scroll down to see payment details.');
       } else {
         toast.success('Buy order submitted! Admin will process your request.');
+        setAmountUsd('');
+        setWalletAddress('');
       }
       
       loadTransactions();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Error submitting buy order');
+      console.error('Buy error:', error.response?.data);
+      const errorMsg = error.response?.data?.detail || 'Error submitting buy order';
+      toast.error(typeof errorMsg === 'string' ? errorMsg : 'Error submitting buy order');
     } finally {
       setLoading(false);
     }
