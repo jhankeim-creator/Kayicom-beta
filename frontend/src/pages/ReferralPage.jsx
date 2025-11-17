@@ -21,9 +21,10 @@ const ReferralPage = ({ user, logout, settings }) => {
 
   const loadReferralInfo = async () => {
     try {
-      // Get user ID from localStorage
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = userData.id || user.id;
+      const userId = user.user_id || user.id;
+      if (!userId) {
+        throw new Error('No user ID');
+      }
       
       const response = await axiosInstance.get(`/referral/info?user_id=${userId}`);
       setReferralInfo(response.data);
