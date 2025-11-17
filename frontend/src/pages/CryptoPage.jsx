@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowDownUp, TrendingUp, TrendingDown, Upload } from 'lucide-react';
+import { Copy, TrendingUp, TrendingDown, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CryptoPage = ({ user, logout, settings }) => {
@@ -69,6 +69,11 @@ const CryptoPage = ({ user, logout, settings }) => {
       toast.error('Error uploading file');
       return null;
     }
+  };
+
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied!`);
   };
 
   const calculateBuy = (usd) => {
@@ -203,6 +208,11 @@ const CryptoPage = ({ user, logout, settings }) => {
 
   const buyCalculation = amountUsd ? calculateBuy(amountUsd) : null;
   const sellCalculation = amountCrypto ? calculateSell(amountCrypto) : null;
+
+  const getAdminWallet = () => {
+    if (!config?.crypto_settings?.wallets) return null;
+    return config.crypto_settings.wallets[chain];
+  };
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -351,11 +361,31 @@ const CryptoPage = ({ user, logout, settings }) => {
                     </Select>
                   </div>
 
+                  {/* SHOW ADMIN WALLET ADDRESS */}
+                  {getAdminWallet() && (
+                    <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
+                      <Label className="text-blue-300 font-semibold">Send USDT to this {chain} address:</Label>
+                      <div className="flex items-center gap-2 mt-2">
+                        <code className="flex-1 bg-white/5 text-white text-sm p-2 rounded break-all">
+                          {getAdminWallet()}
+                        </code>
+                        <Button
+                          size="sm"
+                          onClick={() => copyToClipboard(getAdminWallet(), 'Wallet address')}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <p className="text-yellow-300 text-xs mt-2">⚠️ Make sure to select the correct {chain} network</p>
+                    </div>
+                  )}
+
                   <div>
                     <Label className="text-white">Amount (USDT)</Label>
                     <Input
                       type="number"
-                      placeholder="Enter USDT amount"
+                      placeholder="Enter USDT amount you're sending"
                       value={amountCrypto}
                       onChange={(e) => setAmountCrypto(e.target.value)}
                       className="bg-white/10 border-white/20 text-white mt-1"
@@ -380,7 +410,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                   )}
 
                   <div>
-                    <Label className="text-white">Payment Method</Label>
+                    <Label className="text-white">Payment Method (Where to receive money)</Label>
                     <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-2 space-y-2">
                       <div className="flex items-center space-x-2 bg-white/5 p-3 rounded-lg">
                         <RadioGroupItem value="paypal" id="sell-paypal" />
@@ -455,7 +485,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="text-white font-semibold">
-                            {tx.trade_type === 'buy' ? '🟢 Buy' : '🔵 Sell'} {tx.chain}
+                            {tx.transaction_type === 'buy' ? '🟢 Buy' : '🔵 Sell'} {tx.chain}
                           </p>
                           <p className="text-white/70 text-sm">
                             ${tx.amount_usd} → {tx.amount_crypto} USDT
