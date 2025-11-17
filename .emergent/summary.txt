@@ -1,94 +1,181 @@
-<analysis>
-The previous AI engineer developed a full-stack digital marketplace named KayiCom, iteratively addressing complex requirements and extensive user feedback. The development followed a cyclical pattern of implementing features, presenting a complete status, receiving further user criticisms/requests, and then iterating on the design and functionality. Key challenges included translating nuanced Haitian Creole requirements, adapting to evolving design inspirations (MTCGame to U7BUY), implementing a bilingual system, and integrating various e-commerce features. The AI successfully established a React frontend, FastAPI backend, and MongoDB database, including core functionalities like user authentication, product management, order processing, and an administrative panel with customizable settings. Design elements, internationalization, and robust backend APIs were continually refined based on direct user observations and explicit requests, demonstrating a reactive and adaptive development approach.
-</analysis>
+<analysis>**original_problem_statement**: The user wants to build a comprehensive digital marketplace, KayiCom. The project initially involved fixing admin panel issues and homepage design. This escalated into a large feature request including a game top-up system, gift cards, subscriptions, a referral system, a withdrawal system (USDT, BTC, PayPal), and a crypto exchange (buy/sell USDT). The user also requested significant admin panel enhancements for managing these systems and major UI/UX improvements, including the removal of all Haitian Creole text and a cleaner navigation bar.
 
-<product_requirements>
-The user requested a digital marketplace, Kayicom, similar to MTCGame, featuring:
-1.  **Product Offerings:** Internal gift card delivery, automatic game top-up, automatic subscription control post-delivery, services (Stripe/PayPal account verification, TextNow), and products inspired initially by MTCGame/GoSplit/Z2U, later shifting to U7BUY's design and product categories with a unique twist. Specific subscription durations (2, 6, 12, 24 months) were requested.
-2.  **Design & Customization:** MTCGame-like design initially, then U7BUY-inspired with professional background images, unique game cover image collages, KayiCom logo, Trustpilot widget. The site should have a dark theme with specific color schemes (initially blue/cyan, later flamingo pink & royal blue). All site elements (links, images, product covers, logo) and payment methods should be customizable via an admin panel.
-3.  **Admin & Customer Dashboards:** A robust admin dashboard to manage products, orders, categories, settings, and bulk email promotions. A customer dashboard for user management.
-4.  **Payments:** Automatic crypto payments via Plisio (initially requested but not implemented) and manual payments (PayPal, Skrill, MonCash, Binance Pay, Zelle, CashApp) requiring proof and transaction ID.
-5.  **Internationalization:** Bilingual support (English/French) with English as the primary language.
-6.  **Functionality:** What We Offer section at the bottom, bulk email functionality for promotions (referencing resender.com), and comprehensive product/category management configurable from the admin panel. Ensure seamless login/admin redirects and general bug-free operation.
-</product_requirements>
+**PRODUCT REQUIREMENTS:**
+1.  **Top-Up System:** For games, using UID only.
+2.  **Gift Cards:** Products with value and region variants.
+3.  **Subscriptions:** Implement subscription plans.
+4.  **Referral System:** Users get a referral link; referrer earns  when a new user signs up and purchases a subscription.
+5.  **Withdrawal System:** Allow users to withdraw referral balances (min ) via USDT (BEP20), BTC, or PayPal.
+6.  **Crypto Exchange:**
+    *   Allow users to buy/sell USDT on BEP20 and TRC20 chains (MATIC was requested to be removed).
+    *   For Buy USDT, payment is made via Airtm/Skrill/PayPal, and a Plisio invoice should be automatically generated for the customer to pay to.
+    *   For Sell USDT, the customer is shown the admin's wallet address to send crypto to.
+    *   Customers must be able to provide a Transaction ID and proof of payment (as a file upload).
+7.  **Admin Panel Enhancements:**
+    *   Manage payment gateways (Airtm, Skrill, PayPal instructions).
+    *   Manage crypto settings (admin wallets, fees).
+    *   An admin page to view and manage crypto transactions (approve/reject).
+    *   Proper file upload components instead of URL inputs.
+8.  **UI/UX Fixes:**
+    *   A clean main navigation bar with Crypto, Referral, Dashboard, and Withdraw as top-level items.
+    *   The user's logo must be displayed.
+    *   The site layout must be properly centered.
+    *   The navbar must be responsive and styled with a warm color (settled on purple gradient).
 
-<key_technical_concepts>
--   **Full-stack Development:** React (Frontend), FastAPI (Backend), MongoDB (Database).
--   **Styling:** Tailwind CSS, PostCSS, Shadcn/UI components, custom CSS for dark themes and gradients.
--   **Internationalization:**  for multi-language support (English/French).
--   **API Integration:** Plisio (researched, not implemented), manual payment gateway handling.
--   **Deployment & Environment:** Kubernetes container, Supervisor for process management.
--   **Authentication:** JWT-based custom auth with admin/customer roles.
--   **Data Management:** Pydantic for FastAPI models, MongoDB for data storage.
-</key_technical_concepts>
+**User's preferred language**: **Haitian Creole**. The user communicates exclusively in Haitian Creole. The next agent MUST respond in Haitian Creole to maintain user trust and ensure clear communication.
 
-<code_architecture>
-The application follows a standard full-stack architecture with a React frontend, FastAPI backend, and MongoDB database.
+**what currently exists?**
+The application is significantly more stable than at the start of the session. The agent has systematically addressed numerous critical bugs and UI issues.
+- **Backend:** The critical routing issue where new endpoints were not being registered has been fixed. The Referral System backend is now functional. Plisio integration for automatic crypto address generation has been added via a new  and integrated into the Buy Crypto flow. Endpoints for managing crypto transactions have been created and updated.
+- **Frontend:** The UI has been substantially improved based on multiple rounds of user feedback. The language switcher now uses flags. The navbar is fully responsive, features the user's logo, has a new color scheme, and includes direct links to key pages (Dashboard, Referral, Withdraw). The Crypto page has been updated to support the buy/sell flow with file uploads for proof and displays the appropriate admin wallet or Plisio invoice details.
+
+**Last working item**:
+- **Last item agent was working**: The agent was finalizing the Plisio integration. The user requested that the Plisio automatic payment flow also be used on the main product checkout page (not just the crypto trade page). The agent updated the  endpoint in  to use the new  class for consistency. Additionally, the MATIC network option was removed from both the frontend and backend as requested.
+- **Status**: IN PROGRESS
+- **Agent Testing Done**: N (The code for the  endpoint was updated, but the agent did not perform a test of the product checkout flow to verify the Plisio integration works in that context.)
+- **Which testing method agent to use?**: Frontend testing agent. This is required to simulate a full user journey: adding a product to the cart, proceeding to checkout, selecting a crypto payment method, and verifying that a Plisio invoice is correctly generated and displayed.
+- **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+-   **Issue 1**: (P0) Plisio integration on the main product checkout page is untested.
+-   **Issue 2**: (P1) Saving payment gateway information in the Admin Settings panel is not working.
+-   **Issue 3**: (P1) Manual payment methods configured in Admin Settings are not appearing as options on the product checkout page.
+
+**Issues Detail**:
+-   **Issue 1: Plisio integration on the main product checkout page is untested.**
+    -   **Attempted fixes**: The agent correctly identified that the  endpoint in  had an outdated Plisio implementation and updated it to use the new, more robust  class.
+    -   **Next debug checklist**:
+        1.  Use the frontend testing agent to perform a full end-to-end test:
+        2.  Log in as a customer.
+        3.  Add a product to the cart.
+        4.  Navigate to the checkout page ().
+        5.  Select a crypto payment option.
+        6.  Confirm the order and verify that a Plisio invoice is generated and its details are displayed to the user.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a core part of the e-commerce functionality and was a direct request from the user.
+    -   **Status**: TESTING PENDING
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Frontend
+    -   **Blocked on other issue**: None
+
+-   **Issue 2: Saving payment gateway information in the Admin Settings panel is not working.**
+    -   **Attempted fixes**: The backend  model in  was updated to include fields for payment gateways. The frontend UI exists in . However, the user reported that saving the information fails. The agent did not investigate this specific failure.
+    -   **Next debug checklist**:
+        1.  In , inspect the  function for the payments tab.
+        2.  Use browser developer tools (via screenshot agent) to check the payload being sent to the backend when the admin tries to save payment settings.
+        3.  Verify the backend endpoint () correctly receives and processes this payload. Check backend logs for errors.
+    -   **Why fix this issue and what will be achieved with the fix?**: The admin needs to be able to configure payment instructions for manual methods like Airtm and Skrill.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: Both
+    -   **Blocked on other issue**: None
+
+-   **Issue 3: Manual payment methods configured in Admin Settings are not appearing as options on the product checkout page.**
+    -   **Attempted fixes**: None. This is a logical follow-up to Issue 2.
+    -   **Next debug checklist**:
+        1.  First, ensure Issue 2 is resolved and payment gateway settings can be saved.
+        2.  In , add logic to fetch the site settings ().
+        3.  Dynamically render payment options based on which gateways are marked as active in the settings.
+    -   **Why fix this issue and what will be achieved with the fix?**: This will allow customers to choose from the payment methods the admin has enabled.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: Frontend
+    -   **Blocked on other issue**: Issue 2
+
+**In progress Task List**:
+*   None.
+
+**Upcoming and Future Tasks**
+
+*   **Upcoming Tasks**:
+    *   (P0) **Test and Verify Plisio on Checkout**: Complete testing for Issue 1.
+    *   (P1) **Fix Admin Payment Settings**: Resolve Issue 2 and Issue 3 to complete the payment gateway management feature.
+    *   (P2) **Complete Withdrawal System**: The backend/frontend placeholders exist, but the full UI flow for a user to request a withdrawal and for an admin to approve it needs to be built and tested.
+    *   (P2) **Fix Product Variants**: The original issue of generic variants for all product types still needs to be addressed. This involves modifying the seeding scripts and the product page UI.
+
+*   **Future Tasks**:
+    *   **Refactor **: This file is still extremely large and should be broken down into separate router files (e.g., , ).
+    *   **Implement a Notification System**: Build the email/SMS/WhatsApp notification system.
+    *   **Implement Security Features**: Add rate limiting, input sanitization, and other security measures.
+
+**Completed work in this session**
+- **Referral System Fixed**: Resolved the critical backend routing issue that prevented the referral API from working.
+- **Plisio Integration**: Successfully integrated Plisio for automatic crypto address generation, created a reusable , and handled API key management.
+- **Crypto Exchange UI/UX**: Built and refined the Buy/Sell Crypto page, adding fields for transaction proof, implementing file uploads, and displaying correct wallet information for each flow.
+- **Navbar Overhaul**: Completely redesigned the navbar based on user feedback, adding a new color scheme, the user's logo, direct links to major pages, and ensuring it's fully responsive.
+- **Language Switcher Implemented**: Replaced the old text-based language selector with a modern dropdown using country flags.
+- **General UI/Layout Fixes**: Implemented a global max-width and centering for the site layout.
+- **Admin Crypto Management**: Created a new page () and corresponding backend endpoints for admins to manage crypto trades.
+- **MATIC Network Removed**: Removed the MATIC cryptocurrency option from all parts of the application as requested.
+
+**Earlier issues found/mentioned but not fixed**
+*   **Issue 1: Product variants are not category-specific.** The user complained that the same variants are used for all categories (e.g., Region for Top-Ups). This still needs to be fixed in the data-seeding scripts and product display components.
+*   **Issue 2: The full Withdrawal system is not implemented.** While backend models/endpoints and a placeholder UI page exist, the feature is not functional.
+
+**Known issue recurrence from previous fork**
+- **Issue recurrence in previous fork**: The previous agent's pattern of claiming work is done without proper testing was repeated initially in this session. This led to user frustration. The agent improved by adopting  and screenshot testing, but the final task was still left without verification.
+- **Recurrence count**: 4+
+- **Status**: PARTIALLY RESOLVED (Agent's testing improved, but is not yet consistently applied before finishing).
+
+**Code Architecture**
 
 
+**Key Technical Concepts**
+*   Full-stack Development: React, FastAPI, MongoDB
+*   Third-Party Integration: **Plisio API** for crypto payments.
+*   Styling: Tailwind CSS, Shadcn/UI
+*   Asynchronous Python:  for non-blocking API calls to Plisio.
 
--   **/app/backend/server.py**: Main FastAPI application.
-    -   **Importance:** Handles all backend logic, API endpoints, database interactions, and business logic.
-    -   **Changes:** Initial setup of routes for authentication, products, orders, settings. Modified to support subscription durations, various payment methods, category management, and bulk email functionality. Includes CRUD operations for products and user management, and an admin user creation endpoint.
--   **/app/frontend/src/App.js**: Main React component and routing.
-    -   **Importance:** Defines the application's structure, routes, and global contexts (e.g., language).
-    -   **Changes:** Initial setup, later updated to include language context provider () and to switch the main route from  to .
--   **/app/frontend/src/App.css & /app/frontend/src/index.css**: Global and component-specific styles.
-    -   **Importance:** Defines the visual theme of the application.
-    -   **Changes:** Heavily modified for dark theme implementation, gradients, and a new color scheme (flamingo pink & royal blue).
--   **/app/frontend/src/utils/i18n.js**: Internationalization utility.
-    -   **Importance:** Manages translation strings for English and French.
-    -   **Changes:** Created to support bilingual functionality.
--   **/app/frontend/src/components/Navbar.jsx**: Navigation bar component.
-    -   **Importance:** Provides global navigation, login/logout, and language switching.
-    -   **Changes:** Rewritten to integrate dark theme styles, a  component, and updated color schemes for hover states and icons.
--   **/app/frontend/src/components/Footer.jsx**: Footer component.
-    -   **Importance:** Displays copyright, support information, and social links.
-    -   **Changes:** Updated for dark theme styles, new color scheme, and fixed syntax errors ( characters).
--   **/app/frontend/src/pages/NewHomePage.jsx**: The primary landing page.
-    -   **Importance:** The initial view for users, showcasing featured products and services.
-    -   **Changes:** Initially created, then completely rewritten multiple times to match U7BUY-inspired design, include professional background images (game collage), Trustpilot widget, reorganized layout, and apply the new color scheme.
--   **/app/frontend/src/pages/AdminSettings.jsx**: Admin panel for site configuration.
-    -   **Importance:** Allows administrators to customize site parameters, API keys, categories, and manage bulk emails.
-    -   **Changes:** Modified to include new tabs for 'Categories' and 'Bulk Email', remove Creole text, and fix syntax issues, including a full rewrite due to newline characters.
--   **/app/frontend/src/pages/AdminOrders.jsx**: Admin panel for order management.
-    -   **Importance:** Enables administrators to view and manage customer orders, including delivery status and payment approvals.
-    -   **Changes:** Rewritten to include delivery management features and translate Creole text to English, applying the new color scheme.
--   **/app/frontend/src/pages/LoginPage.jsx** and **/app/frontend/src/pages/RegisterPage.jsx**: User authentication pages.
-    -   **Importance:** Handles user sign-up and sign-in processes.
-    -   **Changes:** Edited to ensure correct admin panel redirection post-login and to remove Creole text, applying new color schemes for buttons and links.
--   **/app/frontend/src/pages/AdminDashboard.jsx**: Overview for administrators.
-    -   **Importance:** Displays key statistics like total orders, products, customers, and revenue.
-    -   **Changes:** Edited to replace all Creole text with English for better internationalization consistency.
--   **/app/frontend/src/pages/ProductsPage.jsx**: Displays all available products.
-    -   **Importance:** Allows users to browse and filter products.
-    -   **Changes:** Adjusted layout to display products in 2 columns on mobile devices ().
-</code_architecture>
+**key DB schema**
+- **settings**: Extended significantly to hold  (Airtm, Skrill, PayPal),  (admin wallet addresses), and .
 
-<pending_tasks>
--   **Plisio Crypto Payment Integration:** Research was done, but the actual integration was not implemented, as the user shifted focus to manual payments.
--   **Automatic Subscription Control After Delivery:** While subscription durations were added, the full automatic control after delivery system (beyond manual delivery options in Admin Orders) remains to be fully implemented and verified.
--   **Comprehensive Payment Gateway Testing:** Explicit end-to-end testing of *all* specified manual payment gateways (PayPal, Skrill, MonCash, Binance Pay, Zelle, CashApp) was planned but not explicitly demonstrated or confirmed in the trajectory.
-</pending_tasks>
+**changes in tech stack**
+-   Added  to the backend dependencies for Plisio integration.
 
-<current_work>
-Immediately before this summary request, the AI engineer was focused on addressing user feedback regarding login issues, missing delivery options in the admin panel, incorrect language usage (Haitian Creole instead of English/French), and a desire for specific design color changes.
+**All files**
+-   **Created**:
+    -   : To encapsulate all logic for interacting with the Plisio API.
+    -   : A new admin page to view and manage crypto trades.
+-   **Updated Heavily**:
+    -   : Fixed routing, updated numerous endpoints for crypto and orders to use new helpers and models, added Plisio integration.
+    -   : Complete visual and functional overhaul for responsiveness, styling, and new navigation links.
+    -   : Rewritten to handle the full buy/sell crypto flow, including Plisio integration and file uploads.
+    -   : Added new routes for the admin crypto management page.
+    -   : Added global styles for site centering.
+    -   : Rewritten to use a dropdown with flags.
 
-The AI engineer performed the following actions:
-1.  **Verified Admin Login:** Tested the backend API login and frontend login flow (Chat 268-271). The tests showed successful login and redirection to , suggesting the issue might be client-side (cache/cookies) for the user.
-2.  **Implemented Order Delivery Management:** Updated  to include delivery options. This involved rewriting the file to incorporate the new functionality and translate remaining Creole text to English (Chat 279-280).
-3.  **Updated Color Scheme:** Modified the application's visual theme from a blue/cyan gradient to flamingo pink and royal blue while retaining the dark background. This involved edits to:
-    *    (Chat 276)
-    *    (Chat 278)
-    *    (Chat 282, 284, 286)
-    *    (Chat 288, 290, 292, 294, 296, 298, 300, 302)
-    *    (Chat 304, 306)
-    These changes specifically targeted button colors, hover states, text colors, and icon colors throughout the frontend.
-4.  **Tested Latest Changes:** A screenshot was taken (Chat 308) to verify the new color scheme on the Homepage, Login Page, and Admin Orders page, confirming they were working as expected.
+**Critical Info for New Agent**
+-   **COMMUNICATE IN HAITIAN CREOLE.** This is non-negotiable.
+-   **TEST EVERYTHING FROM THE USER'S PERSPECTIVE.** The user uses the preview link. Do not assume a feature works just because a  test on  passes. Use the screenshot tool and frontend testing agent to validate UI changes and end-to-end flows.
+-   **Tackle one issue at a time.** The user has several remaining issues. Address them methodically: implement, test thoroughly, confirm with the user, then move to the next.
+-   **Focus on the remaining payment issues.** The highest priority is to get all payment flows (Plisio on checkout, manual payment methods) fully functional and tested, as this is core to the marketplace.
 
-The application is currently in a state where the core functionalities, including user management, product display with subscription options, multi-language support (English/French), admin panel with product/order/settings management (including categories and bulk email), and a U7BUY-inspired dark theme with pink/blue accents, are all implemented and verified to be functional according to the latest tests.
-</current_work>
+**documents created in this job**
+- None.
 
-<optional_next_step>
-Test the functionality of the new delivery options in the Admin Orders page.
-</optional_next_step>
+**Last 5 User Messages and any pending user messages**
+1.  **User (Message 278):** Provided Plisio API key and asked for automatic address generation and UI adjustments for navbar/logo on web/mobile.
+2.  **User (Message 301):** Pointed out that new navbar buttons (Dashboard, Referral, etc.) were missing and that the Plisio integration wasn't working.
+3.  **User (Message 323):** Expressed anger that the agent claimed Plisio was working when it was failing on the live site.
+4.  **User (Message 343):** Clarified they only use the Emergent preview link (not localhost) and demanded all issues be fixed for production.
+5.  **User (Message 357):** Asked to remove the MATIC network, pointed out a logical flaw in the crypto generation link, and asked to test Plisio on the main product checkout page.
+
+**Project Health Check:**
+-   **Broken**: The flow for configuring manual payment methods in the admin panel and displaying them at checkout is broken. The Plisio integration on the main checkout page is unverified.
+-   **Mocked**: None.
+
+**Testing status**
+-   **Testing agent used after significant changes**: YES, the agent used both backend and frontend testing agents once, which helped establish a stable baseline.
+-   **Troubleshoot agent used after agent stuck in loop**: NO.
+-   **Test files created**: The backend testing agent created temporary test files during its run.
+-   **Known regressions**: None in this session; the agent fixed existing regressions.
+
+**Credentials to test flow:**
+-   **Admin Email**: 
+-   **Admin Password**: 
+-   **Customer Email**: 
+-   **Customer Password**: 
+
+**What agent forgot to execute**
+-   The agent did not address the user's reported issue that saving payment gateway information in the admin panel was failing.
+-   Consequently, the agent also did not implement the display of these configured manual payment methods on the product checkout page.
+-   The agent did not perform a final end-to-end test of the product checkout page after integrating the Plisio helper.</analysis>
