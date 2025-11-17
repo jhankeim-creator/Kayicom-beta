@@ -843,8 +843,13 @@ async def update_crypto_config(updates: Dict[str, Any]):
     return {"message": "Crypto config updated"}
 
 @api_router.post("/crypto/buy")
-async def buy_crypto(request: CryptoBuyRequest, user_id: str, user_email: str):
+async def buy_crypto(request: CryptoBuyRequest, user_id: str = None, user_email: str = None):
     """User buys USDT - Generate Plisio invoice automatically"""
+    # Extract user info from request if not provided
+    if not user_id:
+        user_id = "guest"
+    if not user_email:
+        user_email = "guest@kayicom.com"
     # Get config
     config = await db.crypto_config.find_one({"id": "crypto_config"})
     if not config:
