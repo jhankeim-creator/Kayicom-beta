@@ -961,23 +961,30 @@ async def get_all_crypto_transactions():
     
     return transactions
 
+class CryptoStatusUpdate(BaseModel):
+    status: str
+    admin_notes: Optional[str] = None
+    tx_hash: Optional[str] = None
+
 @api_router.put("/crypto/transactions/{transaction_id}/status")
 async def update_crypto_transaction_status(
     transaction_id: str,
-    status: str,
-    transaction_hash: Optional[str] = None
+    update_data: CryptoStatusUpdate
 ):
     """Admin: Update crypto transaction status"""
-    if status not in ['processing', 'completed', 'failed']:
+    if update_data.status not in ['processing', 'completed', 'rejected', 'failed']:
         raise HTTPException(status_code=400, detail="Invalid status")
     
     updates = {
-        "status": status,
+        "status": update_data.status,
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    if transaction_hash:
-        updates['transaction_hash'] = transaction_hash
+    if update_data.admin_notes:
+        updates['admin_notes'] = update_data.admin_notes
+    
+    if update_data.tx_hash:
+        updates['tx_hash'] = update_data.tx_hash
     
 
 
