@@ -26,27 +26,17 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             )}
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6 text-base font-medium">
+          {/* Desktop Menu - CLEAN */}
+          <div className="hidden md:flex items-center space-x-8 text-base">
             <Link to="/" className="text-white hover:text-pink-400 transition" data-testid="nav-home">
-              <Home className="inline mr-1" size={18} />Home
+              Home
             </Link>
             <Link to="/products" className="text-white hover:text-pink-400 transition" data-testid="nav-products">
-              <Package className="inline mr-1" size={18} />Products
+              Products
             </Link>
-            <Link to="/crypto" className="text-white hover:text-pink-400 transition font-semibold bg-gradient-to-r from-cyan-500 to-pink-500 px-4 py-2 rounded-lg">
+            <Link to="/crypto" className="text-white font-semibold bg-gradient-to-r from-cyan-500 to-pink-500 px-4 py-2 rounded-lg hover:opacity-90 transition">
               💱 Crypto
             </Link>
-            {user && (
-              <>
-                <Link to="/referral" className="text-white hover:text-pink-400 transition">
-                  👥 Referral
-                </Link>
-                <Link to="/withdraw" className="text-white hover:text-pink-400 transition">
-                  💰 Withdraw
-                </Link>
-              </>
-            )}
           </div>
           
           {/* Mobile Menu - More Visible */}
