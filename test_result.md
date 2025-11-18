@@ -560,3 +560,38 @@ agent_communication:
       - "Open Full Payment Invoice" button implemented as requested
       
       Minor Issue: Add to cart functionality needs fixing to enable full checkout flow testing.
+  - agent: "testing"
+    message: |
+      🚨 CRITICAL VERIFICATION COMPLETE: PLISIO INTEGRATION STATUS CONFIRMED
+      
+      **VERIFICATION REQUEST COMPLETED** as requested in Haitian Creole:
+      
+      ✅ **LOGIN SUCCESSFUL**: customer@test.com / test123 working correctly
+      ✅ **CRYPTO PAGE ACCESS**: Successfully navigated to Crypto page
+      ✅ **SELL USDT TAB**: Successfully clicked and accessed Sell USDT tab
+      
+      📸 **SCREENSHOTS CAPTURED**:
+      1. **BEFORE FORM FILL**: sell_form_before_fill.png - Shows form fields clearly
+      2. **AFTER SUBMIT**: sell_form_after_submit.png - Shows result after submission
+      
+      🔍 **CRITICAL FINDINGS - ANSWERING THE KEY QUESTION**:
+      
+      ❌ **VYE KÒD (OLD CODE) CONFIRMED**:
+      - ✅ "Transaction ID" field IS PRESENT
+      - ✅ "Payment Proof" upload field IS PRESENT  
+      - ✅ Form shows traditional flow with Transaction ID + Payment Proof fields
+      - ❌ NO green Plisio card appeared after submission
+      - ❌ NO unique wallet address generated
+      - ❌ NO "Open Full Payment Details" button
+      - ❌ NO automatic detection message
+      
+      **ANSWER TO VERIFICATION**: **VYE KÒD** - The old code is still showing. Plisio integration is NOT working.
+      
+      🎯 **DETAILED ANALYSIS**:
+      - Form accepts input correctly (Amount=20, PayPal, test@test.com)
+      - Submission works (shows success message "Sell order created! Send USDT to admin wallet")
+      - Transaction appears in "Your Transactions" section with pending status
+      - BUT: Traditional Transaction ID and Payment Proof fields remain visible
+      - NO Plisio unique address generation occurred
+      
+      **CONCLUSION**: The Plisio integration has failed/reverted to fallback mode, showing the old traditional flow instead of the new automated Plisio flow.
