@@ -315,9 +315,9 @@ frontend:
     implemented: true
     working: false
     file: "/app/frontend/src/pages/CryptoPage.jsx"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -325,6 +325,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL FAILURE: Sell USDT form submission not reaching backend. Form accepts input (25 USDT, TRC20, PayPal, myemail@paypal.com) but POST /api/crypto/sell never appears in backend logs. Fixed missing user_id/user_email parameters but issue persists. No Plisio payment card displayed. Form shows traditional flow with transaction ID/proof fields instead of automated Plisio flow. Requires investigation of form submission mechanism."
+      - working: false
+        agent: "testing"
+        comment: "❌ FRONTEND DISPLAY ISSUE IDENTIFIED: Backend Plisio integration is WORKING correctly - API successfully creates invoices with unique wallet addresses (e.g., 0x5a2342ddb23de22460885a46a3c22236ac8c8031) and invoice URLs. However, frontend is NOT displaying the new Plisio UI. OLD CODE STILL SHOWING: Transaction ID and Payment Proof fields visible before submission. After successful form submission (POST /api/crypto/sell returns 200 OK with Plisio data), the Plisio payment card with 'Send USDT to This Unique Address' does not appear. Issue is in React state management - sellPlisioInvoice state not properly triggering UI update despite receiving correct backend response."
 
 metadata:
   created_by: "main_agent"
