@@ -972,9 +972,37 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
     fee = amount_usd * (config['sell_fee_percent'] / 100)
     total_usd = amount_usd - fee
     
+    transaction_id = str(uuid.uuid4())
+    
+    # Create Plisio invoice for receiving USDT from customer
+    settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0})
+    plisio_invoice = None
+    
+    if settings and settings.get('plisio_api_key'):
+        plisio_helper = PlisioHelper(settings['plisio_api_key'])
+        
+        # Map chain to Plisio currency
+        currency_map = {
+            'BEP20': 'USDT_BSC',
+            'TRC20': 'USDT_TRX',
+            'MATIC': 'USDT_MATIC'
+        }
+        plisio_currency = currency_map.get(request.chain, 'USDT_BSC')
+        
+        plisio_result = await plisio_helper.create_invoice(
+            amount=request.amount_crypto,
+            currency=plisio_currency,
+            order_name=f"Sell USDT Order",
+            order_number=transaction_id,
+            email=user_email
+        )
+        
+        if plisio_result.get('success'):
+            plisio_invoice = plisio_result
+    
     # Create transaction
     transaction = {
-        "id": str(uuid.uuid4()),
+        "id": transaction_id,
         "user_id": user_id,
         "user_email": user_email,
         "transaction_type": "sell",
@@ -990,6 +1018,7 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
         "receiving_info": request.receiving_info,
         "transaction_id": request.transaction_id,
         "payment_proof": request.payment_proof,
+        "plisio_invoice_id": plisio_invoice.get('txn_id') if plisio_invoice else None,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
@@ -997,12 +1026,28 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
     
     await db.crypto_transactions.insert_one(transaction)
     
-    return {
-        "message": "Crypto sell order created. Send USDT to our wallet",
+    response = {
+        "message": "Crypto sell order created. Send USDT to the address below",
         "transaction_id": transaction['id'],
         "total_usd_to_receive": total_usd,
-        "wallet_address": config.get(f"wallet_{request.chain.lower()}")
+        "amount_crypto": request.amount_crypto
     }
+    
+    # Add Plisio details if available
+    if plisio_invoice:
+        response['plisio'] = {
+            "wallet_address": plisio_invoice.get("wallet_address"),
+            "invoice_url": plisio_invoice.get("invoice_url"),
+            "qr_code": plisio_invoice.get("qr_code"),
+            "amount_crypto": plisio_invoice.get("amount_crypto"),
+            "message": "Send USDT to this unique address. Payment will be automatically detected."
+        }
+    else:
+        # Fallback to admin wallet if Plisio not available
+        response['wallet_address'] = config.get(f"wallet_{request.chain.lower()}")
+        response['message'] = "Send USDT to admin wallet. You'll need to provide transaction ID."
+    
+    return response
 
 @api_router.get("/crypto/transactions/user/{user_id}")
 async def get_user_crypto_transactions(user_id: str):
