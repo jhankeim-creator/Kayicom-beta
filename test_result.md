@@ -311,6 +311,21 @@ frontend:
         agent: "testing"
         comment: "✅ TESTED: Delivery info display implemented correctly. Code shows proper green box styling with delivery timestamp and credentials display for completed orders. Visual formatting and data structure verified in AdminOrders.jsx lines 212-222."
 
+  - task: "Sell USDT Plisio Integration"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/CryptoPage.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Plisio integration implemented for sell USDT flow. Backend has PlisioHelper class, sell endpoint, and Plisio API key configured. Frontend should display unique wallet address and payment details."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL FAILURE: Sell USDT form submission not reaching backend. Form accepts input (25 USDT, TRC20, PayPal, myemail@paypal.com) but POST /api/crypto/sell never appears in backend logs. Fixed missing user_id/user_email parameters but issue persists. No Plisio payment card displayed. Form shows traditional flow with transaction ID/proof fields instead of automated Plisio flow. Requires investigation of form submission mechanism."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
