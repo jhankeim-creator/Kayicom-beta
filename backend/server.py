@@ -870,7 +870,6 @@ async def buy_crypto(request: CryptoBuyRequest, user_id: str = None, user_email:
     plisio_invoice = None
     if plisio_api_key:
         try:
-            from plisio_helper import PlisioHelper
             plisio = PlisioHelper(plisio_api_key)
             
             # Map chain to Plisio currency
