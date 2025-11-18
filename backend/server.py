@@ -979,26 +979,32 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
     plisio_invoice = None
     
     if settings and settings.get('plisio_api_key'):
-        plisio_helper = PlisioHelper(settings['plisio_api_key'])
-        
-        # Map chain to Plisio currency
-        currency_map = {
-            'BEP20': 'USDT_BEP20',
-            'TRC20': 'USDT_TRC20',
-            'MATIC': 'USDT_MATIC'
-        }
-        plisio_currency = currency_map.get(request.chain, 'USDT_BEP20')
-        
-        plisio_result = await plisio_helper.create_invoice(
-            amount=request.amount_crypto,
-            currency=plisio_currency,
-            order_name=f"Sell USDT Order",
-            order_number=transaction_id,
-            email=user_email
-        )
-        
-        if plisio_result.get('success'):
-            plisio_invoice = plisio_result
+        try:
+            plisio_helper = PlisioHelper(settings['plisio_api_key'])
+            
+            # Map chain to Plisio currency
+            currency_map = {
+                'BEP20': 'USDT_BEP20',
+                'TRC20': 'USDT_TRC20',
+                'MATIC': 'USDT_MATIC'
+            }
+            plisio_currency = currency_map.get(request.chain, 'USDT_BEP20')
+            
+            plisio_result = await plisio_helper.create_invoice(
+                amount=request.amount_crypto,
+                currency=plisio_currency,
+                order_name=f"Sell USDT Order",
+                order_number=transaction_id,
+                email=user_email
+            )
+            
+            if plisio_result.get('success'):
+                plisio_invoice = plisio_result
+            else:
+                print(f"Plisio invoice creation failed: {plisio_result.get('error')}")
+        except Exception as e:
+            print(f"Plisio integration error: {str(e)}")
+            # Continue without Plisio integration
     
     # Create transaction
     transaction = {
