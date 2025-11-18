@@ -393,7 +393,75 @@ const CryptoPage = ({ user, logout, settings }) => {
                     </Select>
                   </div>
 
-                  {getAdminWallet() && (
+                  {/* Show Plisio invoice if available */}
+                  {sellPlisioInvoice?.plisio && (
+                    <Card className="glass-effect border-green-500/50 mb-4">
+                      <CardContent className="p-6">
+                        <div className="text-center">
+                          <h3 className="text-2xl font-bold text-green-400 mb-4">💰 Send USDT to This Unique Address</h3>
+                          
+                          <div className="bg-green-500/10 border border-green-500/30 p-6 rounded-lg mb-4 space-y-4">
+                            <div className="bg-white/5 p-5 rounded-lg">
+                              <p className="text-white/70 text-sm mb-3 font-semibold">📍 Your Unique {chain} Wallet Address:</p>
+                              <div className="flex items-center justify-center gap-2 flex-wrap">
+                                <code className="text-green-300 text-base break-all font-mono bg-black/30 px-3 py-2 rounded">
+                                  {sellPlisioInvoice.plisio.wallet_address}
+                                </code>
+                                <Button
+                                  size="sm"
+                                  onClick={() => copyToClipboard(sellPlisioInvoice.plisio.wallet_address, 'Wallet address')}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <Copy size={16} />
+                                </Button>
+                              </div>
+                              <p className="text-white/60 text-xs mt-3">
+                                💡 Send exactly {sellPlisioInvoice.amount_crypto} USDT to this address
+                              </p>
+                            </div>
+
+                            <div className="bg-white/5 p-4 rounded-lg">
+                              <p className="text-white/70 text-sm mb-2">You will receive (after payment confirmed):</p>
+                              <p className="text-green-300 text-2xl font-bold">${sellPlisioInvoice.total_usd_to_receive.toFixed(2)}</p>
+                              <p className="text-white/60 text-xs mt-1">
+                                Payment to your {sellPlisioInvoice.payment_method || 'selected method'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {sellPlisioInvoice.plisio.invoice_url && (
+                            <a 
+                              href={sellPlisioInvoice.plisio.invoice_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-block w-full mb-4"
+                            >
+                              <Button className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 text-lg">
+                                🔗 Open Full Payment Details
+                              </Button>
+                            </a>
+                          )}
+                          
+                          <div className="text-left bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
+                            <p className="text-blue-300 text-sm">
+                              ✅ <strong>Automatic Detection:</strong> Your payment will be automatically detected once confirmed on the blockchain. No need to submit transaction ID or proof!
+                            </p>
+                          </div>
+
+                          <Button 
+                            onClick={() => setSellPlisioInvoice(null)}
+                            variant="outline"
+                            className="mt-4 w-full"
+                          >
+                            Create Another Sell Order
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Show admin wallet if Plisio not available (fallback) */}
+                  {!sellPlisioInvoice && getAdminWallet() && (
                     <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
                       <Label className="text-blue-300 font-semibold">Send USDT to this {chain} address:</Label>
                       <div className="flex items-center gap-2 mt-2">
@@ -409,6 +477,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                         </Button>
                       </div>
                       <p className="text-yellow-300 text-xs mt-2">⚠️ Make sure to select the correct {chain} network</p>
+                      <p className="text-white/60 text-xs mt-2">📝 You'll need to provide transaction ID and proof after sending</p>
                     </div>
                   )}
 
