@@ -864,36 +864,9 @@ async def buy_crypto(request: CryptoBuyRequest, user_id: str = None, user_email:
     
     # Get Plisio API key from settings
     settings = await db.settings.find_one({"id": "site_settings"})
-    plisio_api_key = settings.get("plisio_api_key") if settings else None
     
-    # If Plisio is configured, create invoice automatically
-    plisio_invoice = None
-    if plisio_api_key:
-        try:
-            plisio = PlisioHelper(plisio_api_key)
-            
-            # Map chain to Plisio currency
-            currency_map = {
-                "BEP20": "USDT_BEP20",
-                "TRC20": "USDT_TRC20"
-            }
-            plisio_currency = currency_map.get(request.chain, "USDT_TRC20")
-            
-            # Create Plisio invoice
-            invoice_response = await plisio.create_invoice(
-                amount=request.amount_usd,
-                currency=plisio_currency,
-                order_name=f"Buy {request.amount_usd} USD worth of USDT",
-                order_number=f"BUY-{str(uuid.uuid4())[:8]}",
-                email=user_email
-            )
-            
-            if invoice_response.get("success"):
-                plisio_invoice = invoice_response
-                # Use Plisio wallet address instead
-                request.wallet_address = invoice_response.get("wallet_address", request.wallet_address)
-        except Exception as e:
-            print(f"Plisio error (continuing without): {str(e)}")
+    # For BUY USDT, customer pays with FIAT (PayPal, AirTM, Skrill)
+    # No need for Plisio - just show admin payment info
     
     # Check limits
     if request.amount_usd < config['min_buy_usd'] or request.amount_usd > config['max_buy_usd']:
