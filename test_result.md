@@ -319,10 +319,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Plisio integration testing completed"
-  stuck_tasks: []
+    - "Sell USDT Plisio integration - CRITICAL ISSUE FOUND"
+  stuck_tasks:
+    - "Sell USDT Plisio integration - Form submission not reaching backend"
   test_all: false
-  test_priority: "completed"
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
