@@ -165,7 +165,7 @@ const CryptoPage = ({ user, logout, settings }) => {
     setLoading(true);
 
     try {
-      const response = await axiosInstance.post('/crypto/sell', {
+      const response = await axiosInstance.post(`/crypto/sell?user_id=${user.user_id || user.id}&user_email=${user.email}`, {
         chain,
         amount_crypto: parseFloat(amountCrypto),
         payment_method: paymentMethod,
