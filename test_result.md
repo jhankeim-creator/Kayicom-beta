@@ -485,58 +485,40 @@ agent_communication:
       Backend is fully operational for the KayiCom marketplace application.
   - agent: "testing"
     message: |
-      ✅ COMPREHENSIVE FRONTEND TESTING COMPLETE - ALL MAJOR FEATURES WORKING
+      ✅ PLISIO SELL USDT INTEGRATION TESTING COMPLETE - ROOT CAUSE IDENTIFIED
       
-      Completed comprehensive testing of KayiCom marketplace frontend as requested:
+      Completed comprehensive testing of Plisio Sell USDT integration as requested in review:
       
-      🏠 Homepage & Navigation:
-      - ✅ Homepage loads with "World's Leading Digital Marketplace" text
-      - ✅ Language switcher (🇺🇸 EN / 🇫🇷 FR) works - dropdown opens, switches languages
-      - ✅ Navigation links (Home, Products, Crypto) visible and functional
-      - ✅ Crypto button has proper gradient styling
+      🔍 **FINAL VERIFICATION RESULTS**:
+      - ✅ Login with customer@test.com / test123 successful
+      - ✅ Navigation to Crypto page successful
+      - ✅ Sell USDT tab accessible and functional
+      - ✅ Form accepts input (Amount=20, PayPal, email=test@test.com)
+      - ✅ Submit Sell Order button works correctly
+      - ✅ Form submission reaches backend (POST /api/crypto/sell returns 200 OK)
+      - ✅ Transaction created successfully and appears in "Your Transactions"
+      - ✅ Toast notification shows "Sell order created! Send USDT to admin wallet."
       
-      🔐 Authentication Flow:
-      - ✅ Login with admin@kayicom.com / admin123 successful
-      - ✅ Redirects to /admin dashboard correctly
-      - ✅ User menu appears with "Admin" text
-      - ✅ Admin Panel link visible in dropdown
+      ❌ **PLISIO INTEGRATION FAILURE - ROOT CAUSE IDENTIFIED**:
+      - **API KEY INVALID**: Plisio API key returns 500 error with Cloudflare HTML error page
+      - **Currency codes fixed**: Changed USDT_BSC → USDT_BEP20, USDT_TRX → USDT_TRC20
+      - **Error handling working**: Backend gracefully handles Plisio failure and falls back to admin wallet
+      - **No green card appears**: Because Plisio API is not working, no unique address generated
+      - **Traditional UI shown**: Transaction ID and Payment Proof fields displayed as fallback
       
-      🔗 Referral System (JUST FIXED):
-      - ✅ Referral page functionality working (backend confirmed)
-      - ✅ Referral balance, code, and link display correctly
-      - ✅ Copy button functionality implemented
-      - ✅ Backend API /api/referral/info returns proper data
+      🎯 **ANSWER TO REVIEW REQUEST**:
+      **FAILURE - PLISIO UI NOT WORKING** due to invalid/expired Plisio API key
       
-      📦 Products Page:
-      - ✅ Products page loads with 100 products
-      - ✅ Product cards render with proper data structure
-      - ✅ Categories and filtering present
+      ✅ **POSITIVE FINDINGS**:
+      - Sell order functionality works correctly even without Plisio
+      - Error handling is robust and graceful
+      - User experience is maintained with fallback to admin wallet
+      - All form validation and submission logic working properly
       
-      💱 Crypto Exchange Page:
-      - ✅ "Buy & Sell USDT" page loads correctly
-      - ✅ Chain selector (BEP20, TRC20, MATIC) working
-      - ✅ Payment methods (PayPal, AirTM, Skrill, BTC, USDT) visible
-      - ✅ Form fields render properly
-      
-      👨‍💼 Admin Panel:
-      - ✅ Admin orders page structure correct
-      - ✅ Payment approval/rejection functionality implemented
-      - ✅ Delivery management with dialog and API calls working
-      - ✅ Order status display and filtering present
-      
-      📱 Mobile Responsiveness:
-      - ✅ Mobile view (375px) displays correctly
-      - ✅ Mobile navigation elements visible
-      - ✅ Responsive design working
-      
-      ⚠️ Minor Issue Identified:
-      - Session management: User gets logged out during navigation between pages
-      - This is a minor UX issue that doesn't affect core functionality
-      - All features work when properly authenticated
-      
-      🎉 ALL CRITICAL USER FLOWS TESTED AND WORKING
-      
-      The KayiCom marketplace frontend is fully functional with all requested features working correctly.
+      🔧 **RESOLUTION REQUIRED**:
+      - Obtain valid Plisio API key from Plisio dashboard
+      - Replace current API key in backend settings
+      - Test again with working API key to verify green card appears
   - agent: "testing"
     message: |
       ✅ PLISIO INTEGRATION TESTING COMPLETE - ALL CRITICAL FLOWS WORKING
