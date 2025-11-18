@@ -49,7 +49,26 @@ class PlisioHelper:
         
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=params) as response:
-                data = await response.json()
+                print(f"Plisio API Response Status: {response.status}")
+                print(f"Plisio API Response Headers: {response.headers}")
+                
+                if response.status != 200:
+                    error_text = await response.text()
+                    print(f"Plisio API Error Response: {error_text}")
+                    return {
+                        "success": False,
+                        "error": f"API returned status {response.status}: {error_text[:200]}"
+                    }
+                
+                try:
+                    data = await response.json()
+                except Exception as e:
+                    error_text = await response.text()
+                    print(f"Failed to parse JSON. Response text: {error_text}")
+                    return {
+                        "success": False,
+                        "error": f"Invalid JSON response: {error_text[:200]}"
+                    }
                 
                 if data.get("status") == "success":
                     return {
