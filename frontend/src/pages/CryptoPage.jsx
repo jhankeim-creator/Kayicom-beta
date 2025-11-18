@@ -542,47 +542,18 @@ const CryptoPage = ({ user, logout, settings }) => {
                     </RadioGroup>
                   </div>
 
-                  {!sellPlisioInvoice && (
-                    <>
-                      <div>
-                        <Label className="text-white">Your Receiving Info (Email/Account)</Label>
-                        <Input
-                          placeholder="Enter your PayPal/AirTM/Skrill email or account"
-                          value={receivingInfo}
-                          onChange={(e) => setReceivingInfo(e.target.value)}
-                          className="bg-white/10 border-white/20 text-white mt-1"
-                        />
-                        <p className="text-white/60 text-xs mt-1">
-                          💡 This is where you'll receive your payment after we verify your USDT transfer
-                        </p>
-                      </div>
-
-                      <div>
-                        <Label className="text-white">Transaction ID (Your Crypto Transfer)</Label>
-                        <Input
-                          placeholder="Enter your crypto transaction hash/ID"
-                          value={transactionId}
-                          onChange={(e) => setTransactionId(e.target.value)}
-                          className="bg-white/10 border-white/20 text-white mt-1"
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-white">Payment Proof (Upload Screenshot)</Label>
-                        <div className="mt-1">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setPaymentProofFile(e.target.files[0])}
-                            className="block w-full text-white bg-white/10 border border-white/20 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-pink-500 file:text-white hover:file:bg-pink-600"
-                          />
-                          {paymentProofFile && (
-                            <p className="text-green-400 text-sm mt-2">✓ {paymentProofFile.name}</p>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <Label className="text-white">Your Receiving Info (Email/Account)</Label>
+                    <Input
+                      placeholder="Enter your PayPal/AirTM/Skrill email or account"
+                      value={receivingInfo}
+                      onChange={(e) => setReceivingInfo(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white mt-1"
+                    />
+                    <p className="text-white/60 text-xs mt-1">
+                      💡 This is where you'll receive your payment after we process your USDT
+                    </p>
+                  </div>
 
                   <Button
                     onClick={handleSell}
