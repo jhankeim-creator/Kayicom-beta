@@ -315,7 +315,7 @@ frontend:
     implemented: true
     working: false
     file: "/app/frontend/src/pages/CryptoPage.jsx"
-    stuck_count: 3
+    stuck_count: 4
     priority: "high"
     needs_retesting: false
     status_history:
@@ -331,6 +331,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ PLISIO API KEY INVALID: Comprehensive testing reveals Plisio API key 'bYC1EHrh0TtRIjDkWLNDuZXEG6z98vhxu62DlIo2UMKZZ8hUjTXIqA04rwI1Zi_g' returns 500 error with Cloudflare HTML error page. Fixed currency codes (USDT_BSC → USDT_BEP20, USDT_TRX → USDT_TRC20) and added proper error handling. GOOD NEWS: Sell order functionality works correctly with graceful fallback to admin wallet when Plisio fails. Form submission works (POST /api/crypto/sell returns 200 OK), transaction created successfully, appears in user's transaction list. Frontend UI shows traditional flow (Transaction ID + Payment Proof fields) as expected when Plisio integration fails. No green card appears because Plisio API is not working."
+      - working: false
+        agent: "testing"
+        comment: "❌ FINAL VERIFICATION CONFIRMS OLD CODE: Comprehensive UI testing with customer@test.com login confirms Plisio integration is NOT working. BEFORE SUBMISSION: Transaction ID and Payment Proof upload fields are clearly visible in the form (OLD CODE indicators). AFTER SUBMISSION: Form submits successfully with success message 'Sell order created! Send USDT to admin wallet', transaction appears in history, but NO Plisio green card appears. NO unique wallet address generated. Traditional Transaction ID/Payment Proof fields remain visible after submission. This definitively confirms the Plisio integration has failed and system is using fallback to traditional manual verification flow. Screenshots captured: sell_form_before_fill.png and sell_form_after_submit.png show the old code UI clearly."
 
 metadata:
   created_by: "main_agent"
