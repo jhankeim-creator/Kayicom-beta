@@ -404,6 +404,30 @@ agent_communication:
       The main agent needs to investigate why form submissions are not reaching the backend.
   - agent: "testing"
     message: |
+      🔍 ISSUE RESOLUTION UPDATE: SELL USDT PLISIO INTEGRATION ANALYSIS COMPLETE
+      
+      **CRITICAL DISCOVERY**: The previous analysis was incorrect. After comprehensive re-testing:
+      
+      ✅ **BACKEND PLISIO INTEGRATION FULLY WORKING**:
+      - Form submission IS reaching backend (POST /api/crypto/sell returns 200 OK)
+      - Plisio API successfully creates invoices with unique wallet addresses
+      - Example response: wallet_address: "0x5a2342ddb23de22460885a46a3c22236ac8c8031", invoice_url: "https://plisio.net/invoice/691c6cbd79bc8054e70e3cdb"
+      - Backend returns complete Plisio data structure in response.data.plisio
+      
+      ❌ **FRONTEND DISPLAY ISSUE IDENTIFIED**:
+      - **OLD CODE STILL SHOWING**: Transaction ID and Payment Proof fields visible before submission
+      - **NEW CODE NOT DISPLAYING**: Plisio payment card with "Send USDT to This Unique Address" not appearing after successful submission
+      - Form successfully submits and creates transactions (visible in "Your Transactions" section)
+      - Toast notification shows "Order created! Send USDT to the address below" but Plisio UI doesn't render
+      
+      🎯 **ROOT CAUSE**: Frontend React state management issue
+      - Backend returns correct Plisio data: `response.data.plisio` exists with wallet_address and invoice_url
+      - Frontend calls `setSellPlisioInvoice(response.data)` but UI condition `sellPlisioInvoice?.plisio` not triggering render
+      - State update not properly causing re-render of Plisio payment card component
+      
+      **ANSWER TO USER'S QUESTION**: **OLD CODE STILL SHOWING** - The traditional Transaction ID and Payment Proof fields are visible, and the new Plisio unique address UI is not displaying despite working backend integration.
+  - agent: "testing"
+    message: |
       ✅ COMPREHENSIVE BACKEND TESTING COMPLETE - ALL MAJOR ENDPOINTS WORKING
       
       Completed comprehensive testing of all major KayiCom marketplace backend endpoints as requested:
