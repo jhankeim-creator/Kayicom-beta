@@ -409,10 +409,11 @@ const CryptoPage = ({ user, logout, settings }) => {
 
                   {/* Show Plisio invoice if available */}
                   {sellPlisioInvoice?.plisio && (
-                    <Card className="glass-effect border-green-500/50 mb-4">
-                      <CardContent className="p-6">
+                    <Card className="glass-effect border-green-500/50 mb-6 shadow-2xl" data-testid="plisio-sell-card">
+                      <CardContent className="p-8">
                         <div className="text-center">
-                          <h3 className="text-2xl font-bold text-green-400 mb-4">💰 Send USDT to This Unique Address</h3>
+                          <h2 className="text-3xl font-bold text-green-400 mb-2">💰 UNIQUE PAYMENT ADDRESS GENERATED!</h2>
+                          <p className="text-white/80 mb-6">Send your USDT to the address below. Payment will be automatically detected.</p>
                           
                           <div className="bg-green-500/10 border border-green-500/30 p-6 rounded-lg mb-4 space-y-4">
                             <div className="bg-white/5 p-5 rounded-lg">
