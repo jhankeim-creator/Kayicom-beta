@@ -219,8 +219,8 @@ const CryptoPage = ({ user, logout, settings }) => {
             Trade USDT on BEP20, TRC20, and MATIC networks. No KYC required.
           </p>
 
-          {/* Payment Instructions Display */}
-          {plisioInvoice && (
+          {/* BUY USDT - No Plisio needed, customer pays with FIAT */}
+          {false && plisioInvoice && (
             <Card className="glass-effect border-cyan-500/50 mb-8">
               <CardContent className="p-6">
                 <div className="text-center">
