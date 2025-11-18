@@ -983,8 +983,8 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
         
         # Map chain to Plisio currency
         currency_map = {
-            'BEP20': 'USDT_BSC',
-            'TRC20': 'USDT_TRX',
+            'BEP20': 'USDT_BEP20',
+            'TRC20': 'USDT_TRC20',
             'MATIC': 'USDT_MATIC'
         }
         plisio_currency = currency_map.get(request.chain, 'USDT_BSC')
