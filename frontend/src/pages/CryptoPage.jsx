@@ -122,19 +122,13 @@ const CryptoPage = ({ user, logout, settings }) => {
         payment_proof: ''
       });
       
-      console.log('Buy response:', response.data);
+      // For BUY, show success with payment instructions
+      toast.success('✅ Order created! Check your email for payment instructions or view in Your Transactions below.');
       
-      // Check if Plisio invoice was generated
-      if (response.data.plisio) {
-        setPlisioInvoice(response.data.plisio);
-        setAmountUsd('');
-        setWalletAddress('');
-        toast.success('✅ Payment address generated! Scroll down to see payment details.');
-      } else {
-        toast.success('Buy order submitted! Admin will process your request.');
-        setAmountUsd('');
-        setWalletAddress('');
-      }
+      // Clear form
+      setAmountUsd('');
+      setWalletAddress('');
+      setTransactionId('');
       
       loadTransactions();
     } catch (error) {
