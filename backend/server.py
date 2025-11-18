@@ -987,7 +987,7 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
             'TRC20': 'USDT_TRC20',
             'MATIC': 'USDT_MATIC'
         }
-        plisio_currency = currency_map.get(request.chain, 'USDT_BSC')
+        plisio_currency = currency_map.get(request.chain, 'USDT_BEP20')
         
         plisio_result = await plisio_helper.create_invoice(
             amount=request.amount_crypto,
