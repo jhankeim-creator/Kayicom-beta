@@ -899,7 +899,6 @@ async def buy_crypto(request: CryptoBuyRequest, user_id: str = None, user_email:
         "transaction_id": request.transaction_id,
         "payment_proof": request.payment_proof,
         "status": "pending",
-        "plisio_invoice": plisio_invoice,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
