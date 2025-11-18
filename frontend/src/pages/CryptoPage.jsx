@@ -26,6 +26,7 @@ const CryptoPage = ({ user, logout, settings }) => {
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [plisioInvoice, setPlisioInvoice] = useState(null);
+  const [sellPlisioInvoice, setSellPlisioInvoice] = useState(null);
 
   useEffect(() => {
     loadConfig();
