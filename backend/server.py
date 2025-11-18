@@ -432,7 +432,7 @@ async def create_order(order_data: OrderCreate, user_id: str, user_email: str):
                 # Create Plisio invoice for USDT payment
                 invoice_response = await plisio.create_invoice(
                     amount=total,
-                    currency="USDT_TRX",  # Default to TRC20 for orders
+                    currency="USDT_TRC20",  # Default to TRC20 for orders
                     order_name=f"Order {order.id}",
                     order_number=order.id,
                     email=user_email
