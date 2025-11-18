@@ -348,6 +348,44 @@ agent_communication:
       6. Verify delivery info is saved and displayed after delivery
   - agent: "testing"
     message: |
+      🚨 CRITICAL ISSUE FOUND: SELL USDT PLISIO INTEGRATION NOT WORKING
+      
+      Completed comprehensive testing of Sell USDT flow with Plisio as requested:
+      
+      ✅ BASIC FLOW WORKING:
+      - Customer login (customer@test.com / test123) successful
+      - Navigation to Crypto page successful
+      - Sell USDT tab accessible and functional
+      - Form accepts input data (Amount: 25 USDT, PayPal, myemail@paypal.com)
+      - Chain selection available (BEP20 default, TRC20 option exists)
+      
+      ❌ CRITICAL PLISIO INTEGRATION FAILURE:
+      - Form submission NOT reaching backend (no POST /api/crypto/sell in logs)
+      - No Plisio payment card displayed after submission
+      - No unique wallet address generated
+      - No "Open Full Payment Details" button
+      - No "Automatic Detection" message
+      - No "Create Another Sell Order" button
+      - Form still shows traditional flow (transaction ID + proof upload fields)
+      
+      🔍 ROOT CAUSE ANALYSIS:
+      1. Fixed missing user_id/user_email parameters in frontend API call
+      2. PlisioHelper class exists and is properly imported
+      3. Plisio API key configured: "bYC1EHrh0TtRIjDkWLNDuZXEG6z98vhxu62DlIo2UMKZZ8hUjTXIqA04rwI1Zi_g"
+      4. Backend endpoint exists at POST /api/crypto/sell
+      5. Issue: Form submission not reaching backend despite frontend fix
+      
+      🎯 CURRENT STATUS:
+      - User can fill form but submission fails silently
+      - No error messages displayed to user
+      - Backend never receives the sell request
+      - Plisio integration cannot be tested until form submission works
+      
+      ⚠️ REQUIRES IMMEDIATE ATTENTION:
+      This is a critical issue preventing the Sell USDT Plisio flow from working.
+      The main agent needs to investigate why form submissions are not reaching the backend.
+  - agent: "testing"
+    message: |
       ✅ COMPREHENSIVE BACKEND TESTING COMPLETE - ALL MAJOR ENDPOINTS WORKING
       
       Completed comprehensive testing of all major KayiCom marketplace backend endpoints as requested:
