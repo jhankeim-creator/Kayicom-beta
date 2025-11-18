@@ -175,9 +175,16 @@ const CryptoPage = ({ user, logout, settings }) => {
       });
       
       // Check if Plisio address was generated
+      console.log('Sell response:', response.data);
+      console.log('Has plisio?', response.data.plisio);
+      
       if (response.data.plisio) {
+        console.log('Setting Plisio invoice:', response.data);
         setSellPlisioInvoice(response.data);
-        toast.success('Order created! Send USDT to the address below.');
+        toast.success('✅ Unique address generated! Scroll up to see payment details.');
+        
+        // Scroll to top to show Plisio card
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         toast.success('Sell order created! Send USDT to admin wallet.');
       }
