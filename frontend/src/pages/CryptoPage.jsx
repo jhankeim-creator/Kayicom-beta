@@ -181,10 +181,17 @@ const CryptoPage = ({ user, logout, settings }) => {
       if (response.data.plisio) {
         console.log('Setting Plisio invoice:', response.data);
         setSellPlisioInvoice(response.data);
-        toast.success('✅ Unique address generated! Scroll up to see payment details.');
+        
+        // Clear form fields
+        setAmountCrypto('');
+        setReceivingInfo('');
+        
+        toast.success('✅ Unique address generated! Check the green card above.');
         
         // Scroll to top to show Plisio card
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
       } else {
         toast.success('Sell order created! Send USDT to admin wallet.');
       }
