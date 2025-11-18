@@ -315,7 +315,7 @@ frontend:
     implemented: true
     working: false
     file: "/app/frontend/src/pages/CryptoPage.jsx"
-    stuck_count: 2
+    stuck_count: 3
     priority: "high"
     needs_retesting: false
     status_history:
@@ -328,6 +328,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ FRONTEND DISPLAY ISSUE IDENTIFIED: Backend Plisio integration is WORKING correctly - API successfully creates invoices with unique wallet addresses (e.g., 0x5a2342ddb23de22460885a46a3c22236ac8c8031) and invoice URLs. However, frontend is NOT displaying the new Plisio UI. OLD CODE STILL SHOWING: Transaction ID and Payment Proof fields visible before submission. After successful form submission (POST /api/crypto/sell returns 200 OK with Plisio data), the Plisio payment card with 'Send USDT to This Unique Address' does not appear. Issue is in React state management - sellPlisioInvoice state not properly triggering UI update despite receiving correct backend response."
+      - working: false
+        agent: "testing"
+        comment: "❌ PLISIO API KEY INVALID: Comprehensive testing reveals Plisio API key 'bYC1EHrh0TtRIjDkWLNDuZXEG6z98vhxu62DlIo2UMKZZ8hUjTXIqA04rwI1Zi_g' returns 500 error with Cloudflare HTML error page. Fixed currency codes (USDT_BSC → USDT_BEP20, USDT_TRX → USDT_TRC20) and added proper error handling. GOOD NEWS: Sell order functionality works correctly with graceful fallback to admin wallet when Plisio fails. Form submission works (POST /api/crypto/sell returns 200 OK), transaction created successfully, appears in user's transaction list. Frontend UI shows traditional flow (Transaction ID + Payment Proof fields) as expected when Plisio integration fails. No green card appears because Plisio API is not working."
 
 metadata:
   created_by: "main_agent"
