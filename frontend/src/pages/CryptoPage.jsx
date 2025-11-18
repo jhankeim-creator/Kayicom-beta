@@ -158,27 +158,11 @@ const CryptoPage = ({ user, logout, settings }) => {
     }
 
     if (!receivingInfo) {
-      toast.error('Please enter your receiving information');
-      return;
-    }
-
-    if (!transactionId) {
-      toast.error('Please enter transaction ID');
-      return;
-    }
-
-    if (!paymentProofFile) {
-      toast.error('Please upload payment proof');
+      toast.error('Please enter your receiving payment info (PayPal email, etc)');
       return;
     }
 
     setLoading(true);
-    
-    const proofUrl = await handleFileUpload(paymentProofFile);
-    if (!proofUrl) {
-      setLoading(false);
-      return;
-    }
 
     try {
       const response = await axiosInstance.post('/crypto/sell', {
@@ -186,14 +170,18 @@ const CryptoPage = ({ user, logout, settings }) => {
         amount_crypto: parseFloat(amountCrypto),
         payment_method: paymentMethod,
         receiving_info: receivingInfo,
-        transaction_id: transactionId,
-        payment_proof: proofUrl
+        transaction_id: '',
+        payment_proof: ''
       });
-      toast.success('Sell order submitted! Admin will process your request.');
-      setAmountCrypto('');
-      setReceivingInfo('');
-      setTransactionId('');
-      setPaymentProofFile(null);
+      
+      // Check if Plisio address was generated
+      if (response.data.plisio) {
+        setSellPlisioInvoice(response.data);
+        toast.success('Order created! Send USDT to the address below.');
+      } else {
+        toast.success('Sell order created! Send USDT to admin wallet.');
+      }
+      
       loadTransactions();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Error submitting sell order');
