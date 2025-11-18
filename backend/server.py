@@ -874,10 +874,10 @@ async def buy_crypto(request: CryptoBuyRequest, user_id: str = None, user_email:
             
             # Map chain to Plisio currency
             currency_map = {
-                "BEP20": "USDT_BSC",
-                "TRC20": "USDT_TRX"
+                "BEP20": "USDT_BEP20",
+                "TRC20": "USDT_TRC20"
             }
-            plisio_currency = currency_map.get(request.chain, "USDT_TRX")
+            plisio_currency = currency_map.get(request.chain, "USDT_TRC20")
             
             # Create Plisio invoice
             invoice_response = await plisio.create_invoice(
