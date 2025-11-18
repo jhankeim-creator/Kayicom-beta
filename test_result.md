@@ -337,9 +337,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sell USDT Plisio integration - CRITICAL ISSUE FOUND"
+    - "Sell USDT Plisio integration - FRONTEND DISPLAY ISSUE"
   stuck_tasks:
-    - "Sell USDT Plisio integration - Form submission not reaching backend"
+    - "Sell USDT Plisio integration - React state not updating UI despite working backend"
   test_all: false
   test_priority: "high_first"
 
