@@ -13,9 +13,11 @@ import { toast } from 'sonner';
 const WithdrawPage = ({ user, logout, settings }) => {
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState('');
-  const [method, setMethod] = useState('usdt_bep20');
+  const [method, setMethod] = useState('moncash');
   const [walletAddress, setWalletAddress] = useState('');
   const [paypalEmail, setPaypalEmail] = useState('');
+  const [moncashPhone, setMoncashPhone] = useState('');
+  const [moncashName, setMoncashName] = useState('');
   const [loading, setLoading] = useState(false);
   const [withdrawals, setWithdrawals] = useState([]);
 
