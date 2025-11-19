@@ -50,32 +50,36 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
   });
   const [sendingEmail, setSendingEmail] = useState(false);
 
+  const defaultPaymentGateways = useMemo(() => ({
+    paypal: { enabled: true, email: '', instructions: '' },
+    airtm: { enabled: true, email: '', instructions: '' },
+    skrill: { enabled: true, email: '', instructions: '' },
+    moncash: { enabled: true, email: '', instructions: '' },
+    binance_pay: { enabled: true, email: '', instructions: '' },
+    zelle: { enabled: true, email: '', instructions: '' },
+    cashapp: { enabled: true, email: '', instructions: '' }
+  }), []);
+
   useEffect(() => {
     if (currentSettings) {
-      setFormData({
-        site_name: currentSettings.site_name || '',
-        logo_url: currentSettings.logo_url || '',
-        primary_color: currentSettings.primary_color || '',
-        secondary_color: currentSettings.secondary_color || '',
-        support_email: currentSettings.support_email || '',
-        plisio_api_key: currentSettings.plisio_api_key || '',
-        mtcgame_api_key: currentSettings.mtcgame_api_key || '',
-        gosplit_api_key: currentSettings.gosplit_api_key || '',
-        z2u_api_key: currentSettings.z2u_api_key || '',
-        resend_api_key: currentSettings.resend_api_key || '',
-        product_categories: currentSettings.product_categories || ['giftcard', 'topup', 'subscription', 'service'],
-        payment_gateways: currentSettings.payment_gateways || {
-          paypal: { enabled: true, email: '', instructions: '' },
-          airtm: { enabled: true, email: '', instructions: '' },
-          skrill: { enabled: true, email: '', instructions: '' },
-          moncash: { enabled: true, email: '', instructions: '' },
-          binance_pay: { enabled: true, email: '', instructions: '' },
-          zelle: { enabled: true, email: '', instructions: '' },
-          cashapp: { enabled: true, email: '', instructions: '' }
-        }
+      startTransition(() => {
+        setFormData({
+          site_name: currentSettings.site_name || '',
+          logo_url: currentSettings.logo_url || '',
+          primary_color: currentSettings.primary_color || '',
+          secondary_color: currentSettings.secondary_color || '',
+          support_email: currentSettings.support_email || '',
+          plisio_api_key: currentSettings.plisio_api_key || '',
+          mtcgame_api_key: currentSettings.mtcgame_api_key || '',
+          gosplit_api_key: currentSettings.gosplit_api_key || '',
+          z2u_api_key: currentSettings.z2u_api_key || '',
+          resend_api_key: currentSettings.resend_api_key || '',
+          product_categories: currentSettings.product_categories || ['giftcard', 'topup', 'subscription', 'service'],
+          payment_gateways: currentSettings.payment_gateways || defaultPaymentGateways
+        });
       });
     }
-  }, [currentSettings]);
+  }, [currentSettings, defaultPaymentGateways]);
 
   const addCategory = useCallback(() => {
     setFormData(prev => {
