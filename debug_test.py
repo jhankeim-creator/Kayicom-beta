@@ -7,7 +7,7 @@ import requests
 import json
 import traceback
 
-BASE_URL = "https://crypto-shop-4.preview.emergentagent.com/api"
+BASE_URL = "https://kayicom-payments.preview.emergentagent.com/api"
 
 class DebugTester:
     def __init__(self):

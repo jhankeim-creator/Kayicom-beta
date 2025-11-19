@@ -10,7 +10,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BASE_URL = "https://crypto-shop-4.preview.emergentagent.com/api"
+BASE_URL = "https://kayicom-payments.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@kayicom.com"
 ADMIN_PASSWORD = "admin123"
 
