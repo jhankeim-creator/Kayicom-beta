@@ -56,6 +56,8 @@ const AdminWithdrawals = () => {
                   <p className="text-white/70 text-sm capitalize">{w.method.replace('_', ' ')}</p>
                   {w.wallet_address && <p className="text-white/60 text-xs">Wallet: {w.wallet_address}</p>}
                   {w.paypal_email && <p className="text-white/60 text-xs">PayPal: {w.paypal_email}</p>}
+                  {w.moncash_phone && <p className="text-white/60 text-xs">MonCash: {w.moncash_phone}</p>}
+                  {w.moncash_name && <p className="text-white/60 text-xs">Nom: {w.moncash_name}</p>}
                   <p className="text-white/60 text-xs mt-1">{new Date(w.created_at).toLocaleString()}</p>
                 </div>
                 
