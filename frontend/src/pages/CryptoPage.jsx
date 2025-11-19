@@ -216,7 +216,7 @@ const CryptoPage = ({ user, logout, settings }) => {
             Buy & Sell USDT
           </h1>
           <p className="text-white/80 text-center mb-12">
-            Trade USDT on BEP20 and TRC20 networks. No KYC required.
+            Trade USDT on BEP20, TRC20, and MATIC networks. No KYC required.
           </p>
 
           {/* BUY USDT - No Plisio needed, customer pays with FIAT */}
@@ -470,7 +470,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                   )}
 
                   {/* Show admin wallet if Plisio not available (fallback) */}
-                  {false {!sellPlisioInvoice && getAdminWallet() && ({!sellPlisioInvoice && getAdminWallet() && ( (
+                  {!sellPlisioInvoice && getAdminWallet() && (
                     <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
                       <Label className="text-blue-300 font-semibold">Send USDT to this {chain} address:</Label>
                       <div className="flex items-center gap-2 mt-2">
