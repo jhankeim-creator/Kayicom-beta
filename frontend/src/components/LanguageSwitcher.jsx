@@ -22,12 +22,13 @@ const LanguageSwitcher = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
-          variant="ghost" 
-          className="text-gray-300 hover:bg-white/5 hover:text-pink-400 flex items-center gap-2"
+          variant="ghost"
+          size="sm"
+          className="text-gray-300 hover:bg-white/5 hover:text-pink-400 flex items-center gap-1 p-1 md:p-2"
           data-testid="language-switcher"
         >
-          <span className="text-xl">{currentLang.flag}</span>
-          <span className="hidden md:inline">{language.toUpperCase()}</span>
+          <span className="text-base md:text-xl">{currentLang.flag}</span>
+          <span className="hidden md:inline text-sm">{language.toUpperCase()}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40 bg-gray-900 border-white/10">
