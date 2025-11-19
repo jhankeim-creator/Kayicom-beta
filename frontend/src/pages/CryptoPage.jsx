@@ -470,7 +470,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                   )}
 
                   {/* Show admin wallet if Plisio not available (fallback) */}
-                  {!sellPlisioInvoice && getAdminWallet() && (
+                  {false {!sellPlisioInvoice && getAdminWallet() && ({!sellPlisioInvoice && getAdminWallet() && ( (
                     <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
                       <Label className="text-blue-300 font-semibold">Send USDT to this {chain} address:</Label>
                       <div className="flex items-center gap-2 mt-2">
