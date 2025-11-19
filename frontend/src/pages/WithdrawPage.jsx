@@ -67,20 +67,29 @@ const WithdrawPage = ({ user, logout, settings }) => {
       return;
     }
 
+    if (method === 'moncash' && (!moncashPhone || !moncashName)) {
+      toast.error('Please enter MonCash phone number and name');
+      return;
+    }
+
     setLoading(true);
 
     try {
       await axiosInstance.post(`/withdrawals/request?user_id=${user.user_id}&user_email=${user.email}`, {
         amount: parseFloat(amount),
         method: method,
-        wallet_address: method !== 'paypal' ? walletAddress : null,
-        paypal_email: method === 'paypal' ? paypalEmail : null
+        wallet_address: (method === 'usdt_bep20' || method === 'btc') ? walletAddress : null,
+        paypal_email: method === 'paypal' ? paypalEmail : null,
+        moncash_phone: method === 'moncash' ? moncashPhone : null,
+        moncash_name: method === 'moncash' ? moncashName : null
       });
 
       toast.success('Withdrawal request submitted!');
       setAmount('');
       setWalletAddress('');
       setPaypalEmail('');
+      setMoncashPhone('');
+      setMoncashName('');
       loadBalance();
       loadWithdrawals();
     } catch (error) {
