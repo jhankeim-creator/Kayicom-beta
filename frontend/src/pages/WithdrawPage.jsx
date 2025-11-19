@@ -196,11 +196,21 @@ const WithdrawPage = ({ user, logout, settings }) => {
                           <p className="text-white/70 text-sm">Send to PayPal account</p>
                         </div>
                       </label>
+
+                      <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
+                        method === 'moncash' ? 'border-green-400 bg-green-400/10' : 'border-white/20 hover:border-white/40'
+                      }`}>
+                        <RadioGroupItem value="moncash" className="mt-1" />
+                        <div className="ml-4">
+                          <span className="text-white font-semibold">💵 MonCash</span>
+                          <p className="text-white/70 text-sm">Mobile money transfer Haiti</p>
+                        </div>
+                      </label>
                     </div>
                   </RadioGroup>
                 </div>
 
-                {/* Wallet/Email Input */}
+                {/* Wallet/Email/MonCash Input */}
                 {method === 'paypal' ? (
                   <div>
                     <Label htmlFor="paypal-email" className="text-white">PayPal Email</Label>
@@ -212,6 +222,31 @@ const WithdrawPage = ({ user, logout, settings }) => {
                       placeholder="your@email.com"
                       className="bg-white/10 border-white/20 text-white placeholder:text-white/50 mt-2"
                     />
+                  </div>
+                ) : method === 'moncash' ? (
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="moncash-phone" className="text-white">Nimewo Telefòn MonCash</Label>
+                      <Input
+                        id="moncash-phone"
+                        type="tel"
+                        value={moncashPhone}
+                        onChange={(e) => setMoncashPhone(e.target.value)}
+                        placeholder="+509 XXXX XXXX"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="moncash-name" className="text-white">Non sou MonCash</Label>
+                      <Input
+                        id="moncash-name"
+                        type="text"
+                        value={moncashName}
+                        onChange={(e) => setMoncashName(e.target.value)}
+                        placeholder="Jan Pye"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 mt-2"
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div>
