@@ -106,22 +106,22 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     }
   };
 
-  const handleChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
-  };
+  const handleChange = useCallback((field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
-  const handlePaymentGatewayChange = (gateway, field, value) => {
-    setFormData({
-      ...formData,
+  const handlePaymentGatewayChange = useCallback((gateway, field, value) => {
+    setFormData(prev => ({
+      ...prev,
       payment_gateways: {
-        ...formData.payment_gateways,
+        ...prev.payment_gateways,
         [gateway]: {
-          ...formData.payment_gateways[gateway],
+          ...prev.payment_gateways[gateway],
           [field]: value
         }
       }
-    });
-  };
+    }));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
