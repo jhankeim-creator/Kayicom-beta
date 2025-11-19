@@ -78,11 +78,14 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
   }, [currentSettings]);
 
   const addCategory = useCallback(() => {
-    if (newCategory && !formData.product_categories.includes(newCategory)) {
-      setFormData(prev => ({...prev, product_categories: [...prev.product_categories, newCategory]}));
-      setNewCategory('');
-    }
-  }, [newCategory, formData.product_categories]);
+    setFormData(prev => {
+      if (newCategory && !prev.product_categories.includes(newCategory)) {
+        setNewCategory('');
+        return {...prev, product_categories: [...prev.product_categories, newCategory]};
+      }
+      return prev;
+    });
+  }, [newCategory]);
 
   const removeCategory = useCallback((cat) => {
     setFormData(prev => ({...prev, product_categories: prev.product_categories.filter(c => c !== cat)}));
