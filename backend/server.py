@@ -232,6 +232,8 @@ class WithdrawalRequest(BaseModel):
     method: str
     wallet_address: Optional[str] = None
     paypal_email: Optional[str] = None
+    moncash_phone: Optional[str] = None
+    moncash_name: Optional[str] = None
 
 # Crypto Transaction Models
 class CryptoTransaction(BaseModel):
