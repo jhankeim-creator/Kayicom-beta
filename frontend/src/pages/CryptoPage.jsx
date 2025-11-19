@@ -469,6 +469,47 @@ const CryptoPage = ({ user, logout, settings }) => {
                     </Card>
                   )}
 
+                  {/* Show admin wallet if Plisio not available (fallback) */}
+                  {!sellPlisioInvoice && getAdminWallet() && (
+                    <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
+                      <Label className="text-blue-300 font-semibold">Send USDT to this {chain} address:</Label>
+                      <div className="flex items-center gap-2 mt-2">
+                        <code className="flex-1 bg-white/5 text-white text-sm p-2 rounded break-all">
+                          {getAdminWallet()}
+                        </code>
+                        <Button
+                          size="sm"
+                          onClick={() => copyToClipboard(getAdminWallet(), 'Wallet address')}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <p className="text-yellow-300 text-xs mt-2">⚠️ Make sure to select the correct {chain} network</p>
+                      <p className="text-white/60 text-xs mt-2">📝 You'll need to provide transaction ID and proof after sending</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <Label className="text-white">Amount (USDT)</Label>
+                    <Input
+                      type="number"
+                      placeholder="Enter USDT amount you're sending"
+                      value={amountCrypto}
+                      onChange={(e) => setAmountCrypto(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white mt-1"
+                    />
+                  </div>
+
+                  {sellCalculation && (
+                    <div className="bg-white/5 p-4 rounded-lg space-y-2">
+                      <div className="flex justify-between text-white/70">
+                        <span>You will receive:</span>
+                        <span className="text-white font-bold">${sellCalculation.usd.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-white/70">
+                        <span>Fee ({config?.transaction_fee_percent || 2}%):</span>
+                        <span>-${sellCalculation.fee.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-white font-bold border-t border-white/20 pt-2">
                         <span>Total:</span>
