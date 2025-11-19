@@ -16,8 +16,8 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
 
   return (
     <nav className="sticky top-0 z-50 shadow-lg border-b border-purple-500/20" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-6 py-3 md:py-4">
-        <div className="flex items-center justify-between gap-2 md:gap-4">
+      <div className="w-full max-w-[1400px] mx-auto px-3 md:px-6 py-2 md:py-4">
+        <div className="flex items-center justify-between gap-1 md:gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 flex-shrink-0" data-testid="nav-logo">
             {settings?.logo_url ? (
