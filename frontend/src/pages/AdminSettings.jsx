@@ -35,7 +35,11 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     payment_gateways: {
       paypal: { enabled: true, email: '', instructions: '' },
       airtm: { enabled: true, email: '', instructions: '' },
-      skrill: { enabled: true, email: '', instructions: '' }
+      skrill: { enabled: true, email: '', instructions: '' },
+      moncash: { enabled: true, email: '', instructions: '' },
+      binance_pay: { enabled: true, email: '', instructions: '' },
+      zelle: { enabled: true, email: '', instructions: '' },
+      cashapp: { enabled: true, email: '', instructions: '' }
     }
   });
   const [newCategory, setNewCategory] = useState('');
