@@ -742,6 +742,8 @@ async def request_withdrawal(withdrawal: WithdrawalRequest, user_id: str, user_e
         raise HTTPException(status_code=400, detail="Wallet address required")
     if withdrawal.method == 'paypal' and not withdrawal.paypal_email:
         raise HTTPException(status_code=400, detail="PayPal email required")
+    if withdrawal.method == 'moncash' and (not withdrawal.moncash_phone or not withdrawal.moncash_name):
+        raise HTTPException(status_code=400, detail="MonCash phone and name required")
     
     # Create withdrawal request
     withdrawal_doc = {
@@ -752,6 +754,8 @@ async def request_withdrawal(withdrawal: WithdrawalRequest, user_id: str, user_e
         "method": withdrawal.method,
         "wallet_address": withdrawal.wallet_address,
         "paypal_email": withdrawal.paypal_email,
+        "moncash_phone": withdrawal.moncash_phone if withdrawal.method == 'moncash' else None,
+        "moncash_name": withdrawal.moncash_name if withdrawal.method == 'moncash' else None,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
