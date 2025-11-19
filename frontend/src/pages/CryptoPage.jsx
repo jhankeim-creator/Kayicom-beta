@@ -470,30 +470,6 @@ const CryptoPage = ({ user, logout, settings }) => {
                     </Card>
                   )}
 <div>
-                    <Label className="text-white">Amount (USDT)</Label>
-                    <Input
-                      type="number"
-                      placeholder="Enter USDT amount you're sending"
-                      value={amountCrypto}
-                      onChange={(e) => setAmountCrypto(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white mt-1"
-                    />
-                  </div>
-
-                  {sellCalculation && (
-                    <div className="bg-white/5 p-4 rounded-lg space-y-2">
-                      <div className="flex justify-between text-white/70">
-                        <span>You will receive:</span>
-                        <span className="text-white font-bold">${sellCalculation.usd.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-white/70">
-                        <span>Fee ({config?.transaction_fee_percent || 2}%):</span>
-                        <span>-${sellCalculation.fee.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-white font-bold border-t border-white/20 pt-2">
-                        <span>Total:</span>
-                        <span>${sellCalculation.total.toFixed(2)}</span>
-                      </div>
                     </div>
                   )}
 
