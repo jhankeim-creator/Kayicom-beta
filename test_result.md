@@ -313,7 +313,7 @@ frontend:
 
   - task: "Sell USDT Plisio Integration"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/pages/CryptoPage.jsx"
     stuck_count: 4
     priority: "high"
@@ -334,6 +334,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ FINAL VERIFICATION CONFIRMS OLD CODE: Comprehensive UI testing with customer@test.com login confirms Plisio integration is NOT working. BEFORE SUBMISSION: Transaction ID and Payment Proof upload fields are clearly visible in the form (OLD CODE indicators). AFTER SUBMISSION: Form submits successfully with success message 'Sell order created! Send USDT to admin wallet', transaction appears in history, but NO Plisio green card appears. NO unique wallet address generated. Traditional Transaction ID/Payment Proof fields remain visible after submission. This definitively confirms the Plisio integration has failed and system is using fallback to traditional manual verification flow. Screenshots captured: sell_form_before_fill.png and sell_form_after_submit.png show the old code UI clearly."
+      - working: true
+        agent: "testing"
+        comment: "✅ PLISIO INTEGRATION NOW WORKING! Final proof test completed successfully. BEFORE SUBMISSION: Old code indicators visible (admin wallet address and transaction ID/proof text). AFTER SUBMISSION: NEW CODE CONFIRMED - Green card with 'UNIQUE PAYMENT ADDRESS GENERATED!' appears, unique wallet address displayed (0x180e9556f67fb005c77b01192e87e48e64ec07e0), 'Open Full Payment Details' button present, 'Automatic Detection' message visible. Success toast: 'Unique address generated! Check the green card above.' Form submission working correctly with customer@test.com login. Screenshots captured showing successful Plisio integration."
 
 metadata:
   created_by: "main_agent"
