@@ -54,9 +54,6 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
           <div className="flex lg:hidden items-center gap-1">
             {!user && (
               <>
-                <Link to="/products" className="text-white hover:text-pink-400 p-1.5">
-                  <Package size={18} />
-                </Link>
                 <Link to="/crypto" className="text-white hover:text-pink-400 p-1.5">
                   <span className="text-xs font-semibold">Crypto</span>
                 </Link>
