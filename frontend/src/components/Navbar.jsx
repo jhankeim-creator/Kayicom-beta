@@ -130,10 +130,10 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link to="/login" className="hidden md:inline-block">
-                <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400 p-1.5 md:p-2 md:px-3" data-testid="login-btn">
+              <Link to="/login">
+                <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400 p-1 md:p-2 md:px-3" data-testid="login-btn">
                   <User size={16} className="md:w-5 md:h-5" />
-                  <span className="ml-1 md:ml-2 text-sm md:text-base">{t('login')}</span>
+                  <span className="ml-1 text-xs md:text-base">{t('login')}</span>
                 </Button>
               </Link>
             )}
