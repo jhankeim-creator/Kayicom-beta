@@ -346,9 +346,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sell USDT Plisio integration - API KEY ISSUE RESOLVED"
-  stuck_tasks:
-    - "Sell USDT Plisio integration - Invalid Plisio API key causing 500 errors"
+    - "All major features tested and working"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
