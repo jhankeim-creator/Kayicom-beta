@@ -185,6 +185,78 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
                       </div>
                     </label>
                   )}
+
+                  {settings?.payment_gateways?.moncash?.enabled && (
+                    <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
+                      paymentMethod === 'moncash' ? 'border-pink-400 bg-pink-400/10' : 'border-white/20 hover:border-white/40'
+                    }`}>
+                      <RadioGroupItem value="moncash" className="mt-1" />
+                      <div className="ml-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="text-pink-400" size={20} />
+                          <span className="text-white font-semibold">MonCash</span>
+                        </div>
+                        <p className="text-white/70 text-sm mt-1">Manual verification - Proof required</p>
+                        {settings.payment_gateways.moncash.email && (
+                          <p className="text-white/60 text-xs mt-1">Send to: {settings.payment_gateways.moncash.email}</p>
+                        )}
+                      </div>
+                    </label>
+                  )}
+
+                  {settings?.payment_gateways?.binance_pay?.enabled && (
+                    <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
+                      paymentMethod === 'binance_pay' ? 'border-pink-400 bg-pink-400/10' : 'border-white/20 hover:border-white/40'
+                    }`}>
+                      <RadioGroupItem value="binance_pay" className="mt-1" />
+                      <div className="ml-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="text-pink-400" size={20} />
+                          <span className="text-white font-semibold">Binance Pay</span>
+                        </div>
+                        <p className="text-white/70 text-sm mt-1">Manual verification - Proof required</p>
+                        {settings.payment_gateways.binance_pay.email && (
+                          <p className="text-white/60 text-xs mt-1">ID: {settings.payment_gateways.binance_pay.email}</p>
+                        )}
+                      </div>
+                    </label>
+                  )}
+
+                  {settings?.payment_gateways?.zelle?.enabled && (
+                    <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
+                      paymentMethod === 'zelle' ? 'border-pink-400 bg-pink-400/10' : 'border-white/20 hover:border-white/40'
+                    }`}>
+                      <RadioGroupItem value="zelle" className="mt-1" />
+                      <div className="ml-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="text-pink-400" size={20} />
+                          <span className="text-white font-semibold">Zelle</span>
+                        </div>
+                        <p className="text-white/70 text-sm mt-1">Manual verification - Proof required</p>
+                        {settings.payment_gateways.zelle.email && (
+                          <p className="text-white/60 text-xs mt-1">Send to: {settings.payment_gateways.zelle.email}</p>
+                        )}
+                      </div>
+                    </label>
+                  )}
+
+                  {settings?.payment_gateways?.cashapp?.enabled && (
+                    <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
+                      paymentMethod === 'cashapp' ? 'border-pink-400 bg-pink-400/10' : 'border-white/20 hover:border-white/40'
+                    }`}>
+                      <RadioGroupItem value="cashapp" className="mt-1" />
+                      <div className="ml-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="text-pink-400" size={20} />
+                          <span className="text-white font-semibold">CashApp</span>
+                        </div>
+                        <p className="text-white/70 text-sm mt-1">Manual verification - Proof required</p>
+                        {settings.payment_gateways.cashapp.email && (
+                          <p className="text-white/60 text-xs mt-1">Tag: {settings.payment_gateways.cashapp.email}</p>
+                        )}
+                      </div>
+                    </label>
+                  )}
                 </div>
               </RadioGroup>
 
