@@ -420,6 +420,162 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                         </div>
                       </div>
 
+                      {/* MonCash */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>💵</span> MonCash
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={formData.payment_gateways.moncash.enabled}
+                              onChange={(e) => handlePaymentGatewayChange('moncash', 'enabled', e.target.checked)}
+                              className="w-4 h-4" 
+                            />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-white/70 text-sm">MonCash Number</Label>
+                            <Input
+                              placeholder="+509XXXXXXXX"
+                              value={formData.payment_gateways.moncash.email}
+                              onChange={(e) => handlePaymentGatewayChange('moncash', 'email', e.target.value)}
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Instructions</Label>
+                            <Textarea
+                              placeholder="Send via MonCash to number above"
+                              value={formData.payment_gateways.moncash.instructions}
+                              onChange={(e) => handlePaymentGatewayChange('moncash', 'instructions', e.target.value)}
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Binance Pay */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>🟡</span> Binance Pay
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={formData.payment_gateways.binance_pay.enabled}
+                              onChange={(e) => handlePaymentGatewayChange('binance_pay', 'enabled', e.target.checked)}
+                              className="w-4 h-4" 
+                            />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-white/70 text-sm">Binance Pay ID</Label>
+                            <Input
+                              placeholder="Your Binance Pay ID"
+                              value={formData.payment_gateways.binance_pay.email}
+                              onChange={(e) => handlePaymentGatewayChange('binance_pay', 'email', e.target.value)}
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Instructions</Label>
+                            <Textarea
+                              placeholder="Send via Binance Pay"
+                              value={formData.payment_gateways.binance_pay.instructions}
+                              onChange={(e) => handlePaymentGatewayChange('binance_pay', 'instructions', e.target.value)}
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Zelle */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>💲</span> Zelle
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={formData.payment_gateways.zelle.enabled}
+                              onChange={(e) => handlePaymentGatewayChange('zelle', 'enabled', e.target.checked)}
+                              className="w-4 h-4" 
+                            />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-white/70 text-sm">Zelle Email/Phone</Label>
+                            <Input
+                              placeholder="your@email.com or phone"
+                              value={formData.payment_gateways.zelle.email}
+                              onChange={(e) => handlePaymentGatewayChange('zelle', 'email', e.target.value)}
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Instructions</Label>
+                            <Textarea
+                              placeholder="Send via Zelle"
+                              value={formData.payment_gateways.zelle.instructions}
+                              onChange={(e) => handlePaymentGatewayChange('zelle', 'instructions', e.target.value)}
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* CashApp */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>💵</span> CashApp
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={formData.payment_gateways.cashapp.enabled}
+                              onChange={(e) => handlePaymentGatewayChange('cashapp', 'enabled', e.target.checked)}
+                              className="w-4 h-4" 
+                            />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-white/70 text-sm">CashApp Tag</Label>
+                            <Input
+                              placeholder="$YourCashtag"
+                              value={formData.payment_gateways.cashapp.email}
+                              onChange={(e) => handlePaymentGatewayChange('cashapp', 'email', e.target.value)}
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Instructions</Label>
+                            <Textarea
+                              placeholder="Send via CashApp"
+                              value={formData.payment_gateways.cashapp.instructions}
+                              onChange={(e) => handlePaymentGatewayChange('cashapp', 'instructions', e.target.value)}
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       {/* BTC */}
                       <div className="bg-white/5 p-4 rounded-lg mb-4">
                         <div className="flex justify-between items-center mb-3">
