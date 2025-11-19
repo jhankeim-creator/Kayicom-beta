@@ -62,11 +62,11 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-0.5 md:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-0 md:gap-3 flex-shrink-0">
             <LanguageSwitcher />
             
             <Link to="/cart" className="relative" data-testid="nav-cart">
-              <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400 p-1.5 md:p-2 md:px-3">
+              <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400 p-1 md:p-2 md:px-3">
                 <ShoppingCart size={16} className="md:w-5 md:h-5" />
                 {cartItemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-blue-500 text-white text-xs rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center text-[10px] md:text-xs font-bold">
@@ -79,7 +79,7 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400 p-1.5 md:p-2 md:px-3" data-testid="user-menu">
+                  <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400 p-1 md:p-2 md:px-3" data-testid="user-menu">
                     <User size={16} className="md:w-5 md:h-5" />
                     <span className="ml-2 hidden xl:inline text-base">{user.full_name}</span>
                   </Button>
