@@ -388,6 +388,7 @@ const CryptoPage = ({ user, logout, settings }) => {
                 </TabsContent>
 
                 <TabsContent value="sell" className="space-y-4">
+  {/* PLISIO SELL INTEGRATION - UPDATED */}
                   <div>
                     <Label className="text-white">Select Chain</Label>
                     <Select value={chain} onValueChange={setChain}>
