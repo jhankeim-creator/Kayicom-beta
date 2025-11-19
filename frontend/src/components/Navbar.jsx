@@ -79,8 +79,8 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400 p-2 md:px-3" data-testid="user-menu">
-                    <User size={18} className="md:w-5 md:h-5" />
+                  <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-white/5 hover:text-pink-400 p-1.5 md:p-2 md:px-3" data-testid="user-menu">
+                    <User size={16} className="md:w-5 md:h-5" />
                     <span className="ml-2 hidden xl:inline text-base">{user.full_name}</span>
                   </Button>
                 </DropdownMenuTrigger>
