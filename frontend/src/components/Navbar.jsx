@@ -32,9 +32,6 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             <Link to="/" className="text-white font-medium hover:text-pink-400 transition" data-testid="nav-home">
               Home
             </Link>
-            <Link to="/products" className="text-white font-medium hover:text-pink-400 transition" data-testid="nav-products">
-              Products
-            </Link>
             <Link to="/crypto" className="text-white font-medium hover:text-pink-400 transition" data-testid="nav-crypto">
               Crypto
             </Link>
