@@ -19,11 +19,11 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
       <div className="w-full max-w-[1400px] mx-auto px-2 md:px-6 py-2 md:py-4">
         <div className="flex items-center justify-between gap-0.5 md:gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 flex-shrink-0" data-testid="nav-logo">
+          <Link to="/" className="flex items-center space-x-1 flex-shrink-0" data-testid="nav-logo">
             {settings?.logo_url ? (
-              <img src={settings.logo_url} alt="Logo" className="h-10 md:h-14 w-auto" />
+              <img src={settings.logo_url} alt="Logo" className="h-8 md:h-14 w-auto" />
             ) : (
-              <h1 className="text-xl md:text-2xl font-bold text-white drop-shadow-lg">{settings?.site_name || 'KayiCom'}</h1>
+              <h1 className="text-lg md:text-2xl font-bold text-white drop-shadow-lg">{settings?.site_name || 'KayiCom'}</h1>
             )}
           </Link>
 
