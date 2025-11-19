@@ -77,16 +77,16 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     }
   }, [currentSettings]);
 
-  const addCategory = () => {
+  const addCategory = useCallback(() => {
     if (newCategory && !formData.product_categories.includes(newCategory)) {
-      setFormData({...formData, product_categories: [...formData.product_categories, newCategory]});
+      setFormData(prev => ({...prev, product_categories: [...prev.product_categories, newCategory]}));
       setNewCategory('');
     }
-  };
+  }, [newCategory, formData.product_categories]);
 
-  const removeCategory = (cat) => {
-    setFormData({...formData, product_categories: formData.product_categories.filter(c => c !== cat)});
-  };
+  const removeCategory = useCallback((cat) => {
+    setFormData(prev => ({...prev, product_categories: prev.product_categories.filter(c => c !== cat)}));
+  }, []);
 
   const handleSendBulkEmail = async () => {
     if (!bulkEmail.subject || !bulkEmail.message) {
