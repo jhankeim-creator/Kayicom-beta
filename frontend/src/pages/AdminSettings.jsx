@@ -31,6 +31,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     gosplit_api_key: '',
     z2u_api_key: '',
     resend_api_key: '',
+    trustpilot_enabled: false,
+    trustpilot_business_id: '',
     product_categories: [],
     payment_gateways: {
       paypal: { enabled: true, email: '', instructions: '' },
