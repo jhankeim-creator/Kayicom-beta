@@ -49,6 +49,20 @@ const Footer = ({ settings }) => {
                 Trustpilot
               </a>
             </div>
+            
+            {/* Direct link to Trustpilot reviews */}
+            <div className="text-center mt-4">
+              <a 
+                href={`https://fr.trustpilot.com/review/${settings.trustpilot_business_id}`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-blue-500 text-white font-semibold rounded-lg hover:from-pink-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105"
+              >
+                <span>⭐</span>
+                <span>Wè tout reviews yo sou Trustpilot</span>
+                <span>→</span>
+              </a>
+            </div>
           </div>
         )}
         
