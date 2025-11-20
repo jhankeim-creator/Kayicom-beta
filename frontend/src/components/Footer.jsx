@@ -40,6 +40,18 @@ const Footer = ({ settings }) => {
           </div>
         </div>
         
+        {/* Trustpilot Widget */}
+        {settings?.trustpilot_enabled && settings?.trustpilot_business_id && (
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <h3 className="text-xl font-bold mb-4 text-white text-center">Kliyan nou yo di</h3>
+            <div className="trustpilot-widget" data-locale="fr-FR" data-template-id="53aa8912dec7e10d38f59f36" data-businessunit-id={settings.trustpilot_business_id} data-style-height="140px" data-style-width="100%" data-theme="dark" data-stars="4,5">
+              <a href={`https://fr.trustpilot.com/review/${settings.trustpilot_business_id}`} target="_blank" rel="noopener noreferrer" className="text-white hover:text-pink-400">
+                Trustpilot
+              </a>
+            </div>
+          </div>
+        )}
+        
         <div className="mt-8 pt-6 border-t border-white/10 text-center text-sm text-gray-400">
           <p>&copy; {new Date().getFullYear()} {settings?.site_name || 'KayiCom'}. {t('allRightsReserved')}</p>
         </div>
