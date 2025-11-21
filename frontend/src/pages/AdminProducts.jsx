@@ -335,11 +335,35 @@ const AdminProducts = ({ user, logout, settings }) => {
           </Dialog>
         </div>
 
+        {/* Category Filter */}
+        <div className="flex gap-2 flex-wrap mb-6">
+          <Button
+            onClick={() => setCategoryFilter('all')}
+            className={categoryFilter === 'all' ? 'bg-pink-500' : 'bg-white/10'}
+          >
+            All ({products.length})
+          </Button>
+          {['giftcard', 'topup', 'subscription', 'service'].map(cat => {
+            const count = products.filter(p => p.category === cat).length;
+            return (
+              <Button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={categoryFilter === cat ? 'bg-pink-500' : 'bg-white/10'}
+              >
+                {cat.charAt(0).toUpperCase() + cat.slice(1)} ({count})
+              </Button>
+            );
+          })}
+        </div>
+
         {loading ? (
           <div className="text-center text-white text-xl py-12">Loading...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="products-list">
-            {products.map((product) => (
+            {products
+              .filter(product => categoryFilter === 'all' || product.category === categoryFilter)
+              .map((product) => (
               <Card key={product.id} className="glass-effect border-white/20" data-testid={`product-${product.id}`}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
