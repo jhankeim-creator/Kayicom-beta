@@ -29,9 +29,10 @@ const AdminCrypto = () => {
   const loadTransactions = async () => {
     try {
       const response = await axiosInstance.get('/crypto/transactions/all');
-      setTransactions(response.data);
+      setTransactions(response.data || []);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error loading transactions:', error);
+      setTransactions([]); // Set empty array on error
     }
   };
 
