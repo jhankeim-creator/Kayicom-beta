@@ -392,7 +392,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">PayPal Email</Label>
                             <Input
                               placeholder="your@paypal.com"
-                              value={formData.payment_gateways.paypal.email}
+                              value={formData.payment_gateways?.paypal?.email || ""}
                               onChange={(e) => handlePaymentGatewayChange('paypal', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
@@ -401,7 +401,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions for Customers</Label>
                             <Textarea
                               placeholder="Send payment to the email above with order ID in notes"
-                              value={formData.payment_gateways.paypal.instructions}
+                              value={formData.payment_gateways?.paypal?.instructions || ""}
                               onChange={(e) => handlePaymentGatewayChange('paypal', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
@@ -419,7 +419,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                           <label className="flex items-center gap-2">
                             <input 
                               type="checkbox" 
-                              checked={formData.payment_gateways.airtm.enabled}
+                              checked={formData.payment_gateways?.airtm?.enabled || false}
                               onChange={(e) => handlePaymentGatewayChange('airtm', 'enabled', e.target.checked)}
                               className="w-4 h-4" 
                             />
@@ -431,7 +431,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">AirTM Email/Username</Label>
                             <Input
                               placeholder="your@email.com"
-                              value={formData.payment_gateways.airtm.email}
+                              value={formData.payment_gateways?.airtm?.email || ""}
                               onChange={(e) => handlePaymentGatewayChange('airtm', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
@@ -440,7 +440,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions</Label>
                             <Textarea
                               placeholder="Send via AirTM to the email above"
-                              value={formData.payment_gateways.airtm.instructions}
+                              value={formData.payment_gateways?.airtm?.instructions || ""}
                               onChange={(e) => handlePaymentGatewayChange('airtm', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
@@ -458,7 +458,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                           <label className="flex items-center gap-2">
                             <input 
                               type="checkbox" 
-                              checked={formData.payment_gateways.skrill.enabled}
+                              checked={formData.payment_gateways?.skrill?.enabled || false}
                               onChange={(e) => handlePaymentGatewayChange('skrill', 'enabled', e.target.checked)}
                               className="w-4 h-4" 
                             />
@@ -470,7 +470,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Skrill Email</Label>
                             <Input
                               placeholder="your@skrill.com"
-                              value={formData.payment_gateways.skrill.email}
+                              value={formData.payment_gateways?.skrill?.email || ""}
                               onChange={(e) => handlePaymentGatewayChange('skrill', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
@@ -479,7 +479,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions</Label>
                             <Textarea
                               placeholder="Send to Skrill email above"
-                              value={formData.payment_gateways.skrill.instructions}
+                              value={formData.payment_gateways?.skrill?.instructions || ""}
                               onChange={(e) => handlePaymentGatewayChange('skrill', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
@@ -497,7 +497,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                           <label className="flex items-center gap-2">
                             <input 
                               type="checkbox" 
-                              checked={formData.payment_gateways.moncash.enabled}
+                              checked={formData.payment_gateways?.moncash?.enabled || false}
                               onChange={(e) => handlePaymentGatewayChange('moncash', 'enabled', e.target.checked)}
                               className="w-4 h-4" 
                             />
@@ -509,7 +509,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">MonCash Number</Label>
                             <Input
                               placeholder="+509XXXXXXXX"
-                              value={formData.payment_gateways.moncash.email}
+                              value={formData.payment_gateways?.moncash?.email || ""}
                               onChange={(e) => handlePaymentGatewayChange('moncash', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
@@ -518,7 +518,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions</Label>
                             <Textarea
                               placeholder="Send via MonCash to number above"
-                              value={formData.payment_gateways.moncash.instructions}
+                              value={formData.payment_gateways?.moncash?.instructions || ""}
                               onChange={(e) => handlePaymentGatewayChange('moncash', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
@@ -536,7 +536,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                           <label className="flex items-center gap-2">
                             <input 
                               type="checkbox" 
-                              checked={formData.payment_gateways.binance_pay.enabled}
+                              checked={formData.payment_gateways?.binance_pay?.enabled || false}
                               onChange={(e) => handlePaymentGatewayChange('binance_pay', 'enabled', e.target.checked)}
                               className="w-4 h-4" 
                             />
@@ -548,7 +548,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Binance Pay ID</Label>
                             <Input
                               placeholder="Your Binance Pay ID"
-                              value={formData.payment_gateways.binance_pay.email}
+                              value={formData.payment_gateways?.binance_pay?.email || ""}
                               onChange={(e) => handlePaymentGatewayChange('binance_pay', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
@@ -557,7 +557,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions</Label>
                             <Textarea
                               placeholder="Send via Binance Pay"
-                              value={formData.payment_gateways.binance_pay.instructions}
+                              value={formData.payment_gateways?.binance_pay?.instructions || ""}
                               onChange={(e) => handlePaymentGatewayChange('binance_pay', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
@@ -575,7 +575,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                           <label className="flex items-center gap-2">
                             <input 
                               type="checkbox" 
-                              checked={formData.payment_gateways.zelle.enabled}
+                              checked={formData.payment_gateways?.zelle?.enabled || false}
                               onChange={(e) => handlePaymentGatewayChange('zelle', 'enabled', e.target.checked)}
                               className="w-4 h-4" 
                             />
@@ -587,7 +587,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Zelle Email/Phone</Label>
                             <Input
                               placeholder="your@email.com or phone"
-                              value={formData.payment_gateways.zelle.email}
+                              value={formData.payment_gateways?.zelle?.email || ""}
                               onChange={(e) => handlePaymentGatewayChange('zelle', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
@@ -596,7 +596,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions</Label>
                             <Textarea
                               placeholder="Send via Zelle"
-                              value={formData.payment_gateways.zelle.instructions}
+                              value={formData.payment_gateways?.zelle?.instructions || ""}
                               onChange={(e) => handlePaymentGatewayChange('zelle', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
@@ -614,7 +614,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                           <label className="flex items-center gap-2">
                             <input 
                               type="checkbox" 
-                              checked={formData.payment_gateways.cashapp.enabled}
+                              checked={formData.payment_gateways?.cashapp?.enabled || false}
                               onChange={(e) => handlePaymentGatewayChange('cashapp', 'enabled', e.target.checked)}
                               className="w-4 h-4" 
                             />
@@ -626,7 +626,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">CashApp Tag</Label>
                             <Input
                               placeholder="$YourCashtag"
-                              value={formData.payment_gateways.cashapp.email}
+                              value={formData.payment_gateways?.cashapp?.email || ""}
                               onChange={(e) => handlePaymentGatewayChange('cashapp', 'email', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                             />
@@ -635,7 +635,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Label className="text-white/70 text-sm">Instructions</Label>
                             <Textarea
                               placeholder="Send via CashApp"
-                              value={formData.payment_gateways.cashapp.instructions}
+                              value={formData.payment_gateways?.cashapp?.instructions || ""}
                               onChange={(e) => handlePaymentGatewayChange('cashapp', 'instructions', e.target.value)}
                               className="bg-white/10 border-white/20 text-white mt-1"
                               rows={2}
