@@ -27,12 +27,19 @@ const AdminProducts = ({ user, logout, settings }) => {
     stock_available: true,
     delivery_type: 'manual',
     requires_player_id: false,
+    requires_credentials: false,
+    player_id_label: 'Player ID',
+    credential_fields: ['email', 'password'],
     region: '',
     is_subscription: false,
-    variant_name: ''
+    variant_name: '',
+    parent_product_id: null,
+    is_variant: false
   });
   const [imageFile, setImageFile] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [showVariantMode, setShowVariantMode] = useState(false);
+  const [parentProduct, setParentProduct] = useState(null);
 
   useEffect(() => {
     loadProducts();
