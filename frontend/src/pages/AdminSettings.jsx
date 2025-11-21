@@ -122,16 +122,21 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
   }, []);
 
   const handlePaymentGatewayChange = useCallback((gateway, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      payment_gateways: {
-        ...prev.payment_gateways,
-        [gateway]: {
-          ...prev.payment_gateways[gateway],
-          [field]: value
+    setFormData(prev => {
+      // Ensure payment_gateways exists
+      if (!prev.payment_gateways) return prev;
+      
+      return {
+        ...prev,
+        payment_gateways: {
+          ...prev.payment_gateways,
+          [gateway]: {
+            ...(prev.payment_gateways[gateway] || {}),
+            [field]: value
+          }
         }
-      }
-    }));
+      };
+    });
   }, []);
 
   const handleSubmit = async (e) => {
