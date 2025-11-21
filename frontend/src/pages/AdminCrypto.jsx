@@ -62,7 +62,15 @@ const AdminCrypto = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Crypto Management</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Crypto Management</h2>
+        <Button 
+          onClick={() => window.location.href = '/admin'}
+          className="bg-gradient-to-r from-pink-500 to-blue-500 text-white"
+        >
+          🏠 Admin Home
+        </Button>
+      </div>
 
       <Tabs defaultValue="config" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
