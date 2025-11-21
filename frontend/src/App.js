@@ -45,13 +45,20 @@ function App() {
   const [cart, setCart] = useState([]);
   const [settings, setSettings] = useState(null);
   const [language, setLanguage] = useState('en'); // Default to English
+  const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     // Load user from localStorage
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error('Error parsing saved user:', e);
+        localStorage.removeItem('user');
+      }
     }
+    setLoading(false); // Mark loading complete
 
     // Load cart from localStorage
     const savedCart = localStorage.getItem('cart');
