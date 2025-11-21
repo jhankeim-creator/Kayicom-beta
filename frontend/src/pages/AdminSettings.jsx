@@ -281,7 +281,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                   <TabsContent value="integrations" className="space-y-6">
                     <div>
                       <h3 className="text-xl font-bold text-white mb-4">Trustpilot Reviews</h3>
-                      <p className="text-gray-400 mb-6">Integre Trustpilot reviews nan sitwèb ou a pou bay kliyan yo konfyans.</p>
+                      <p className="text-gray-400 mb-6">Integrate Trustpilot reviews into your website to build customer trust.</p>
                       
                       {/* Enable Trustpilot */}
                       <div className="bg-white/5 p-4 rounded-lg mb-4">
@@ -290,7 +290,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <h4 className="text-white font-semibold flex items-center gap-2">
                               ⭐ Trustpilot Widget
                             </h4>
-                            <p className="text-white/60 text-sm mt-1">Montre reviews Trustpilot nan footer sitwèb la</p>
+                            <p className="text-white/60 text-sm mt-1">Display Trustpilot reviews in website footer</p>
                           </div>
                           <label className="flex items-center gap-2">
                             <input 
@@ -314,7 +314,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                                 className="bg-white/10 border-white/20 text-white mt-1"
                               />
                               <p className="text-white/50 text-xs mt-1">
-                                Egzanp: kayicom.com (nan URL: https://fr.trustpilot.com/review/<strong>kayicom.com</strong>)
+                                Example: kayicom.com (from URL: https://fr.trustpilot.com/review/<strong>kayicom.com</strong>)
                               </p>
                             </div>
                           </div>
@@ -323,7 +323,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                       
                       <div className="p-4 bg-green-400/10 border border-green-400/30 rounded-lg">
                         <p className="text-green-200 text-sm">
-                          <strong>Note:</strong> Apre w aktive Trustpilot, widget la ap parèt anba nan footer sitwèb la.
+                          <strong>Note:</strong> After enabling Trustpilot, the widget will appear in the website footer.
                         </p>
                       </div>
                     </div>
