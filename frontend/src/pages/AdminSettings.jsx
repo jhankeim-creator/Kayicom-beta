@@ -281,16 +281,16 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                   <TabsContent value="integrations" className="space-y-6">
                     <div>
                       <h3 className="text-xl font-bold text-white mb-4">Trustpilot Reviews</h3>
-                      <p className="text-gray-400 mb-6">Integrate Trustpilot reviews into your website to build customer trust.</p>
+                      <p className="text-gray-400 mb-6">Add a link to your Trustpilot reviews page in the website footer.</p>
                       
                       {/* Enable Trustpilot */}
                       <div className="bg-white/5 p-4 rounded-lg mb-4">
                         <div className="flex justify-between items-center mb-3">
                           <div>
                             <h4 className="text-white font-semibold flex items-center gap-2">
-                              ⭐ Trustpilot Widget
+                              ⭐ Trustpilot Link
                             </h4>
-                            <p className="text-white/60 text-sm mt-1">Display Trustpilot reviews in website footer</p>
+                            <p className="text-white/60 text-sm mt-1">Show Trustpilot reviews button in footer</p>
                           </div>
                           <label className="flex items-center gap-2">
                             <input 
