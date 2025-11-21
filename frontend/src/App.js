@@ -154,11 +154,24 @@ function App() {
   };
 
   const ProtectedRoute = ({ children, adminOnly = false }) => {
-    if (!user) {
+    // Show loading while checking authentication
+    if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      );
+    }
+
+    // Check localStorage as fallback if user state is null
+    const savedUser = !user ? localStorage.getItem('user') : null;
+    const currentUser = user || (savedUser ? JSON.parse(savedUser) : null);
+    
+    if (!currentUser) {
       return <Navigate to="/login" replace />;
     }
     
-    if (adminOnly && user.role !== 'admin') {
+    if (adminOnly && currentUser.role !== 'admin') {
       return <Navigate to="/" replace />;
     }
     
