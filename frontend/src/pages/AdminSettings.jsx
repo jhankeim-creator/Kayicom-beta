@@ -717,6 +717,11 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                         Save Payment Settings
                       </Button>
                     </div>
+                    ) : (
+                      <div className="text-center text-white/60 py-8">
+                        Loading payment gateways...
+                      </div>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="email" className="space-y-4">
