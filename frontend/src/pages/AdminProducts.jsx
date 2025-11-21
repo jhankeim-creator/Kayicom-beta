@@ -50,7 +50,16 @@ const AdminProducts = ({ user, logout, settings }) => {
   };
 
   const handleChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // If category is topup, automatically set requires_player_id to false
+      if (field === 'category' && value === 'topup') {
+        updated.requires_player_id = false;
+      }
+      
+      return updated;
+    });
   };
 
   const handleSubmit = async () => {
