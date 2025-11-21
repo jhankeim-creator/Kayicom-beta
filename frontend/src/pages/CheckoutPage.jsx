@@ -16,17 +16,29 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
   const [paymentMethod, setPaymentMethod] = useState('crypto_plisio');
   const [loading, setLoading] = useState(false);
   const [playerIds, setPlayerIds] = useState({});
+  const [credentials, setCredentials] = useState({});
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const total = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
-  // Check if any item needs player ID
+  // Check if any item needs player ID or credentials
   const needsPlayerIds = cart.some(item => item.product.requires_player_id);
+  const needsCredentials = cart.some(item => item.product.requires_credentials);
 
   const handlePlayerIdChange = (productId, value) => {
     setPlayerIds(prev => ({
       ...prev,
       [productId]: value
+    }));
+  };
+
+  const handleCredentialChange = (productId, field, value) => {
+    setCredentials(prev => ({
+      ...prev,
+      [productId]: {
+        ...(prev[productId] || {}),
+        [field]: value
+      }
     }));
   };
 
