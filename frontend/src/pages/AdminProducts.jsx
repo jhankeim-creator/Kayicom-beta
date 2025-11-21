@@ -190,11 +190,52 @@ const AdminProducts = ({ user, logout, settings }) => {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-white/20">
               <DialogHeader>
-                <DialogTitle className="text-white">{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+                <DialogTitle className="text-white">
+                  {editingProduct ? 'Edit Product' : (showVariantMode ? 'Add Product Variant' : 'Add New Product')}
+                </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                {/* Variant Mode: Select Parent Product */}
+                {showVariantMode && !editingProduct && (
+                  <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+                    <Label className="text-white mb-2 block">Select Parent Product</Label>
+                    <Select onValueChange={(value) => {
+                      const parent = products.find(p => p.id === value);
+                      setParentProduct(parent);
+                      setFormData(prev => ({
+                        ...prev,
+                        parent_product_id: value,
+                        is_variant: true,
+                        name: parent?.name || '',
+                        category: parent?.category || 'topup',
+                        image_url: parent?.image_url || '',
+                        requires_player_id: parent?.requires_player_id || false,
+                        requires_credentials: parent?.requires_credentials || false
+                      }));
+                    }}>
+                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                        <SelectValue placeholder="Choose parent product..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.filter(p => !p.is_variant && !p.parent_product_id).map(product => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.category})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {parentProduct && (
+                      <p className="text-cyan-300 text-sm mt-2">
+                        Creating variant for: <strong>{parentProduct.name}</strong>
+                      </p>
+                    )}
+                  </div>
+                )}
+                
                 <div>
-                  <Label htmlFor="name" className="text-white">Name</Label>
+                  <Label htmlFor="name" className="text-white">
+                    {showVariantMode ? 'Product Name (inherited from parent)' : 'Name'}
+                  </Label>
                   <Input
                     id="name"
                     value={formData.name}
