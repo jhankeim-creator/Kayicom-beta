@@ -167,6 +167,8 @@ class SiteSettings(BaseModel):
     gosplit_api_key: Optional[str] = None
     z2u_api_key: Optional[str] = None
     resend_api_key: Optional[str] = None
+    trustpilot_enabled: Optional[bool] = False
+    trustpilot_business_id: Optional[str] = None
     product_categories: Optional[List[str]] = ["giftcard", "topup", "subscription", "service"]
     # Payment Gateway Settings
     payment_gateways: Optional[dict] = {
