@@ -32,6 +32,7 @@ const AdminProducts = ({ user, logout, settings }) => {
     variant_name: ''
   });
   const [imageFile, setImageFile] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   useEffect(() => {
     loadProducts();
