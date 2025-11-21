@@ -169,7 +169,15 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
 
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-12" data-testid="settings-title">Site Settings</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-white" data-testid="settings-title">Site Settings</h1>
+            <Button 
+              onClick={() => window.location.href = '/admin'}
+              className="bg-gradient-to-r from-pink-500 to-blue-500 text-white px-6 py-3"
+            >
+              🏠 Admin Home
+            </Button>
+          </div>
 
           <Card className="glass-effect border-white/20">
             <CardContent className="p-6">
