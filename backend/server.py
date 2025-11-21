@@ -202,6 +202,8 @@ class SettingsUpdate(BaseModel):
     gosplit_api_key: Optional[str] = None
     z2u_api_key: Optional[str] = None
     resend_api_key: Optional[str] = None
+    trustpilot_enabled: Optional[bool] = None
+    trustpilot_business_id: Optional[str] = None
     product_categories: Optional[List[str]] = None
     payment_gateways: Optional[dict] = None
     crypto_settings: Optional[dict] = None
