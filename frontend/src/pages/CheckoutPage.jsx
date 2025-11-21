@@ -57,8 +57,20 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
     // Validate player IDs for products that require them
     for (const item of cart) {
       if (item.product.requires_player_id && !playerIds[item.product.id]) {
-        toast.error(`Please enter Player ID for ${item.product.name}`);
+        const label = item.product.player_id_label || 'Player ID';
+        toast.error(`Please enter ${label} for ${item.product.name}`);
         return;
+      }
+    }
+
+    // Check credentials
+    for (const item of cart) {
+      if (item.product.requires_credentials) {
+        const creds = credentials[item.product.id];
+        if (!creds || !creds.email || !creds.password) {
+          toast.error(`Please enter account credentials for ${item.product.name}`);
+          return;
+        }
       }
     }
 
