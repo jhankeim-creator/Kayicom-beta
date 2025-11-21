@@ -323,7 +323,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                       
                       <div className="p-4 bg-green-400/10 border border-green-400/30 rounded-lg">
                         <p className="text-green-200 text-sm">
-                          <strong>Note:</strong> After enabling Trustpilot, the widget will appear in the website footer.
+                          <strong>Note:</strong> After enabling, a button linking to your Trustpilot reviews will appear in the footer. Customers can click to see your actual reviews on Trustpilot.
                         </p>
                       </div>
                     </div>
