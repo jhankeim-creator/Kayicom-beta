@@ -135,7 +135,15 @@ const AdminProducts = ({ user, logout, settings }) => {
 
       <div className="container mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-white" data-testid="products-title">Manage Products</h1>
+          <div className="flex justify-between items-center w-full">
+            <h1 className="text-4xl font-bold text-white" data-testid="products-title">Manage Products</h1>
+            <Button 
+              onClick={() => window.location.href = '/admin'}
+              className="bg-gradient-to-r from-pink-500 to-blue-500 text-white px-6 py-3"
+            >
+              🏠 Admin Home
+            </Button>
+          </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="bg-white text-purple-600 hover:bg-gray-100" data-testid="add-product-btn">
