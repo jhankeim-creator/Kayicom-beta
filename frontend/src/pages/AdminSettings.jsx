@@ -366,6 +366,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
 
                   {/* Payment Gateways Tab */}
                   <TabsContent value="payments" className="space-y-6">
+                    {formData.payment_gateways ? (
                     <div>
                       <h3 className="text-xl font-bold text-white mb-4">Payment Gateway Configuration</h3>
                       <p className="text-gray-400 mb-6">Configure payment methods, wallets, and instructions for customers.</p>
@@ -379,7 +380,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                           <label className="flex items-center gap-2">
                             <input 
                               type="checkbox" 
-                              checked={formData.payment_gateways.paypal.enabled}
+                              checked={formData.payment_gateways?.paypal?.enabled || false}
                               onChange={(e) => handlePaymentGatewayChange('paypal', 'enabled', e.target.checked)}
                               className="w-4 h-4" 
                             />
