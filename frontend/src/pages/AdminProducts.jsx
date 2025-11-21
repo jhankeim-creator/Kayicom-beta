@@ -238,7 +238,35 @@ const AdminProducts = ({ user, logout, settings }) => {
                     value={formData.image_url}
                     onChange={(e) => handleChange('image_url', e.target.value)}
                     className="bg-white/10 border-white/20 text-white"
+                    placeholder="Or upload image below"
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="image_file" className="text-white">Or Upload Image</Label>
+                  <Input
+                    id="image_file"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setImageFile(file);
+                        // Create preview URL
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          handleChange('image_url', reader.result);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="bg-white/10 border-white/20 text-white cursor-pointer"
+                  />
+                  {formData.image_url && (
+                    <div className="mt-2">
+                      <img src={formData.image_url} alt="Preview" className="w-32 h-32 object-cover rounded" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
