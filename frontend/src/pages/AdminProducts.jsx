@@ -173,9 +173,19 @@ const AdminProducts = ({ user, logout, settings }) => {
           </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="bg-white text-purple-600 hover:bg-gray-100" data-testid="add-product-btn">
-                <Plus className="mr-2" size={20} />
-                Add Product
+              <Button className="bg-gradient-to-r from-pink-500 to-blue-500 text-white" data-testid="add-product-btn">
+                <Plus size={20} className="mr-2" />
+                Add New Product
+              </Button>
+            </DialogTrigger>
+            
+            <DialogTrigger asChild>
+              <Button 
+                className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white ml-2"
+                onClick={() => setShowVariantMode(true)}
+              >
+                <Plus size={20} className="mr-2" />
+                Add Product Variant
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-white/20">
