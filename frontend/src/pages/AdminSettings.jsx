@@ -146,7 +146,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     try {
       const updates = {};
       Object.keys(formData).forEach(key => {
-        if (formData[key] !== '') {
+        // Include all fields except empty strings (but keep false booleans)
+        if (formData[key] !== '' && formData[key] !== undefined) {
           updates[key] = formData[key];
         }
       });
