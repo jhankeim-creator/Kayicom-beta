@@ -118,36 +118,10 @@ const AdminCrypto = () => {
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-white mt-6 mb-4">Wallets</h3>
-              
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-white">BEP20 Wallet</Label>
-                  <Input
-                    value={config.wallet_bep20 || ''}
-                    onChange={(e) => setConfig({...config, wallet_bep20: e.target.value})}
-                    className="bg-white/10 text-white mt-1"
-                    placeholder="0x..."
-                  />
-                </div>
-                <div>
-                  <Label className="text-white">TRC20 Wallet</Label>
-                  <Input
-                    value={config.wallet_trc20 || ''}
-                    onChange={(e) => setConfig({...config, wallet_trc20: e.target.value})}
-                    className="bg-white/10 text-white mt-1"
-                    placeholder="T..."
-                  />
-                </div>
-                <div>
-                  <Label className="text-white">MATIC Wallet</Label>
-                  <Input
-                    value={config.wallet_matic || ''}
-                    onChange={(e) => setConfig({...config, wallet_matic: e.target.value})}
-                    className="bg-white/10 text-white mt-1"
-                    placeholder="0x..."
-                  />
-                </div>
+              <div className="p-4 bg-blue-400/10 border border-blue-400/30 rounded-lg mt-6">
+                <p className="text-blue-200 text-sm">
+                  <strong>Note:</strong> Sell USDT uses Plisio automatic wallet generation. Buy USDT is manual payment verification.
+                </p>
               </div>
 
               <Button
