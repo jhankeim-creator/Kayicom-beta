@@ -61,9 +61,18 @@ const AdminProducts = ({ user, logout, settings }) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
       
-      // If category is topup, automatically set requires_player_id to false
-      if (field === 'category' && value === 'topup') {
-        updated.requires_player_id = false;
+      // Auto-detect requirements based on product name or category
+      if (field === 'name' || field === 'category') {
+        const { detectProductRequirements } = require('../utils/gameConfig');
+        const requirements = detectProductRequirements(
+          field === 'name' ? value : prev.name,
+          field === 'category' ? value : prev.category
+        );
+        
+        updated.requires_player_id = requirements.requiresPlayerId;
+        updated.requires_credentials = requirements.requiresCredentials;
+        updated.player_id_label = requirements.playerIdLabel || 'Player ID';
+        updated.credential_fields = requirements.credentialFields || ['email', 'password'];
       }
       
       return updated;
