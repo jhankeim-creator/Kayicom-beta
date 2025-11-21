@@ -31,6 +31,7 @@ const AdminProducts = ({ user, logout, settings }) => {
     is_subscription: false,
     variant_name: ''
   });
+  const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
     loadProducts();
