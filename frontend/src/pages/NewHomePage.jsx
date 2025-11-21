@@ -288,28 +288,6 @@ const NewHomePage = ({ user, logout, cart, settings }) => {
         </div>
       </div>
 
-      {/* Trustpilot Section */}
-      <div className="container mx-auto px-4 py-16">
-        <Card className="glass-effect border-cyan-500/30 overflow-hidden">
-          <CardContent className="p-8 md:p-12 text-center">
-            <div className="flex justify-center mb-4">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star key={star} size={32} className="text-yellow-400 fill-yellow-400" />
-              ))}
-            </div>
-            <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">Rated Excellent on Trustpilot</h3>
-            <p className="text-gray-400 mb-4">4.8 out of 5 based on 50,000+ reviews</p>
-            <a href="https://kayicom.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 transition mb-4">
-              <TrendingUp size={16} />
-              <span className="font-semibold">Visit kayicom.com</span>
-            </a>
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mt-2">
-              <span>Trusted by customers worldwide</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* CTA Section */}
       <div className="container mx-auto px-4 py-12 mb-12">
         <Card className="relative overflow-hidden">
