@@ -226,7 +226,7 @@ const WithdrawPage = ({ user, logout, settings }) => {
                 ) : method === 'moncash' ? (
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="moncash-phone" className="text-white">Nimewo Telefòn MonCash</Label>
+                      <Label htmlFor="moncash-phone" className="text-white">MonCash Phone Number</Label>
                       <Input
                         id="moncash-phone"
                         type="tel"
@@ -237,13 +237,13 @@ const WithdrawPage = ({ user, logout, settings }) => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="moncash-name" className="text-white">Non sou MonCash</Label>
+                      <Label htmlFor="moncash-name" className="text-white">Name on MonCash Account</Label>
                       <Input
                         id="moncash-name"
                         type="text"
                         value={moncashName}
                         onChange={(e) => setMoncashName(e.target.value)}
-                        placeholder="Jan Pye"
+                        placeholder="John Doe"
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50 mt-2"
                       />
                     </div>
