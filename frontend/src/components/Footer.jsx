@@ -43,7 +43,7 @@ const Footer = ({ settings }) => {
         {/* Trustpilot Widget */}
         {settings?.trustpilot_enabled && settings?.trustpilot_business_id && (
           <div className="mt-8 pt-6 border-t border-white/10">
-            <h3 className="text-xl font-bold mb-4 text-white text-center">Kliyan nou yo di</h3>
+            <h3 className="text-xl font-bold mb-4 text-white text-center">Customer Reviews</h3>
             <div className="trustpilot-widget" data-locale="fr-FR" data-template-id="53aa8912dec7e10d38f59f36" data-businessunit-id={settings.trustpilot_business_id} data-style-height="140px" data-style-width="100%" data-theme="dark" data-stars="4,5">
               <a href={`https://fr.trustpilot.com/review/${settings.trustpilot_business_id}`} target="_blank" rel="noopener noreferrer" className="text-white hover:text-pink-400">
                 Trustpilot
@@ -59,7 +59,7 @@ const Footer = ({ settings }) => {
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-blue-500 text-white font-semibold rounded-lg hover:from-pink-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105"
               >
                 <span>⭐</span>
-                <span>Wè tout reviews yo sou Trustpilot</span>
+                <span>View All Reviews on Trustpilot</span>
                 <span>→</span>
               </a>
             </div>
