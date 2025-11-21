@@ -232,7 +232,7 @@ const AdminOrders = ({ user, logout, settings }) => {
                           </Button>
                         </Link>
 
-                        {order.payment_status === 'pending_verification' && (
+                        {(order.payment_status === 'pending_verification' || order.payment_status === 'pending') && (
                           <>
                             <Button
                               className="w-full bg-green-500 hover:bg-green-600 text-white"
@@ -249,7 +249,7 @@ const AdminOrders = ({ user, logout, settings }) => {
                               data-testid={`reject-payment-${order.id}`}
                             >
                               <XCircle size={16} className="mr-2" />
-                              Reject
+                              Reject Order
                             </Button>
                           </>
                         )}
