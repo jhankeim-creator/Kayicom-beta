@@ -148,7 +148,15 @@ const AdminOrders = ({ user, logout, settings }) => {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-white" data-testid="orders-title">Manage Orders</h1>
+            <div className="flex justify-between items-center w-full">
+              <h1 className="text-4xl md:text-5xl font-bold text-white" data-testid="orders-title">Manage Orders</h1>
+              <Button 
+                onClick={() => window.location.href = '/admin'}
+                className="bg-gradient-to-r from-pink-500 to-blue-500 text-white px-6 py-3"
+              >
+                🏠 Admin Home
+              </Button>
+            </div>
             
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="w-[200px] bg-white/10 border-white/20 text-white" data-testid="filter-select">
