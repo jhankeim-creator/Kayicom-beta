@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Package, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -13,6 +14,7 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(category || '');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadProducts();
@@ -21,7 +23,10 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const url = selectedCategory ? `/products?category=${selectedCategory}` : '/products';
+      const q = search.trim();
+      const url = selectedCategory
+        ? `/products?category=${selectedCategory}${q ? `&q=${encodeURIComponent(q)}` : ''}`
+        : `/products${q ? `?q=${encodeURIComponent(q)}` : ''}`;
       const response = await axiosInstance.get(url);
       setProducts(response.data);
     } catch (error) {
@@ -106,6 +111,38 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
         <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-8" data-testid="products-title">
           All Products
         </h1>
+
+        {/* Search */}
+        <div className="max-w-xl mx-auto mb-6">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                loadProducts();
+              }
+            }}
+            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+            placeholder="Search products..."
+          />
+          <div className="flex gap-2 justify-center mt-3">
+            <Button type="button" className="bg-white text-purple-600 hover:bg-gray-100" onClick={loadProducts}>
+              Search
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-white/20 text-white"
+              onClick={() => {
+                setSearch('');
+                setTimeout(() => loadProducts(), 0);
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
 
         {/* Category Filter */}
         <div className="flex flex-wrap gap-3 justify-center mb-12">

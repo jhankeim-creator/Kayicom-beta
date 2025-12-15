@@ -70,6 +70,11 @@ const CustomerDashboard = ({ user, logout, settings }) => {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" data-testid="dashboard-title">My Account</h1>
           <p className="text-white/80 text-lg mb-12">Welcome, {user.full_name}!</p>
+          {user?.customer_id && (
+            <p className="text-white/70 text-sm mb-8">
+              Customer ID: <span className="text-white font-semibold">{user.customer_id}</span>
+            </p>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">

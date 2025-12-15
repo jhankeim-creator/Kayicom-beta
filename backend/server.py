@@ -49,12 +49,26 @@ class UserCreate(UserBase):
 class User(UserBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    customer_id: str = Field(default_factory=lambda: "")
     role: str = "customer"  # customer or admin
     referral_code: str = Field(default_factory=lambda: str(uuid.uuid4())[:8].upper())
     referred_by: Optional[str] = None  # referral_code of referrer
     referral_balance: float = 0.0  # Balance from referrals
     wallet_balance: float = 0.0  # Store credit / refunds
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+async def _generate_unique_customer_id() -> str:
+    """Generate a short, human-friendly customer id like KC-12345678."""
+    import random
+
+    for _ in range(20):
+        cid = f"KC-{random.randint(10_000_000, 99_999_999)}"
+        existing = await db.users.find_one({"customer_id": cid}, {"_id": 1})
+        if not existing:
+            return cid
+    # fallback
+    return f"KC-{str(uuid.uuid4())[:8].upper()}"
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -570,6 +584,7 @@ async def register(user_data: UserCreate):
         full_name=user_data.full_name,
         role="customer"
     )
+    user.customer_id = await _generate_unique_customer_id()
     
     doc = user.model_dump()
     doc['password'] = hashed_password
@@ -594,9 +609,17 @@ async def login(credentials: LoginRequest):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     logging.info(f"Login successful for {credentials.email}")
+
+    # Ensure customer_id exists (for legacy users)
+    if not user.get("customer_id"):
+        cid = await _generate_unique_customer_id()
+        await db.users.update_one({"id": user["id"]}, {"$set": {"customer_id": cid}})
+        user["customer_id"] = cid
+
     return {
         "user_id": user['id'],
         "id": user['id'],
+        "customer_id": user.get("customer_id"),
         "email": user['email'],
         "username": user.get('username', user.get('full_name', 'User')),
         "role": user['role']
@@ -605,12 +628,21 @@ async def login(credentials: LoginRequest):
 # ==================== PRODUCT ENDPOINTS ====================
 
 @api_router.get("/products", response_model=List[Product])
-async def get_products(category: Optional[str] = None, parent_product_id: Optional[str] = None):
+async def get_products(category: Optional[str] = None, parent_product_id: Optional[str] = None, q: Optional[str] = None):
     query = {}
     if category:
         query['category'] = category
     if parent_product_id:
         query['parent_product_id'] = parent_product_id
+    if q:
+        q = q.strip()
+        if q:
+            query["$or"] = [
+                {"name": {"$regex": q, "$options": "i"}},
+                {"description": {"$regex": q, "$options": "i"}},
+                {"variant_name": {"$regex": q, "$options": "i"}},
+                {"giftcard_category": {"$regex": q, "$options": "i"}},
+            ]
     
     products = await db.products.find(query, {"_id": 0}).to_list(1000)
     for product in products:
@@ -1353,6 +1385,7 @@ async def register_with_referral(user_data: UserCreate, referral_code: Optional[
         full_name=user_data.full_name,
         role="customer"
     )
+    user.customer_id = await _generate_unique_customer_id()
     
     doc = user.model_dump()
     doc['password'] = hashed_password
@@ -1830,6 +1863,12 @@ class WalletTopupProof(BaseModel):
     transaction_id: str
     payment_proof_url: str
 
+class AdminWalletAdjustRequest(BaseModel):
+    identifier: str  # user_id or customer_id or email
+    amount: float
+    reason: Optional[str] = None
+    action: str = "credit"  # credit or debit
+
 @api_router.get("/wallet/balance")
 async def get_wallet_balance(user_id: str):
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
@@ -1841,6 +1880,48 @@ async def get_wallet_balance(user_id: str):
 async def get_wallet_transactions(user_id: str):
     txs = await db.wallet_transactions.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
     return txs
+
+@api_router.post("/wallet/admin-adjust")
+async def admin_adjust_wallet(req: AdminWalletAdjustRequest):
+    """
+    Admin: credit/debit a user's wallet balance by user_id, customer_id, or email.
+    (No auth implemented in this project.)
+    """
+    ident = (req.identifier or "").strip()
+    if not ident:
+        raise HTTPException(status_code=400, detail="Identifier required")
+    amt = float(req.amount)
+    if amt <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be > 0")
+    if req.action not in ["credit", "debit"]:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    user = await db.users.find_one(
+        {"$or": [{"id": ident}, {"customer_id": ident}, {"email": ident}]},
+        {"_id": 0}
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    delta = amt if req.action == "credit" else -amt
+    # If debit, prevent negative balance
+    if delta < 0 and float(user.get("wallet_balance", 0.0)) + 1e-9 < abs(delta):
+        raise HTTPException(status_code=400, detail="Insufficient wallet balance")
+
+    await db.users.update_one({"id": user["id"]}, {"$inc": {"wallet_balance": float(delta)}})
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "user_email": user.get("email"),
+        "order_id": None,
+        "type": "admin_adjust",
+        "amount": float(delta),
+        "reason": req.reason or f"Admin wallet {req.action}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    updated = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+    return {"user_id": user["id"], "customer_id": user.get("customer_id"), "wallet_balance": float(updated.get("wallet_balance", 0.0))}
 
 @api_router.post("/wallet/topups")
 async def create_wallet_topup(topup: WalletTopupCreate, user_id: str, user_email: str):

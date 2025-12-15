@@ -5,11 +5,16 @@ import Footer from '../components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 const AdminWalletTopups = ({ user, logout, settings }) => {
   const [topups, setTopups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [manualIdentifier, setManualIdentifier] = useState('');
+  const [manualAmount, setManualAmount] = useState('');
+  const [manualReason, setManualReason] = useState('');
+  const [manualSubmitting, setManualSubmitting] = useState(false);
 
   useEffect(() => {
     loadTopups();
@@ -44,6 +49,36 @@ const AdminWalletTopups = ({ user, logout, settings }) => {
     return 'secondary';
   };
 
+  const manualTopup = async () => {
+    const identifier = manualIdentifier.trim();
+    const amount = Number(manualAmount);
+    if (!identifier) {
+      toast.error('Please enter user_id, customer_id, or email');
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Amount must be greater than 0');
+      return;
+    }
+    setManualSubmitting(true);
+    try {
+      const res = await axiosInstance.post('/wallet/admin-adjust', {
+        identifier,
+        amount,
+        reason: manualReason?.trim() || 'Manual wallet topup',
+        action: 'credit'
+      });
+      toast.success(`Wallet updated: $${Number(res.data.wallet_balance).toFixed(2)}`);
+      setManualAmount('');
+      setManualReason('');
+      setManualIdentifier('');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Error adjusting wallet');
+    } finally {
+      setManualSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen gradient-bg">
       <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
@@ -56,6 +91,46 @@ const AdminWalletTopups = ({ user, logout, settings }) => {
               🏠 Admin Home
             </Button>
           </div>
+
+          <Card className="glass-effect border-white/20 mb-6">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Manual Wallet Topup</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <Input
+                  value={manualIdentifier}
+                  onChange={(e) => setManualIdentifier(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  placeholder="user_id or customer_id or email"
+                />
+                <Input
+                  value={manualAmount}
+                  onChange={(e) => setManualAmount(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  placeholder="Amount (USD)"
+                  type="number"
+                  step="0.01"
+                />
+                <Input
+                  value={manualReason}
+                  onChange={(e) => setManualReason(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  placeholder="Reason (optional)"
+                />
+              </div>
+              <div className="mt-4">
+                <Button
+                  onClick={manualTopup}
+                  disabled={manualSubmitting}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {manualSubmitting ? 'Submitting...' : 'Credit Wallet'}
+                </Button>
+              </div>
+              <p className="text-white/60 text-xs mt-3">
+                Tip: use the customer’s <strong>Customer ID</strong> like <strong>KC-12345678</strong> if you don’t have their user_id.
+              </p>
+            </CardContent>
+          </Card>
 
           {loading ? (
             <div className="text-white">Loading...</div>

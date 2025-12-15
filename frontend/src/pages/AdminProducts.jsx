@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 const AdminProducts = ({ user, logout, settings }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState({
@@ -450,7 +451,16 @@ const AdminProducts = ({ user, logout, settings }) => {
         </div>
 
         {/* Category Filter */}
-        <div className="flex gap-2 flex-wrap mb-6">
+        <div className="flex flex-col md:flex-row gap-3 md:items-center mb-6">
+          <div className="flex-1">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+              placeholder="Search products (name, description, category, variant, region)..."
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap">
           <Button
             onClick={() => setCategoryFilter('all')}
             className={categoryFilter === 'all' ? 'bg-pink-500' : 'bg-white/10'}
@@ -469,6 +479,7 @@ const AdminProducts = ({ user, logout, settings }) => {
               </Button>
             );
           })}
+          </div>
         </div>
 
         {loading ? (
@@ -477,6 +488,22 @@ const AdminProducts = ({ user, logout, settings }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="products-list">
             {products
               .filter(product => categoryFilter === 'all' || product.category === categoryFilter)
+              .filter(product => {
+                const q = search.trim().toLowerCase();
+                if (!q) return true;
+                const hay = [
+                  product.name,
+                  product.description,
+                  product.category,
+                  product.variant_name,
+                  product.region,
+                  product.giftcard_category
+                ]
+                  .filter(Boolean)
+                  .join(' ')
+                  .toLowerCase();
+                return hay.includes(q);
+              })
               .map((product) => (
               <Card key={product.id} className="glass-effect border-white/20" data-testid={`product-${product.id}`}>
                 <CardContent className="p-6">
