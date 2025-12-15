@@ -10,12 +10,7 @@ const Footer = ({ settings }) => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-gray-300">
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              {settings?.logo_url && (
-                <img src={settings.logo_url} alt="Logo" className="h-10 w-auto rounded bg-white/10 p-1" />
-              )}
-              <h3 className="text-xl font-bold gradient-text">{settings?.site_name || 'KayiCom'}</h3>
-            </div>
+            <h3 className="text-xl font-bold mb-4 gradient-text">{settings?.site_name || 'KayiCom'}</h3>
             <p className="text-sm text-gray-400">
               Platform for purchasing gift cards, game top-ups, subscriptions and digital services.
             </p>
