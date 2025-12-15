@@ -6,7 +6,7 @@ import Footer from '../components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, Eye, Clock } from 'lucide-react';
+import { Package, Eye, Clock, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CustomerDashboard = ({ user, logout, settings }) => {
@@ -62,6 +62,31 @@ const CustomerDashboard = ({ user, logout, settings }) => {
       });
   }, [orders, now]);
 
+  const copyCustomerId = async () => {
+    const cid = user?.customer_id;
+    if (!cid) return;
+    try {
+      await navigator.clipboard.writeText(cid);
+      toast.success('Customer ID copied');
+    } catch (e) {
+      // Fallback
+      try {
+        const el = document.createElement('textarea');
+        el.value = cid;
+        el.style.position = 'fixed';
+        el.style.left = '-9999px';
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        toast.success('Customer ID copied');
+      } catch (err) {
+        toast.error('Could not copy Customer ID');
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen gradient-bg">
       <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
@@ -71,9 +96,21 @@ const CustomerDashboard = ({ user, logout, settings }) => {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" data-testid="dashboard-title">My Account</h1>
           <p className="text-white/80 text-lg mb-12">Welcome, {user.full_name}!</p>
           {user?.customer_id && (
-            <p className="text-white/70 text-sm mb-8">
-              Customer ID: <span className="text-white font-semibold">{user.customer_id}</span>
-            </p>
+            <div className="inline-flex items-center gap-2 mb-8 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+              <span className="text-white/70 text-sm">Customer ID:</span>
+              <span className="text-white font-semibold font-mono select-all">{user.customer_id}</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10"
+                onClick={copyCustomerId}
+                data-testid="copy-customer-id"
+              >
+                <Copy size={14} className="mr-2" />
+                Copy
+              </Button>
+            </div>
           )}
 
           {/* Stats Cards */}

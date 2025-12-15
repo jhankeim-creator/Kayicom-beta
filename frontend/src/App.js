@@ -100,13 +100,18 @@ function App() {
   };
 
   const login = (userData) => {
+    const normalized = { ...(userData || {}) };
     // Add id field for consistency (backend sends user_id)
-    if (userData.user_id && !userData.id) {
-      userData.id = userData.user_id;
+    if (normalized.user_id && !normalized.id) {
+      normalized.id = normalized.user_id;
     }
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    return userData; // Return for redirect logic
+    // Normalize name field used by dashboards/UI
+    if (!normalized.full_name && normalized.username) {
+      normalized.full_name = normalized.username;
+    }
+    setUser(normalized);
+    localStorage.setItem('user', JSON.stringify(normalized));
+    return normalized; // Return for redirect logic
   };
 
   const logout = () => {
