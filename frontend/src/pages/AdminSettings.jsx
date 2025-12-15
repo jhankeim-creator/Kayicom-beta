@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 
 const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }) => {
   const [loading, setLoading] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [formData, setFormData] = useState({
     site_name: '',
     logo_url: '',
@@ -128,6 +129,30 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
       toast.error(error.response?.data?.detail || 'Error sending bulk email');
     } finally {
       setSendingEmail(false);
+    }
+  };
+
+  const uploadLogo = async (file) => {
+    if (!file) return null;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File too large. Max 5MB');
+      return null;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const data = new FormData();
+      data.append('file', file);
+      const res = await axiosInstance.post('/upload/image', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return res.data?.url || null;
+    } catch (e) {
+      console.error('Logo upload failed:', e);
+      toast.error('Error uploading logo');
+      return null;
+    } finally {
+      setUploadingLogo(false);
     }
   };
 
@@ -281,6 +306,27 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                         placeholder="https://example.com/logo.png"
                         data-testid="logo-url-input"
                       />
+                      <div className="mt-3">
+                        <Label htmlFor="logo_file" className="text-white">Or Upload Logo</Label>
+                        <Input
+                          id="logo_file"
+                          type="file"
+                          accept="image/*"
+                          disabled={uploadingLogo}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            const url = await uploadLogo(file);
+                            if (url) {
+                              handleChange('logo_url', url);
+                              toast.success('Logo uploaded');
+                            }
+                          }}
+                          className="bg-white/10 border-white/20 text-white cursor-pointer mt-2"
+                        />
+                        {uploadingLogo && (
+                          <p className="text-white/60 text-sm mt-2">Uploading...</p>
+                        )}
+                      </div>
                       {formData.logo_url && (
                         <div className="mt-2">
                           <img src={formData.logo_url} alt="Logo preview" className="h-16 bg-white/10 p-2 rounded" />

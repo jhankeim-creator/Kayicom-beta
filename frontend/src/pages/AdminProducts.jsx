@@ -36,7 +36,7 @@ const AdminProducts = ({ user, logout, settings }) => {
     parent_product_id: null,
     is_variant: false
   });
-  const [imageFile, setImageFile] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showVariantMode, setShowVariantMode] = useState(false);
   const [parentProduct, setParentProduct] = useState(null);
@@ -77,6 +77,31 @@ const AdminProducts = ({ user, logout, settings }) => {
       
       return updated;
     });
+  };
+
+  const uploadImage = async (file) => {
+    if (!file) return null;
+    // 5MB limit (matches other pages)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File too large. Max 5MB');
+      return null;
+    }
+
+    setUploadingImage(true);
+    try {
+      const data = new FormData();
+      data.append('file', file);
+      const res = await axiosInstance.post('/upload/image', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return res.data?.url || null;
+    } catch (e) {
+      console.error('Image upload failed:', e);
+      toast.error('Error uploading image');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -325,20 +350,20 @@ const AdminProducts = ({ user, logout, settings }) => {
                     id="image_file"
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        setImageFile(file);
-                        // Create preview URL
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          handleChange('image_url', reader.result);
-                        };
-                        reader.readAsDataURL(file);
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      const url = await uploadImage(file);
+                      if (url) {
+                        handleChange('image_url', url);
+                        toast.success('Image uploaded');
                       }
                     }}
                     className="bg-white/10 border-white/20 text-white cursor-pointer"
+                    disabled={uploadingImage}
                   />
+                  {uploadingImage && (
+                    <p className="text-white/60 text-sm mt-2">Uploading...</p>
+                  )}
                   {formData.image_url && (
                     <div className="mt-2">
                       <img src={formData.image_url} alt="Preview" className="w-32 h-32 object-cover rounded" />
