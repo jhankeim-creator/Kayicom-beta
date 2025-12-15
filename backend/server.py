@@ -335,15 +335,19 @@ def _parse_subscription_duration(product: dict) -> timedelta:
     variant = (product.get("variant_name") or "").strip().lower()
     if variant:
         import re
-        m = re.search(r"(\d+)\s*(day|days|month|months|year|years)", variant)
+        # Support English + Haitian Creole + French-ish keywords
+        # - day/jou
+        # - month/mwa/mois
+        # - year/ane/an/ans/years
+        m = re.search(r"(\d+)\s*(day|days|jou|month|months|mwa|mois|year|years|ane|an|ans)", variant)
         if m:
             n = int(m.group(1))
             unit = m.group(2)
-            if "day" in unit:
+            if unit in ["day", "days", "jou"]:
                 return timedelta(days=n)
-            if "month" in unit:
+            if unit in ["month", "months", "mwa", "mois"]:
                 return timedelta(days=n * 30)
-            if "year" in unit:
+            if unit in ["year", "years", "ane", "an", "ans"]:
                 return timedelta(days=n * 365)
 
     return timedelta(days=30)

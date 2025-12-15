@@ -70,6 +70,7 @@ DEMO_PRODUCTS = [
         "is_subscription": True,
         "variants": [
             {"duration": "1 Month", "price": 9.99},
+            {"duration": "2 Months", "price": 16.99},
             {"duration": "3 Months", "price": 24.99},
             {"duration": "6 Months", "price": 44.99},
             {"duration": "12 Months", "price": 79.99},
@@ -85,6 +86,7 @@ DEMO_PRODUCTS = [
         "is_subscription": True,
         "variants": [
             {"duration": "1 Month", "price": 19.99},
+            {"duration": "2 Months", "price": 34.99},
             {"duration": "3 Months", "price": 49.99},
             {"duration": "6 Months", "price": 89.99},
             {"duration": "12 Months", "price": 149.99},
