@@ -107,6 +107,7 @@ class _FakeDB:
         self.users = _FakeCollection()
         self.products = _FakeCollection()
         self.wallet_transactions = _FakeCollection()
+        self.referral_payouts = _FakeCollection()
         self.settings = _FakeCollection([{
             "id": "site_settings",
             "minutes_transfer_enabled": True,
@@ -118,6 +119,8 @@ class _FakeDB:
             "plisio_api_key": "dummy"
         }])
         self.minutes_transfers = _FakeCollection()
+        self.orders = _FakeCollection()
+        self.credits_transactions = _FakeCollection()
 
 
 @pytest.fixture()
@@ -296,3 +299,48 @@ def test_minutes_quote_and_wallet_create(app_module):
         json={"country": "Haiti", "phone_number": "+50912345678", "amount": 10, "payment_method": "wallet"},
     )
     assert r4.status_code == 200, r4.text
+
+
+def test_order_success_awards_credits_and_convert(app_module):
+    # seed user
+    app_module.db.users._docs.append(
+        {
+            "id": "u-c1",
+            "email": "c1@example.com",
+            "full_name": "C1",
+            "role": "customer",
+            "password": app_module.pwd_context.hash("x"),
+            "wallet_balance": 0.0,
+            "credits_balance": 95,
+            "customer_id": "KC-33334444",
+        }
+    )
+    # seed paid+completed order without credits_recorded
+    app_module.db.orders._docs.append(
+        {
+            "id": "o-1",
+            "user_id": "u-c1",
+            "user_email": "c1@example.com",
+            "items": [],
+            "total_amount": 1.0,
+            "payment_method": "paypal",
+            "payment_status": "paid",
+            "order_status": "completed",
+            "credits_recorded": False,
+        }
+    )
+    client = TestClient(app_module.app)
+
+    # completing should award credits idempotently
+    r = client.put("/api/orders/o-1/complete")
+    assert r.status_code == 200, r.text
+    # user should now have 100 credits
+    user = next(u for u in app_module.db.users._docs if u["id"] == "u-c1")
+    assert int(user.get("credits_balance", 0)) == 100
+
+    # convert 100 credits to $1
+    r2 = client.post("/api/credits/convert?user_id=u-c1&user_email=c1@example.com", json={"credits": 100})
+    assert r2.status_code == 200, r2.text
+    user2 = next(u for u in app_module.db.users._docs if u["id"] == "u-c1")
+    assert int(user2.get("credits_balance", 0)) == 0
+    assert float(user2.get("wallet_balance", 0.0)) == pytest.approx(1.0)

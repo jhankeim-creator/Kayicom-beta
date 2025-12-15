@@ -55,6 +55,7 @@ class User(UserBase):
     referred_by: Optional[str] = None  # referral_code of referrer
     referral_balance: float = 0.0  # Balance from referrals
     wallet_balance: float = 0.0  # Store credit / refunds
+    credits_balance: int = 0  # Loyalty credits (100 credits = $1)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -164,6 +165,8 @@ class Order(BaseModel):
     discount_amount: Optional[float] = None
     coupon_code: Optional[str] = None
     coupon_usage_recorded: Optional[bool] = None
+    credits_awarded: Optional[int] = None
+    credits_recorded: Optional[bool] = None
     currency: str = "USD"
     payment_method: str  # wallet, crypto_plisio, paypal, skrill, moncash, binance_pay, zelle, cashapp
     payment_status: str = "pending"  # pending, paid, failed, cancelled
@@ -776,6 +779,43 @@ async def _record_coupon_usage_if_needed(order_id: str):
     await db.coupons.update_one({"code": code}, {"$inc": {"used_count": 1}})
     await db.orders.update_one({"id": order_id}, {"$set": {"coupon_usage_recorded": True}})
 
+
+async def _record_loyalty_credits_if_needed(order_id: str):
+    """
+    Award loyalty credits once per successful order.
+    Rule: each successful (paid + completed) order gives 5 credits.
+    """
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        return
+
+    # Only award when fully successful
+    if order.get("payment_status") != "paid":
+        return
+    if order.get("order_status") != "completed":
+        return
+
+    if order.get("credits_recorded"):
+        return
+
+    credits = 5
+    await db.users.update_one({"id": order["user_id"]}, {"$inc": {"credits_balance": int(credits)}})
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {"credits_recorded": True, "credits_awarded": int(credits), "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await db.credits_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": order["user_id"],
+        "user_email": order.get("user_email"),
+        "order_id": order_id,
+        "type": "earn",
+        "credits": int(credits),
+        "usd_equivalent": round(float(credits) / 100.0, 2),
+        "reason": "Order success reward",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+
 @api_router.get("/coupons/validate")
 async def validate_coupon(code: str, amount: float):
     coupon = await _get_valid_coupon(code, amount)
@@ -1051,6 +1091,7 @@ async def update_order_status(order_id: str, payment_status: Optional[str] = Non
             except Exception as e:
                 logging.error(f"Subscription email check error: {e}")
             await check_and_credit_referral(order)
+            await _record_loyalty_credits_if_needed(order_id)
     
     return {"message": "Order updated successfully"}
 
@@ -1076,6 +1117,9 @@ async def update_order_delivery(order_id: str, delivery_info: DeliveryInfo):
     order = await _set_subscription_dates_if_needed(order_id)
     if not order:
         order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+
+    # Award loyalty credits once order is completed+paid
+    await _record_loyalty_credits_if_needed(order_id)
 
     # Send delivery email (includes expiry if subscription)
     try:
@@ -1894,6 +1938,11 @@ class AdminWalletAdjustRequest(BaseModel):
     reason: Optional[str] = None
     action: str = "credit"  # credit or debit
 
+
+class CreditsConvertRequest(BaseModel):
+    credits: int  # must be multiple of 100
+    reason: Optional[str] = None
+
 @api_router.get("/wallet/balance")
 async def get_wallet_balance(user_id: str):
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
@@ -1947,6 +1996,59 @@ async def admin_adjust_wallet(req: AdminWalletAdjustRequest):
 
     updated = await db.users.find_one({"id": user["id"]}, {"_id": 0})
     return {"user_id": user["id"], "customer_id": user.get("customer_id"), "wallet_balance": float(updated.get("wallet_balance", 0.0))}
+
+
+@api_router.get("/credits/balance")
+async def get_credits_balance(user_id: str):
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"user_id": user_id, "credits_balance": int(user.get("credits_balance", 0)), "rate": "100_credits = 1_USD"}
+
+
+@api_router.post("/credits/convert")
+async def convert_credits_to_wallet(req: CreditsConvertRequest, user_id: str, user_email: str):
+    credits = int(req.credits)
+    if credits <= 0:
+        raise HTTPException(status_code=400, detail="Credits must be > 0")
+    if credits % 100 != 0:
+        raise HTTPException(status_code=400, detail="Credits must be a multiple of 100")
+
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    current = int(user.get("credits_balance", 0))
+    if current < credits:
+        raise HTTPException(status_code=400, detail="Insufficient credits")
+
+    usd = round(float(credits) / 100.0, 2)
+    await db.users.update_one({"id": user_id}, {"$inc": {"credits_balance": -credits, "wallet_balance": float(usd)}})
+
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user_email,
+        "order_id": None,
+        "type": "credits_convert",
+        "amount": float(usd),
+        "reason": req.reason or f"Converted {credits} credits to wallet",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    await db.credits_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user_email,
+        "order_id": None,
+        "type": "convert",
+        "credits": -credits,
+        "usd_equivalent": float(usd),
+        "reason": req.reason or "Convert credits to wallet",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    updated = await db.users.find_one({"id": user_id}, {"_id": 0})
+    return {"user_id": user_id, "credits_converted": credits, "usd_added": float(usd), "wallet_balance": float(updated.get("wallet_balance", 0.0)), "credits_balance": int(updated.get("credits_balance", 0))}
 
 @api_router.post("/wallet/topups")
 async def create_wallet_topup(topup: WalletTopupCreate, user_id: str, user_email: str):
@@ -2354,6 +2456,9 @@ async def complete_order_with_referral_check(order_id: str):
     
     # Check and credit referral
     await check_and_credit_referral(order)
+
+    # Award loyalty credits for successful order
+    await _record_loyalty_credits_if_needed(order_id)
     
     return {"message": "Order completed"}
 

@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 const WalletPage = ({ user, logout, settings }) => {
   const [balance, setBalance] = useState(0);
+  const [creditsBalance, setCreditsBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [topups, setTopups] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,8 @@ const WalletPage = ({ user, logout, settings }) => {
   const [proofTxId, setProofTxId] = useState('');
   const [proofUrl, setProofUrl] = useState('');
   const [selectedTopupId, setSelectedTopupId] = useState(null);
+  const [convertCredits, setConvertCredits] = useState('');
+  const [converting, setConverting] = useState(false);
 
   const userId = user?.user_id || user?.id;
 
@@ -42,12 +45,14 @@ const WalletPage = ({ user, logout, settings }) => {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [balRes, txRes, topupRes] = await Promise.all([
+      const [balRes, creditsRes, txRes, topupRes] = await Promise.all([
         axiosInstance.get(`/wallet/balance?user_id=${userId}`),
+        axiosInstance.get(`/credits/balance?user_id=${userId}`),
         axiosInstance.get(`/wallet/transactions?user_id=${userId}`),
         axiosInstance.get(`/wallet/topups/user/${userId}`)
       ]);
       setBalance(balRes.data?.wallet_balance || 0);
+      setCreditsBalance(creditsRes.data?.credits_balance || 0);
       setTransactions(txRes.data || []);
       setTopups(topupRes.data || []);
     } catch (e) {
@@ -57,6 +62,32 @@ const WalletPage = ({ user, logout, settings }) => {
       setLoading(false);
     }
   }, [userId]);
+
+  const doConvertCredits = async () => {
+    const credits = parseInt(convertCredits, 10);
+    if (!Number.isFinite(credits) || credits <= 0) {
+      toast.error('Enter credits to convert (multiple of 100)');
+      return;
+    }
+    if (credits % 100 !== 0) {
+      toast.error('Credits must be a multiple of 100');
+      return;
+    }
+    setConverting(true);
+    try {
+      const res = await axiosInstance.post(
+        `/credits/convert?user_id=${userId}&user_email=${encodeURIComponent(user.email)}`,
+        { credits }
+      );
+      toast.success(`Converted ${credits} credits → $${Number(res.data.usd_added).toFixed(2)}`);
+      setConvertCredits('');
+      await loadAll();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Error converting credits');
+    } finally {
+      setConverting(false);
+    }
+  };
 
   useEffect(() => {
     if (userId) {
@@ -153,6 +184,36 @@ const WalletPage = ({ user, logout, settings }) => {
                 <CardContent className="p-6">
                   <p className="text-white/70 mb-2">Wallet Balance</p>
                   <p className="text-4xl font-bold text-white">${Number(balance).toFixed(2)}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-effect border-white/20">
+                <CardContent className="p-6 space-y-3">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                      <p className="text-white/70 mb-1">Credits</p>
+                      <p className="text-3xl font-bold text-white">{Number(creditsBalance)}</p>
+                      <p className="text-white/60 text-xs">100 credits = $1. Each successful order earns 5 credits.</p>
+                    </div>
+                    <div className="w-full md:w-80">
+                      <Label className="text-white">Convert credits (multiple of 100)</Label>
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          value={convertCredits}
+                          onChange={(e) => setConvertCredits(e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                          placeholder="e.g. 100"
+                        />
+                        <Button
+                          onClick={doConvertCredits}
+                          disabled={converting}
+                          className="bg-white text-purple-600 hover:bg-gray-100"
+                        >
+                          {converting ? '...' : 'Convert'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
