@@ -9,9 +9,22 @@ from fastapi.testclient import TestClient
 class _FakeCursor:
     def __init__(self, items):
         self._items = items
+        self._skip = 0
+
+    def sort(self, *_args, **_kwargs):
+        # no-op for tests
+        return self
+
+    def skip(self, n):
+        try:
+            self._skip = max(0, int(n))
+        except Exception:
+            self._skip = 0
+        return self
 
     async def to_list(self, length):
-        return list(self._items)[:length]
+        items = list(self._items)[self._skip:]
+        return items[:length]
 
 
 def _match_value(doc_value, query_value):
@@ -344,3 +357,36 @@ def test_order_success_awards_credits_and_convert(app_module):
     user2 = next(u for u in app_module.db.users._docs if u["id"] == "u-c1")
     assert int(user2.get("credits_balance", 0)) == 0
     assert float(user2.get("wallet_balance", 0.0)) == pytest.approx(1.0)
+
+
+def test_admin_customers_list_and_search(app_module):
+    app_module.db.users._docs.extend(
+        [
+            {"id": "cu-1", "role": "customer", "email": "john@example.com", "full_name": "John", "customer_id": "KC-10101010", "wallet_balance": 0.0, "credits_balance": 0},
+            {"id": "cu-2", "role": "customer", "email": "mary@example.com", "full_name": "Mary", "customer_id": "KC-20202020", "wallet_balance": 1.0, "credits_balance": 5},
+            {"id": "ad-1", "role": "admin", "email": "admin@example.com", "full_name": "Admin", "customer_id": "", "wallet_balance": 0.0, "credits_balance": 0},
+        ]
+    )
+    client = TestClient(app_module.app)
+    r = client.get("/api/admin/customers")
+    assert r.status_code == 200, r.text
+    data = r.json()
+    # only customers
+    assert all(u.get("role") == "customer" for u in data)
+
+    r2 = client.get("/api/admin/customers?q=KC-2020")
+    assert r2.status_code == 200, r2.text
+    data2 = r2.json()
+    assert len(data2) == 1
+    assert data2[0]["id"] == "cu-2"
+
+
+def test_admin_adjust_credits(app_module):
+    app_module.db.users._docs.append(
+        {"id": "cu-3", "role": "customer", "email": "c3@example.com", "full_name": "C3", "customer_id": "KC-30303030", "credits_balance": 10}
+    )
+    client = TestClient(app_module.app)
+    r = client.post("/api/credits/admin-adjust", json={"identifier": "KC-30303030", "credits": 90, "action": "credit"})
+    assert r.status_code == 200, r.text
+    u = next(x for x in app_module.db.users._docs if x["id"] == "cu-3")
+    assert int(u.get("credits_balance", 0)) == 100

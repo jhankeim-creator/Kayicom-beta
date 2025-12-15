@@ -25,6 +25,7 @@ import AdminCryptoTransactions from './pages/AdminCryptoTransactions';
 import AdminWalletTopups from './pages/AdminWalletTopups';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminMinutesTransfers from './pages/AdminMinutesTransfers';
+import AdminCustomers from './pages/AdminCustomers';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ReferralPage from './pages/ReferralPage';
@@ -378,6 +379,15 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <AdminMinutesTransfers user={user} logout={logout} settings={settings} />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/customers"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminCustomers user={user} logout={logout} settings={settings} />
               </ProtectedRoute>
             }
           />

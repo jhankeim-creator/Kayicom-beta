@@ -1305,6 +1305,37 @@ async def update_settings(updates: SettingsUpdate):
         settings['updated_at'] = datetime.fromisoformat(settings['updated_at'])
     return settings
 
+
+# ==================== ADMIN: CUSTOMERS ====================
+
+@api_router.get("/admin/customers")
+async def admin_list_customers(q: Optional[str] = None, limit: int = 50, skip: int = 0):
+    """
+    Admin: list customer users with optional search.
+    Search matches email/full_name/customer_id (case-insensitive).
+    (No auth implemented in this project.)
+    """
+    limit = max(1, min(int(limit), 500))
+    skip = max(0, int(skip))
+    query: Dict[str, Any] = {"role": "customer"}
+    if q and q.strip():
+        s = q.strip()
+        query["$or"] = [
+            {"email": {"$regex": s, "$options": "i"}},
+            {"full_name": {"$regex": s, "$options": "i"}},
+            {"customer_id": {"$regex": s, "$options": "i"}},
+        ]
+    users = await db.users.find(query, {"_id": 0, "password": 0, "password_hash": 0}).sort("created_at", -1).skip(skip).to_list(limit)
+    return users
+
+
+@api_router.get("/admin/customers/{user_id}")
+async def admin_get_customer(user_id: str):
+    user = await db.users.find_one({"id": user_id, "role": "customer"}, {"_id": 0, "password": 0, "password_hash": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return user
+
 # ==================== BULK EMAIL ENDPOINTS ====================
 
 @api_router.post("/emails/bulk-send")
@@ -1957,6 +1988,13 @@ class CreditsConvertRequest(BaseModel):
     credits: int  # must be multiple of 100
     reason: Optional[str] = None
 
+
+class AdminCreditsAdjustRequest(BaseModel):
+    identifier: str  # user_id or customer_id or email
+    credits: int
+    reason: Optional[str] = None
+    action: str = "credit"  # credit or debit
+
 @api_router.get("/wallet/balance")
 async def get_wallet_balance(user_id: str):
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
@@ -2018,6 +2056,56 @@ async def get_credits_balance(user_id: str):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return {"user_id": user_id, "credits_balance": int(user.get("credits_balance", 0)), "rate": "100_credits = 1_USD"}
+
+
+@api_router.get("/credits/transactions")
+async def get_credits_transactions(user_id: str):
+    txs = await db.credits_transactions.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return txs
+
+
+@api_router.post("/credits/admin-adjust")
+async def admin_adjust_credits(req: AdminCreditsAdjustRequest):
+    """
+    Admin: credit/debit a user's credits by user_id, customer_id, or email.
+    (No auth implemented in this project.)
+    """
+    ident = (req.identifier or "").strip()
+    if not ident:
+        raise HTTPException(status_code=400, detail="Identifier required")
+    credits = int(req.credits)
+    if credits <= 0:
+        raise HTTPException(status_code=400, detail="Credits must be > 0")
+    if req.action not in ["credit", "debit"]:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    user = await db.users.find_one(
+        {"$or": [{"id": ident}, {"customer_id": ident}, {"email": ident}]},
+        {"_id": 0}
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    delta = credits if req.action == "credit" else -credits
+    current = int(user.get("credits_balance", 0))
+    if delta < 0 and current < abs(delta):
+        raise HTTPException(status_code=400, detail="Insufficient credits")
+
+    await db.users.update_one({"id": user["id"]}, {"$inc": {"credits_balance": int(delta)}})
+    await db.credits_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "user_email": user.get("email"),
+        "order_id": None,
+        "type": "admin_adjust",
+        "credits": int(delta),
+        "usd_equivalent": round(float(delta) / 100.0, 2),
+        "reason": req.reason or f"Admin credits {req.action}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    updated = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+    return {"user_id": user["id"], "customer_id": user.get("customer_id"), "credits_balance": int(updated.get("credits_balance", 0))}
 
 
 @api_router.post("/credits/convert")
