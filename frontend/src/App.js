@@ -311,7 +311,6 @@ function App() {
         </Routes>
         <Toaster position="top-right" richColors />
           <WhatsAppButton />
-          <Toaster position="top-right" />
         </div>
       </BrowserRouter>
     </LanguageContext.Provider>

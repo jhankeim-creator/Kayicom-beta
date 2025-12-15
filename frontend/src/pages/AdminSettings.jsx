@@ -42,6 +42,13 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
       binance_pay: { enabled: true, email: '', instructions: '' },
       zelle: { enabled: true, email: '', instructions: '' },
       cashapp: { enabled: true, email: '', instructions: '' }
+    },
+    crypto_settings: {
+      buy_rate_usdt: 1.0,
+      sell_rate_usdt: 0.98,
+      transaction_fee_percent: 2.0,
+      min_transaction_usd: 10.0,
+      wallets: { BEP20: '', TRC20: '', MATIC: '' }
     }
   });
   const [newCategory, setNewCategory] = useState('');
@@ -79,7 +86,14 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
           trustpilot_enabled: currentSettings.trustpilot_enabled || false,
           trustpilot_business_id: currentSettings.trustpilot_business_id || '',
           product_categories: currentSettings.product_categories || ['giftcard', 'topup', 'subscription', 'service'],
-          payment_gateways: currentSettings.payment_gateways || defaultPaymentGateways
+          payment_gateways: currentSettings.payment_gateways || defaultPaymentGateways,
+          crypto_settings: currentSettings.crypto_settings || {
+            buy_rate_usdt: 1.0,
+            sell_rate_usdt: 0.98,
+            transaction_fee_percent: 2.0,
+            min_transaction_usd: 10.0,
+            wallets: { BEP20: '', TRC20: '', MATIC: '' }
+          }
         });
       });
     }
@@ -137,6 +151,29 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
         }
       };
     });
+  }, []);
+
+  const handleCryptoSettingsChange = useCallback((field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      crypto_settings: {
+        ...(prev.crypto_settings || {}),
+        [field]: value
+      }
+    }));
+  }, []);
+
+  const handleCryptoWalletChange = useCallback((chain, value) => {
+    setFormData(prev => ({
+      ...prev,
+      crypto_settings: {
+        ...(prev.crypto_settings || {}),
+        wallets: {
+          ...((prev.crypto_settings || {}).wallets || {}),
+          [chain]: value
+        }
+      }
+    }));
   }, []);
 
   const handleSubmit = async (e) => {
@@ -688,16 +725,12 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                         </div>
                       </div>
 
-                      {/* USDT */}
+                      {/* USDT Wallets (used by Crypto page fallback + display) */}
                       <div className="bg-white/5 p-4 rounded-lg mb-4">
                         <div className="flex justify-between items-center mb-3">
                           <h4 className="text-white font-semibold flex items-center gap-2">
                             <span>₮</span> USDT (Multiple Chains)
                           </h4>
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" defaultChecked className="w-4 h-4" />
-                            <span className="text-white text-sm">Enabled</span>
-                          </label>
                         </div>
                         <div className="space-y-3">
                           <div>
@@ -705,6 +738,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Input
                               placeholder="0x..."
                               className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.crypto_settings?.wallets?.BEP20 || ''}
+                              onChange={(e) => handleCryptoWalletChange('BEP20', e.target.value)}
                             />
                           </div>
                           <div>
@@ -712,6 +747,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Input
                               placeholder="T..."
                               className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.crypto_settings?.wallets?.TRC20 || ''}
+                              onChange={(e) => handleCryptoWalletChange('TRC20', e.target.value)}
                             />
                           </div>
                           <div>
@@ -719,15 +756,61 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             <Input
                               placeholder="0x..."
                               className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.crypto_settings?.wallets?.MATIC || ''}
+                              onChange={(e) => handleCryptoWalletChange('MATIC', e.target.value)}
                             />
                           </div>
                         </div>
                       </div>
 
-                      <Button 
-                        onClick={() => toast.success('Payment settings saved!')} 
-                        className="w-full bg-white text-purple-600 hover:bg-gray-100"
-                      >
+                      {/* Crypto exchange settings */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-4">
+                        <h4 className="text-white font-semibold mb-3">Crypto Exchange (USDT) Settings</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-white/70 text-sm">Buy Rate (USD per 1 USDT)</Label>
+                            <Input
+                              type="number"
+                              step="0.0001"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.crypto_settings?.buy_rate_usdt ?? 1.0}
+                              onChange={(e) => handleCryptoSettingsChange('buy_rate_usdt', parseFloat(e.target.value))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Sell Rate (USD per 1 USDT)</Label>
+                            <Input
+                              type="number"
+                              step="0.0001"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.crypto_settings?.sell_rate_usdt ?? 0.98}
+                              onChange={(e) => handleCryptoSettingsChange('sell_rate_usdt', parseFloat(e.target.value))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Fee %</Label>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.crypto_settings?.transaction_fee_percent ?? 2.0}
+                              onChange={(e) => handleCryptoSettingsChange('transaction_fee_percent', parseFloat(e.target.value))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Minimum Transaction (USD)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.crypto_settings?.min_transaction_usd ?? 10.0}
+                              onChange={(e) => handleCryptoSettingsChange('min_transaction_usd', parseFloat(e.target.value))}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button type="submit" className="w-full bg-white text-purple-600 hover:bg-gray-100">
                         Save Payment Settings
                       </Button>
                     </div>
