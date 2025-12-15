@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
@@ -39,6 +39,17 @@ export const axiosInstance = axios.create({
 
 // Create language context
 export const LanguageContext = createContext();
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // Ensure each route starts at the top
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   const [user, setUser] = useState(null);
@@ -181,6 +192,7 @@ function App() {
   return (
     <LanguageContext.Provider value={{ language, switchLanguage, t }}>
       <BrowserRouter>
+        <ScrollToTop />
         <div className="App">
           <Routes>
             <Route path="/" element={<HomePage user={user} logout={logout} cart={cart} settings={settings} />} />
