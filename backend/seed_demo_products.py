@@ -17,6 +17,7 @@ DEMO_PRODUCTS = [
         "name": "Amazon Gift Card",
         "description": "Amazon gift card with instant delivery. Valid in selected regions.",
         "category": "giftcard",
+        "giftcard_category": "Shopping",
         "image_url": "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=400",
         "delivery_type": "manual",
         "requires_player_id": False,
@@ -32,6 +33,7 @@ DEMO_PRODUCTS = [
         "name": "iTunes Gift Card",
         "description": "Apple iTunes gift card for App Store, Apple Music, and more.",
         "category": "giftcard",
+        "giftcard_category": "Entertainment",
         "image_url": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400",
         "delivery_type": "manual",
         "requires_player_id": False,
@@ -47,6 +49,7 @@ DEMO_PRODUCTS = [
         "name": "Google Play Gift Card",
         "description": "Google Play gift card for apps, games, and digital content.",
         "category": "giftcard",
+        "giftcard_category": "Gaming",
         "image_url": "https://images.unsplash.com/photo-1607252650355-f7fd0460ccdb?w=400",
         "delivery_type": "manual",
         "requires_player_id": False,
@@ -131,6 +134,7 @@ async def seed_demo():
                 "parent_product_id": parent_id,
                 "requires_player_id": product_group["requires_player_id"],
                 "region": region,
+                "giftcard_category": product_group.get("giftcard_category"),
                 "is_subscription": product_group.get("is_subscription", False),
                 "metadata": {
                     "product_type": product_group["category"]

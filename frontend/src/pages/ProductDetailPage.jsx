@@ -121,6 +121,11 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
                 {selectedProduct.category === 'subscription' && 'Abònman'}
                 {selectedProduct.category === 'service' && 'Sèvis'}
               </span>
+              {selectedProduct.category === 'giftcard' && selectedProduct.giftcard_category && (
+                <span className="inline-block bg-white/10 px-3 py-1 rounded text-sm ml-2">
+                  {selectedProduct.giftcard_category}
+                </span>
+              )}
             </div>
 
             <div className="mb-8">

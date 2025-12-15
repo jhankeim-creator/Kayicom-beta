@@ -31,6 +31,7 @@ const AdminProducts = ({ user, logout, settings }) => {
     player_id_label: 'Player ID',
     credential_fields: ['email', 'password'],
     region: '',
+    giftcard_category: '',
     is_subscription: false,
     variant_name: '',
     parent_product_id: null,
@@ -145,6 +146,7 @@ const AdminProducts = ({ user, logout, settings }) => {
       delivery_type: product.delivery_type,
       requires_player_id: product.requires_player_id || false,
       region: product.region || '',
+      giftcard_category: product.giftcard_category || '',
       is_subscription: product.is_subscription || false,
       variant_name: product.variant_name || ''
     });
@@ -175,6 +177,7 @@ const AdminProducts = ({ user, logout, settings }) => {
       delivery_type: 'manual',
       requires_player_id: false,
       region: '',
+      giftcard_category: '',
       is_subscription: false,
       variant_name: ''
     });
@@ -332,6 +335,25 @@ const AdminProducts = ({ user, logout, settings }) => {
                     placeholder="e.g., US, EU, ASIA"
                   />
                 </div>
+
+                {formData.category === 'giftcard' && (
+                  <div>
+                    <Label htmlFor="giftcard_category" className="text-white">Gift Card Category (Bitrefill style)</Label>
+                    <Select value={formData.giftcard_category || ''} onValueChange={(value) => handleChange('giftcard_category', value)}>
+                      <SelectTrigger className="bg-white/10 border-white/20 text-white mt-2">
+                        <SelectValue placeholder="Select category..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Shopping">Shopping</SelectItem>
+                        <SelectItem value="Gaming">Gaming</SelectItem>
+                        <SelectItem value="Entertainment">Entertainment</SelectItem>
+                        <SelectItem value="Food">Food</SelectItem>
+                        <SelectItem value="Travel">Travel</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="image_url" className="text-white">Image URL</Label>

@@ -81,6 +81,7 @@ class Product(BaseModel):
     requires_credentials: bool = False  # For subscription/services that need login credentials
     credential_fields: Optional[List[str]] = None  # e.g. ["email","password"]
     region: Optional[str] = None  # For gift cards: US, EU, ASIA, etc.
+    giftcard_category: Optional[str] = None  # For gift cards: Shopping, Gaming, Entertainment, etc.
     is_subscription: bool = False  # Track if this triggers referral payout
     metadata: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -103,6 +104,7 @@ class ProductCreate(BaseModel):
     requires_credentials: bool = False
     credential_fields: Optional[List[str]] = None
     region: Optional[str] = None
+    giftcard_category: Optional[str] = None
     is_subscription: bool = False
     metadata: Optional[Dict[str, Any]] = None
 
@@ -124,6 +126,7 @@ class ProductUpdate(BaseModel):
     requires_credentials: Optional[bool] = None
     credential_fields: Optional[List[str]] = None
     region: Optional[str] = None
+    giftcard_category: Optional[str] = None
     is_subscription: Optional[bool] = None
     metadata: Optional[Dict[str, Any]] = None
 
@@ -952,6 +955,8 @@ async def get_orders(user_id: Optional[str] = None):
             order['updated_at'] = datetime.fromisoformat(order['updated_at'])
         if isinstance(order.get('refunded_at'), str):
             order['refunded_at'] = datetime.fromisoformat(order['refunded_at'])
+        if isinstance(order.get('subscription_start_date'), str):
+            order['subscription_start_date'] = datetime.fromisoformat(order['subscription_start_date'])
         if isinstance(order.get('subscription_end_date'), str):
             order['subscription_end_date'] = datetime.fromisoformat(order['subscription_end_date'])
     return orders
@@ -968,6 +973,8 @@ async def get_order(order_id: str):
         order['updated_at'] = datetime.fromisoformat(order['updated_at'])
     if isinstance(order.get('refunded_at'), str):
         order['refunded_at'] = datetime.fromisoformat(order['refunded_at'])
+    if isinstance(order.get('subscription_start_date'), str):
+        order['subscription_start_date'] = datetime.fromisoformat(order['subscription_start_date'])
     if isinstance(order.get('subscription_end_date'), str):
         order['subscription_end_date'] = datetime.fromisoformat(order['subscription_end_date'])
     return order
