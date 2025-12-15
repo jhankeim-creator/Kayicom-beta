@@ -32,6 +32,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     gosplit_api_key: '',
     z2u_api_key: '',
     resend_api_key: '',
+    resend_from_email: '',
     trustpilot_enabled: false,
     trustpilot_business_id: '',
     product_categories: [],
@@ -84,6 +85,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
           gosplit_api_key: currentSettings.gosplit_api_key || '',
           z2u_api_key: currentSettings.z2u_api_key || '',
           resend_api_key: currentSettings.resend_api_key || '',
+          resend_from_email: currentSettings.resend_from_email || '',
           trustpilot_enabled: currentSettings.trustpilot_enabled || false,
           trustpilot_business_id: currentSettings.trustpilot_business_id || '',
           product_categories: currentSettings.product_categories || ['giftcard', 'topup', 'subscription', 'service'],
@@ -360,6 +362,20 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                         placeholder="••••••••"
                         data-testid="resend-key-input"
                       />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="resend_from_email" className="text-white">Resend From Email</Label>
+                      <Input
+                        id="resend_from_email"
+                        value={formData.resend_from_email}
+                        onChange={(e) => handleChange('resend_from_email', e.target.value)}
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        placeholder='Example: "KayiCom <no-reply@yourdomain.com>"'
+                      />
+                      <p className="text-white/50 text-xs mt-1">
+                        This must be a verified sender/domain in Resend; otherwise sending will fail.
+                      </p>
                     </div>
 
                     <div className="p-4 bg-blue-400/10 border border-blue-400/30 rounded-lg mt-4">

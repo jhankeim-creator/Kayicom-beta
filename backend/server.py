@@ -181,6 +181,7 @@ class SiteSettings(BaseModel):
     gosplit_api_key: Optional[str] = None
     z2u_api_key: Optional[str] = None
     resend_api_key: Optional[str] = None
+    resend_from_email: Optional[str] = None  # e.g. "KayiCom <no-reply@yourdomain.com>"
     trustpilot_enabled: Optional[bool] = False
     trustpilot_business_id: Optional[str] = None
     product_categories: Optional[List[str]] = ["giftcard", "topup", "subscription", "service"]
@@ -221,6 +222,7 @@ class SettingsUpdate(BaseModel):
     gosplit_api_key: Optional[str] = None
     z2u_api_key: Optional[str] = None
     resend_api_key: Optional[str] = None
+    resend_from_email: Optional[str] = None
     trustpilot_enabled: Optional[bool] = None
     trustpilot_business_id: Optional[str] = None
     product_categories: Optional[List[str]] = None
@@ -497,7 +499,7 @@ async def create_order(order_data: OrderCreate, user_id: str, user_email: str):
                 # Create Plisio invoice for USDT payment
                 invoice_response = await plisio.create_invoice(
                     amount=total,
-                    currency="USDT_TRC20",  # Default to TRC20 for orders
+                    currency="USDT",
                     order_name=f"Order {order.id}",
                     order_number=order.id,
                     email=user_email
@@ -661,6 +663,11 @@ async def get_settings():
     
     if isinstance(settings.get('updated_at'), str):
         settings['updated_at'] = datetime.fromisoformat(settings['updated_at'])
+
+    # Never expose secret keys to clients
+    for secret_field in ["plisio_api_key", "mtcgame_api_key", "gosplit_api_key", "z2u_api_key", "resend_api_key"]:
+        if secret_field in settings:
+            settings[secret_field] = None
     return settings
 
 @api_router.put("/settings", response_model=SiteSettings)
@@ -686,6 +693,10 @@ async def send_bulk_email(email_data: BulkEmailRequest):
     settings = await db.settings.find_one({"id": "site_settings"})
     if not settings or not settings.get('resend_api_key'):
         raise HTTPException(status_code=400, detail="Resend API key not configured")
+
+    resend_from = settings.get("resend_from_email") or settings.get("support_email")
+    if not resend_from:
+        raise HTTPException(status_code=400, detail="Resend from email not configured")
     
     # Get recipients based on type
     recipients = []
@@ -701,14 +712,41 @@ async def send_bulk_email(email_data: BulkEmailRequest):
     if not recipients:
         raise HTTPException(status_code=400, detail="No recipients found")
     
-    # Here you would integrate with Resend API
-    # For now, just log the action
-    sent_count = len(recipients)
-    
+    # Send emails via Resend API (send individually to avoid leaking recipient list)
+    resend_api_key = settings["resend_api_key"]
+    headers = {
+        "Authorization": f"Bearer {resend_api_key}",
+        "Content-Type": "application/json",
+    }
+
+    sent_count = 0
+    failed: List[Dict[str, Any]] = []
+    for recipient in recipients:
+        try:
+            resp = requests.post(
+                "https://api.resend.com/emails",
+                headers=headers,
+                json={
+                    "from": resend_from,
+                    "to": [recipient],
+                    "subject": email_data.subject,
+                    "html": f"<div style='font-family:Arial,sans-serif;white-space:pre-wrap'>{email_data.message}</div>",
+                },
+                timeout=20,
+            )
+            if 200 <= resp.status_code < 300:
+                sent_count += 1
+            else:
+                failed.append({"email": recipient, "status": resp.status_code, "error": resp.text[:300]})
+        except Exception as e:
+            failed.append({"email": recipient, "status": None, "error": str(e)[:300]})
+
     return {
         "message": f"Bulk email sent to {sent_count} recipients",
         "sent_count": sent_count,
-        "recipients": recipients[:10] if len(recipients) > 10 else recipients  # Show first 10
+        "failed_count": len(failed),
+        "failed": failed[:20],
+        "recipients_preview": recipients[:10] if len(recipients) > 10 else recipients
     }
 
 # ==================== STATS ENDPOINTS ====================
