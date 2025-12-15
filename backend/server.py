@@ -783,7 +783,8 @@ async def _record_coupon_usage_if_needed(order_id: str):
 async def _record_loyalty_credits_if_needed(order_id: str):
     """
     Award loyalty credits once per successful order.
-    Rule: each successful (paid + completed) order gives 5 credits.
+    Rule: each successful (paid + completed) order gives 5 credits,
+    only if total_amount >= $10.
     """
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
     if not order:
@@ -793,6 +794,19 @@ async def _record_loyalty_credits_if_needed(order_id: str):
     if order.get("payment_status") != "paid":
         return
     if order.get("order_status") != "completed":
+        return
+
+    # Minimum order amount
+    try:
+        total_amount = float(order.get("total_amount") or 0.0)
+    except Exception:
+        total_amount = 0.0
+    if total_amount + 1e-9 < 10.0:
+        # Mark as recorded to avoid repeatedly re-checking for old small orders
+        await db.orders.update_one(
+            {"id": order_id},
+            {"$set": {"credits_recorded": True, "credits_awarded": 0, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
         return
 
     if order.get("credits_recorded"):

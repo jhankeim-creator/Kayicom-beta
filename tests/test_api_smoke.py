@@ -322,7 +322,7 @@ def test_order_success_awards_credits_and_convert(app_module):
             "user_id": "u-c1",
             "user_email": "c1@example.com",
             "items": [],
-            "total_amount": 1.0,
+            "total_amount": 10.0,
             "payment_method": "paypal",
             "payment_status": "paid",
             "order_status": "completed",
