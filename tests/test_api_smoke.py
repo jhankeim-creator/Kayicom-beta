@@ -1,0 +1,204 @@
+import os
+import re
+import sys
+
+import pytest
+from fastapi.testclient import TestClient
+
+
+class _FakeCursor:
+    def __init__(self, items):
+        self._items = items
+
+    async def to_list(self, length):
+        return list(self._items)[:length]
+
+
+def _match_value(doc_value, query_value):
+    # equality
+    if not isinstance(query_value, dict):
+        return doc_value == query_value
+
+    # regex
+    if "$regex" in query_value:
+        pattern = query_value.get("$regex") or ""
+        flags = 0
+        if (query_value.get("$options") or "").lower().find("i") >= 0:
+            flags |= re.IGNORECASE
+        try:
+            return re.search(pattern, str(doc_value or ""), flags) is not None
+        except re.error:
+            return False
+
+    return False
+
+
+def _doc_matches(doc, query):
+    if not query:
+        return True
+
+    if "$or" in query:
+        return any(_doc_matches(doc, subq) for subq in (query.get("$or") or []))
+
+    for k, v in query.items():
+        if k == "$or":
+            continue
+        if not _match_value(doc.get(k), v):
+            return False
+    return True
+
+
+class _FakeCollection:
+    def __init__(self, initial=None):
+        self._docs = list(initial or [])
+
+    def _project(self, doc, projection):
+        if not projection:
+            return dict(doc)
+        # handle {"_id": 0} or {"email": 1, "_id": 0}
+        include = {k for k, v in projection.items() if v and k != "_id"}
+        exclude_id = projection.get("_id") == 0
+
+        if include:
+            out = {k: doc.get(k) for k in include if k in doc}
+            if not exclude_id and "_id" in doc:
+                out["_id"] = doc["_id"]
+            return out
+
+        out = dict(doc)
+        if exclude_id:
+            out.pop("_id", None)
+        return out
+
+    async def find_one(self, query, projection=None):
+        for d in self._docs:
+            if _doc_matches(d, query):
+                return self._project(d, projection)
+        return None
+
+    def find(self, query, projection=None):
+        items = [self._project(d, projection) for d in self._docs if _doc_matches(d, query)]
+        return _FakeCursor(items)
+
+    async def insert_one(self, doc):
+        self._docs.append(dict(doc))
+        return {"inserted_id": doc.get("id")}
+
+    async def update_one(self, query, update):
+        for d in self._docs:
+            if _doc_matches(d, query):
+                if "$set" in update:
+                    for k, v in update["$set"].items():
+                        d[k] = v
+                if "$inc" in update:
+                    for k, v in update["$inc"].items():
+                        d[k] = float(d.get(k, 0.0)) + float(v)
+                return {"matched_count": 1, "modified_count": 1}
+        return {"matched_count": 0, "modified_count": 0}
+
+    async def count_documents(self, query):
+        return sum(1 for d in self._docs if _doc_matches(d, query))
+
+
+class _FakeDB:
+    def __init__(self):
+        self.users = _FakeCollection()
+        self.products = _FakeCollection()
+        self.wallet_transactions = _FakeCollection()
+
+
+@pytest.fixture()
+def app_module(monkeypatch):
+    # Make backend importable
+    sys.path.insert(0, "/workspace/backend")
+
+    # Provide required env vars
+    monkeypatch.setenv("MONGO_URL", os.environ.get("MONGO_URL", "mongodb://localhost:27017"))
+    monkeypatch.setenv("DB_NAME", os.environ.get("DB_NAME", "test"))
+
+    import importlib
+
+    server = importlib.import_module("server")
+    fake_db = _FakeDB()
+    monkeypatch.setattr(server, "db", fake_db, raising=True)
+    return server
+
+
+def test_register_assigns_customer_id(app_module):
+    client = TestClient(app_module.app)
+
+    r = client.post(
+        "/api/auth/register",
+        json={"email": "a@example.com", "full_name": "A", "password": "pass12345"},
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data.get("customer_id", "").startswith("KC-")
+
+
+def test_login_backfills_customer_id_for_legacy_user(app_module):
+    # Insert a legacy user with no customer_id
+    hashed = app_module.pwd_context.hash("pass12345")
+    app_module.db.users._docs.append(
+        {
+            "id": "u-1",
+            "email": "legacy@example.com",
+            "full_name": "Legacy",
+            "role": "customer",
+            "password": hashed,
+            "wallet_balance": 0.0,
+            "customer_id": "",
+        }
+    )
+
+    client = TestClient(app_module.app)
+    r = client.post("/api/auth/login", json={"email": "legacy@example.com", "password": "pass12345"})
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data.get("customer_id", "").startswith("KC-")
+
+    # Ensure persisted
+    stored = next(d for d in app_module.db.users._docs if d["id"] == "u-1")
+    assert stored.get("customer_id", "").startswith("KC-")
+
+
+def test_products_search_q_filters(app_module):
+    app_module.db.products._docs.extend(
+        [
+            {"id": "p1", "name": "Steam Gift Card", "description": "Gaming", "category": "giftcard", "price": 10.0},
+            {"id": "p2", "name": "Amazon Gift Card", "description": "Shopping", "category": "giftcard", "price": 25.0},
+            {"id": "p3", "name": "Mobile Topup", "description": "Airtime", "category": "topup", "price": 5.0},
+        ]
+    )
+
+    client = TestClient(app_module.app)
+    r = client.get("/api/products?q=steam")
+    assert r.status_code == 200, r.text
+    items = r.json()
+    assert [p["id"] for p in items] == ["p1"]
+
+
+def test_admin_adjust_wallet_by_customer_id(app_module):
+    app_module.db.users._docs.append(
+        {
+            "id": "u-2",
+            "customer_id": "KC-99999999",
+            "email": "cust@example.com",
+            "full_name": "Cust",
+            "role": "customer",
+            "password": app_module.pwd_context.hash("x"),
+            "wallet_balance": 1.0,
+        }
+    )
+    client = TestClient(app_module.app)
+    r = client.post(
+        "/api/wallet/admin-adjust",
+        json={"identifier": "KC-99999999", "amount": 4.5, "reason": "manual", "action": "credit"},
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["user_id"] == "u-2"
+    assert data["wallet_balance"] == pytest.approx(5.5)
+
+    # transaction logged
+    assert len(app_module.db.wallet_transactions._docs) == 1
