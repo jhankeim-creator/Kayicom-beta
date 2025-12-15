@@ -37,14 +37,16 @@ def _doc_matches(doc, query):
     if not query:
         return True
 
-    if "$or" in query:
-        return any(_doc_matches(doc, subq) for subq in (query.get("$or") or []))
-
+    # Mongo semantics: other keys AND ($or matches)
     for k, v in query.items():
         if k == "$or":
             continue
         if not _match_value(doc.get(k), v):
             return False
+
+    if "$or" in query:
+        return any(_doc_matches(doc, subq) for subq in (query.get("$or") or []))
+
     return True
 
 
@@ -202,3 +204,44 @@ def test_admin_adjust_wallet_by_customer_id(app_module):
 
     # transaction logged
     assert len(app_module.db.wallet_transactions._docs) == 1
+
+
+def test_admin_adjust_wallet_by_email_and_debit_validation(app_module):
+    app_module.db.users._docs.append(
+        {
+            "id": "u-3",
+            "customer_id": "KC-11112222",
+            "email": "x@example.com",
+            "full_name": "X",
+            "role": "customer",
+            "password": app_module.pwd_context.hash("x"),
+            "wallet_balance": 2.0,
+        }
+    )
+    client = TestClient(app_module.app)
+
+    # credit by email
+    r = client.post("/api/wallet/admin-adjust", json={"identifier": "x@example.com", "amount": 3, "action": "credit"})
+    assert r.status_code == 200, r.text
+    assert r.json()["wallet_balance"] == pytest.approx(5.0)
+
+    # debit too much should fail
+    r2 = client.post("/api/wallet/admin-adjust", json={"identifier": "x@example.com", "amount": 999, "action": "debit"})
+    assert r2.status_code == 400
+
+
+def test_products_search_and_category_combined(app_module):
+    app_module.db.products._docs.extend(
+        [
+            {"id": "s1", "name": "Netflix", "description": "Entertainment", "category": "giftcard", "price": 10.0},
+            {"id": "s2", "name": "Netflix", "description": "Service", "category": "service", "price": 12.0},
+        ]
+    )
+    client = TestClient(app_module.app)
+
+    # q + category should narrow results
+    r = client.get("/api/products?category=giftcard&q=netflix")
+    assert r.status_code == 200, r.text
+    items = r.json()
+    assert len(items) == 1
+    assert items[0]["id"] == "s1"
