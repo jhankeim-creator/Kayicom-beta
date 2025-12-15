@@ -48,7 +48,7 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
   const loadTransfers = useCallback(async () => {
     setLoadingTransfers(true);
     try {
-      const res = await axiosInstance.get(`/minutes/transfers/user/${userId}`);
+      const res = await axiosInstance.get(`/mobile-topup/requests/user/${userId}`);
       setTransfers(res.data || []);
     } catch (e) {
       toast.error('Error loading minutes transfers');
@@ -83,7 +83,7 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
     const run = async () => {
       setQuoting(true);
       try {
-        const res = await axiosInstance.get(`/minutes/quote?amount=${encodeURIComponent(amt)}&country=${encodeURIComponent(country || '')}`);
+        const res = await axiosInstance.get(`/mobile-topup/quote?amount=${encodeURIComponent(amt)}&country=${encodeURIComponent(country || '')}`);
         if (!cancelled) setQuote(res.data);
       } catch (e) {
         if (!cancelled) setQuote(null);
@@ -106,7 +106,7 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
     setCreating(true);
     try {
       const res = await axiosInstance.post(
-        `/minutes/transfers?user_id=${userId}&user_email=${encodeURIComponent(user.email)}`,
+        `/mobile-topup/requests?user_id=${userId}&user_email=${encodeURIComponent(user.email)}`,
         { country, phone_number: phone, amount: amt, payment_method: paymentMethod }
       );
       toast.success('Minutes transfer created');
@@ -156,7 +156,7 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
       return;
     }
     try {
-      await axiosInstance.post('/minutes/transfers/proof', {
+      await axiosInstance.post('/mobile-topup/requests/proof', {
         transfer_id: selectedTransferId,
         transaction_id: proofTxId,
         payment_proof_url: proofUrl

@@ -5,11 +5,16 @@ import Footer from '../components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 const AdminMinutesTransfers = ({ user, logout, settings }) => {
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     loadAll();
@@ -18,7 +23,7 @@ const AdminMinutesTransfers = ({ user, logout, settings }) => {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get('/minutes/transfers/all');
+      const res = await axiosInstance.get('/mobile-topup/requests/all');
       setTransfers(res.data || []);
     } catch (e) {
       toast.error('Error loading minutes transfers');
@@ -36,13 +41,30 @@ const AdminMinutesTransfers = ({ user, logout, settings }) => {
 
   const updateStatus = async (id, updates) => {
     try {
-      await axiosInstance.put(`/minutes/transfers/${id}/status`, updates);
+      await axiosInstance.put(`/mobile-topup/requests/${id}/status`, updates);
       toast.success('Updated');
       await loadAll();
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Error updating transfer');
     }
   };
+
+  const filtered = transfers.filter(t => {
+    if (paymentFilter !== 'all' && t.payment_status !== paymentFilter) return false;
+    if (statusFilter !== 'all' && t.transfer_status !== statusFilter) return false;
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    const hay = [
+      t.user_email,
+      t.country,
+      t.phone_number,
+      t.payment_method,
+      t.payment_status,
+      t.transfer_status,
+      t.id
+    ].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q);
+  });
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -61,7 +83,49 @@ const AdminMinutesTransfers = ({ user, logout, settings }) => {
             <div className="text-white">Loading...</div>
           ) : (
             <div className="space-y-4">
-              {transfers.map(t => (
+              <Card className="glass-effect border-white/20">
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <Input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                      placeholder="Search (email, country, phone, id...)"
+                    />
+                    <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                        <SelectValue placeholder="Payment status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All payment statuses</SelectItem>
+                        <SelectItem value="pending">pending</SelectItem>
+                        <SelectItem value="pending_verification">pending_verification</SelectItem>
+                        <SelectItem value="paid">paid</SelectItem>
+                        <SelectItem value="rejected">rejected</SelectItem>
+                        <SelectItem value="failed">failed</SelectItem>
+                        <SelectItem value="cancelled">cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                        <SelectValue placeholder="Transfer status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All transfer statuses</SelectItem>
+                        <SelectItem value="pending">pending</SelectItem>
+                        <SelectItem value="processing">processing</SelectItem>
+                        <SelectItem value="completed">completed</SelectItem>
+                        <SelectItem value="cancelled">cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-white/60 text-xs mt-3">
+                    Showing <strong>{filtered.length}</strong> of <strong>{transfers.length}</strong>
+                  </p>
+                </CardContent>
+              </Card>
+
+              {filtered.map(t => (
                 <Card key={t.id} className="glass-effect border-white/20">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -115,7 +179,10 @@ const AdminMinutesTransfers = ({ user, logout, settings }) => {
                   </CardContent>
                 </Card>
               ))}
-              {transfers.length === 0 && <p className="text-white/60">No minutes transfers yet.</p>}
+              {transfers.length === 0 && <p className="text-white/60">No mobile topups yet.</p>}
+              {transfers.length > 0 && filtered.length === 0 && (
+                <p className="text-white/60">No results match your filters.</p>
+              )}
             </div>
           )}
         </div>
