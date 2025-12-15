@@ -189,6 +189,11 @@ class SiteSettings(BaseModel):
         "paypal": {"enabled": True, "email": "", "instructions": ""},
         "airtm": {"enabled": True, "email": "", "instructions": ""},
         "skrill": {"enabled": True, "email": "", "instructions": ""},
+        "moncash": {"enabled": True, "email": "", "instructions": ""},
+        "binance_pay": {"enabled": True, "email": "", "instructions": ""},
+        "zelle": {"enabled": True, "email": "", "instructions": ""},
+        "cashapp": {"enabled": True, "email": "", "instructions": ""},
+        # Legacy key kept for backwards compatibility
         "crypto_usdt": {"enabled": True, "wallet": "", "instructions": ""}
     }
     # Crypto Exchange Settings
@@ -950,23 +955,24 @@ async def buy_crypto(request: CryptoBuyRequest, user_id: str = None, user_email:
     
     # Get Plisio API key from settings
     settings = await db.settings.find_one({"id": "site_settings"})
+    crypto_settings = (settings or {}).get("crypto_settings") or {}
     
     # For BUY USDT, customer pays with FIAT (PayPal, AirTM, Skrill)
     # No need for Plisio - just show admin payment info
     
-    # Check limits (support both old + new naming)
-    min_usd = float(config.get('min_buy_usd', config.get('min_transaction_usd', 10.0)))
+    # Check limits (prefer site_settings.crypto_settings)
+    min_usd = float(crypto_settings.get('min_transaction_usd', config.get('min_buy_usd', config.get('min_transaction_usd', 10.0))))
     max_usd = float(config.get('max_buy_usd', 10000.0))
     if request.amount_usd < min_usd or request.amount_usd > max_usd:
         raise HTTPException(status_code=400, detail=f"Amount must be between ${min_usd} and ${max_usd}")
     
     # Get rate
     rate_key = f"buy_rate_{request.chain.lower()}"
-    exchange_rate = float(config.get(rate_key, config.get("buy_rate_usdt", 1.02)))
+    exchange_rate = float(crypto_settings.get("buy_rate_usdt", config.get(rate_key, config.get("buy_rate_usdt", 1.02))))
     
     # Calculate
     amount_crypto = request.amount_usd / exchange_rate
-    fee_percent = float(config.get('buy_fee_percent', config.get('transaction_fee_percent', 2.0)))
+    fee_percent = float(crypto_settings.get('transaction_fee_percent', config.get('buy_fee_percent', config.get('transaction_fee_percent', 2.0))))
     fee = request.amount_usd * (fee_percent / 100)
     total_usd = request.amount_usd + fee
     
@@ -1020,6 +1026,9 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
     if not config:
         raise HTTPException(status_code=500, detail="Crypto config not found")
     
+    settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0})
+    crypto_settings = (settings or {}).get("crypto_settings") or {}
+    
     # Check limits
     min_sell = float(config.get('min_sell_usdt', 10.0))
     max_sell = float(config.get('max_sell_usdt', 10000.0))
@@ -1028,18 +1037,17 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
     
     # Get rate
     rate_key = f"sell_rate_{request.chain.lower()}"
-    exchange_rate = float(config.get(rate_key, config.get("sell_rate_usdt", 0.98)))
+    exchange_rate = float(crypto_settings.get("sell_rate_usdt", config.get(rate_key, config.get("sell_rate_usdt", 0.98))))
     
     # Calculate
     amount_usd = request.amount_crypto * exchange_rate
-    fee_percent = float(config.get('sell_fee_percent', config.get('transaction_fee_percent', 2.0)))
+    fee_percent = float(crypto_settings.get('transaction_fee_percent', config.get('sell_fee_percent', config.get('transaction_fee_percent', 2.0))))
     fee = amount_usd * (fee_percent / 100)
     total_usd = amount_usd - fee
     
     transaction_id = str(uuid.uuid4())
     
     # Create Plisio invoice for receiving USDT from customer
-    settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0})
     plisio_invoice = None
     
     if settings and settings.get('plisio_api_key'):
@@ -1109,7 +1117,8 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
         }
     else:
         # Fallback to admin wallet if Plisio not available
-        response['wallet_address'] = config.get(f"wallet_{request.chain.lower()}")
+        admin_wallets = crypto_settings.get("wallets") or {}
+        response['wallet_address'] = admin_wallets.get(request.chain) or config.get(f"wallet_{request.chain.lower()}")
         response['message'] = "Send USDT to admin wallet. You'll need to provide transaction ID."
     
     return response
