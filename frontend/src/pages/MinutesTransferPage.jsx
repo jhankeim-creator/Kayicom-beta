@@ -179,7 +179,7 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
 
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-5xl mx-auto space-y-6">
-          <h1 className="text-4xl font-bold text-white">Send Minutes</h1>
+          <h1 className="text-4xl font-bold text-white">Topup Mobile</h1>
 
           {!enabled && (
             <Card className="glass-effect border-white/20">
@@ -191,7 +191,7 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
 
           <Card className="glass-effect border-white/20">
             <CardContent className="p-6 space-y-4">
-              <h2 className="text-2xl font-bold text-white">Create a Minutes Transfer</h2>
+              <h2 className="text-2xl font-bold text-white">Create a Mobile Topup</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -339,7 +339,7 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
 
           <Card className="glass-effect border-white/20">
             <CardContent className="p-6">
-              <h2 className="text-2xl font-bold text-white mb-4">History</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">Topup History</h2>
               {loadingTransfers ? (
                 <p className="text-white/70">Loading...</p>
               ) : (

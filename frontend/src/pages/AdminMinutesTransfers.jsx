@@ -51,7 +51,7 @@ const AdminMinutesTransfers = ({ user, logout, settings }) => {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-white">Minutes Transfers</h1>
+            <h1 className="text-4xl font-bold text-white">Mobile Topups</h1>
             <Button onClick={() => (window.location.href = '/admin')} className="bg-gradient-to-r from-pink-500 to-blue-500 text-white">
               🏠 Admin Home
             </Button>

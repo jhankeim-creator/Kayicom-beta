@@ -2103,6 +2103,7 @@ def _calc_minutes_fee(settings: dict, amount: float) -> Dict[str, float]:
 
 
 @api_router.get("/minutes/quote", response_model=MinutesQuoteResponse)
+@api_router.get("/mobile-topup/quote", response_model=MinutesQuoteResponse)
 async def minutes_quote(amount: float, country: Optional[str] = None):
     settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
     if not settings.get("minutes_transfer_enabled"):
@@ -2121,6 +2122,7 @@ async def minutes_quote(amount: float, country: Optional[str] = None):
 
 
 @api_router.post("/minutes/transfers")
+@api_router.post("/mobile-topup/requests")
 async def create_minutes_transfer(payload: MinutesTransferCreate, user_id: str, user_email: str):
     settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
     if not settings.get("minutes_transfer_enabled"):
@@ -2225,18 +2227,21 @@ async def create_minutes_transfer(payload: MinutesTransferCreate, user_id: str, 
 
 
 @api_router.get("/minutes/transfers/user/{user_id}")
+@api_router.get("/mobile-topup/requests/user/{user_id}")
 async def get_user_minutes_transfers(user_id: str):
     transfers = await db.minutes_transfers.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
     return transfers
 
 
 @api_router.get("/minutes/transfers/all")
+@api_router.get("/mobile-topup/requests/all")
 async def get_all_minutes_transfers():
     transfers = await db.minutes_transfers.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return transfers
 
 
 @api_router.post("/minutes/transfers/proof")
+@api_router.post("/mobile-topup/requests/proof")
 async def submit_minutes_transfer_proof(proof: MinutesTransferProof):
     res = await db.minutes_transfers.update_one(
         {"id": proof.transfer_id},
@@ -2253,6 +2258,7 @@ async def submit_minutes_transfer_proof(proof: MinutesTransferProof):
 
 
 @api_router.put("/minutes/transfers/{transfer_id}/status")
+@api_router.put("/mobile-topup/requests/{transfer_id}/status")
 async def update_minutes_transfer_status(transfer_id: str, updates: MinutesTransferStatusUpdate):
     update_data = {}
     if updates.payment_status is not None:

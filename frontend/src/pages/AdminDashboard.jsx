@@ -167,12 +167,12 @@ const AdminDashboard = ({ user, logout, settings }) => {
               </Card>
             </Link>
 
-            <Link to="/admin/minutes-transfers">
+            <Link to="/admin/mobile-topups">
               <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer">
                 <CardContent className="p-8 text-center">
                   <span className="text-5xl mb-4 block">📲</span>
-                  <h3 className="text-xl font-bold text-white mb-2">Minutes Transfers</h3>
-                  <p className="text-white/70">Manage minutes/airtime requests</p>
+                  <h3 className="text-xl font-bold text-white mb-2">Mobile Topups</h3>
+                  <p className="text-white/70">Manage airtime topup requests</p>
                 </CardContent>
               </Card>
             </Link>

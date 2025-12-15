@@ -259,6 +259,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/mobile-topup"
+            element={
+              <ProtectedRoute>
+                <MinutesTransferPage user={user} logout={logout} settings={settings} />
+              </ProtectedRoute>
+            }
+          />
           
           <Route path="/crypto" element={<CryptoPage user={user} logout={logout} settings={settings} />} />
           
@@ -357,6 +366,15 @@ function App() {
 
           <Route
             path="/admin/minutes-transfers"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminMinutesTransfers user={user} logout={logout} settings={settings} />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/mobile-topups"
             element={
               <ProtectedRoute adminOnly>
                 <AdminMinutesTransfers user={user} logout={logout} settings={settings} />

@@ -287,3 +287,12 @@ def test_minutes_quote_and_wallet_create(app_module):
     data = r2.json()
     assert data["transfer"]["payment_status"] == "paid"
     assert data["transfer"]["transfer_status"] == "processing"
+
+    # Alias endpoints should work too
+    r3 = client.get("/api/mobile-topup/quote?amount=10&country=Haiti")
+    assert r3.status_code == 200, r3.text
+    r4 = client.post(
+        "/api/mobile-topup/requests?user_id=u-m1&user_email=m1@example.com",
+        json={"country": "Haiti", "phone_number": "+50912345678", "amount": 10, "payment_method": "wallet"},
+    )
+    assert r4.status_code == 200, r4.text

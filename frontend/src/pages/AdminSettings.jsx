@@ -532,11 +532,11 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                       <h3 className="text-xl font-bold text-white mb-4">Payment Gateway Configuration</h3>
                       <p className="text-gray-400 mb-6">Configure payment methods, wallets, and instructions for customers.</p>
 
-                      {/* Minutes Transfer Settings */}
+                      {/* Mobile Topup (Minutes/Airtime) Settings */}
                       <div className="bg-white/5 p-4 rounded-lg mb-6 border border-white/10">
                         <div className="flex justify-between items-center mb-3">
                           <h4 className="text-white font-semibold flex items-center gap-2">
-                            <span>📲</span> Minutes Transfer Service
+                            <span>📲</span> Mobile Topup Service
                           </h4>
                           <label className="flex items-center gap-2">
                             <input
@@ -602,7 +602,7 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                             rows={2}
                             value={formData.minutes_transfer_instructions}
                             onChange={(e) => handleChange('minutes_transfer_instructions', e.target.value)}
-                            placeholder="Example: Make sure the phone number includes country code."
+                            placeholder="Example: Phone number must include country code (e.g. +509...)."
                           />
                         </div>
                       </div>
