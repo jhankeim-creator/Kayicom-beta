@@ -56,6 +56,9 @@ class User(UserBase):
     referral_balance: float = 0.0  # Balance from referrals
     wallet_balance: float = 0.0  # Store credit / refunds
     credits_balance: int = 0  # Loyalty credits (100 credits = $1)
+    is_blocked: bool = False
+    blocked_at: Optional[datetime] = None
+    blocked_reason: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -615,6 +618,9 @@ async def login(credentials: LoginRequest):
     if not user:
         logging.error(f"Login failed: user not found for {credentials.email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if user.get("is_blocked"):
+        raise HTTPException(status_code=403, detail="Account is blocked. Contact support.")
     
     # Support both 'password' and 'password_hash' field names
     password_field = 'password_hash' if 'password_hash' in user else 'password'
@@ -638,7 +644,8 @@ async def login(credentials: LoginRequest):
         "customer_id": user.get("customer_id"),
         "email": user['email'],
         "username": user.get('username', user.get('full_name', 'User')),
-        "role": user['role']
+        "role": user['role'],
+        "is_blocked": bool(user.get("is_blocked", False))
     }
 
 # ==================== PRODUCT ENDPOINTS ====================
@@ -923,6 +930,12 @@ async def delete_coupon(coupon_id: str):
 
 @api_router.post("/orders", response_model=Order)
 async def create_order(order_data: OrderCreate, user_id: str, user_email: str):
+    user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user_doc.get("is_blocked"):
+        raise HTTPException(status_code=403, detail="Account is blocked")
+
     # Validate items & calculate total using authoritative product pricing/settings
     validated_items: List[OrderItem] = []
     subtotal = 0.0
@@ -989,10 +1002,7 @@ async def create_order(order_data: OrderCreate, user_id: str, user_email: str):
 
     # Wallet payment: instantly mark paid and deduct balance
     if order_data.payment_method == "wallet":
-        user = await db.users.find_one({"id": user_id}, {"_id": 0})
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        wallet_balance = float(user.get("wallet_balance", 0.0))
+        wallet_balance = float(user_doc.get("wallet_balance", 0.0))
         if wallet_balance + 1e-9 < total:
             raise HTTPException(status_code=400, detail="Insufficient wallet balance")
 
@@ -1336,6 +1346,36 @@ async def admin_get_customer(user_id: str):
         raise HTTPException(status_code=404, detail="Customer not found")
     return user
 
+
+class AdminBlockCustomerRequest(BaseModel):
+    reason: Optional[str] = None
+
+
+@api_router.post("/admin/customers/{user_id}/block")
+async def admin_block_customer(user_id: str, body: AdminBlockCustomerRequest):
+    user = await db.users.find_one({"id": user_id, "role": "customer"}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_blocked": True, "blocked_at": datetime.now(timezone.utc).isoformat(), "blocked_reason": body.reason}}
+    )
+    updated = await db.users.find_one({"id": user_id, "role": "customer"}, {"_id": 0, "password": 0, "password_hash": 0})
+    return updated or {"message": "Blocked"}
+
+
+@api_router.post("/admin/customers/{user_id}/unblock")
+async def admin_unblock_customer(user_id: str):
+    user = await db.users.find_one({"id": user_id, "role": "customer"}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_blocked": False, "blocked_at": None, "blocked_reason": None}}
+    )
+    updated = await db.users.find_one({"id": user_id, "role": "customer"}, {"_id": 0, "password": 0, "password_hash": 0})
+    return updated or {"message": "Unblocked"}
+
 # ==================== BULK EMAIL ENDPOINTS ====================
 
 @api_router.post("/emails/bulk-send")
@@ -1526,6 +1566,8 @@ async def request_withdrawal(withdrawal: WithdrawalRequest, user_id: str, user_e
     
     # Check user balance
     user = await db.users.find_one({"id": user_id})
+    if user and user.get("is_blocked"):
+        raise HTTPException(status_code=403, detail="Account is blocked")
     if not user or user.get('referral_balance', 0.0) < withdrawal.amount:
         raise HTTPException(status_code=400, detail="Insufficient balance")
     
@@ -2157,6 +2199,12 @@ async def create_wallet_topup(topup: WalletTopupCreate, user_id: str, user_email
     if float(topup.amount) <= 0:
         raise HTTPException(status_code=400, detail="Amount must be > 0")
 
+    user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user_doc.get("is_blocked"):
+        raise HTTPException(status_code=403, detail="Account is blocked")
+
     settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
 
     topup_id = str(uuid.uuid4())
@@ -2332,6 +2380,12 @@ async def create_minutes_transfer(payload: MinutesTransferCreate, user_id: str, 
     if not settings.get("minutes_transfer_enabled"):
         raise HTTPException(status_code=400, detail="Minutes transfer is disabled")
 
+    user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user_doc.get("is_blocked"):
+        raise HTTPException(status_code=403, detail="Account is blocked")
+
     country = (payload.country or "").strip()
     phone = (payload.phone_number or "").strip()
     if not country or not phone:
@@ -2369,10 +2423,7 @@ async def create_minutes_transfer(payload: MinutesTransferCreate, user_id: str, 
 
     # Payment validation
     if payload.payment_method == "wallet":
-        user = await db.users.find_one({"id": user_id}, {"_id": 0})
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        wallet_balance = float(user.get("wallet_balance", 0.0))
+        wallet_balance = float(user_doc.get("wallet_balance", 0.0))
         if wallet_balance + 1e-9 < float(doc["total_amount"]):
             raise HTTPException(status_code=400, detail="Insufficient wallet balance")
         await db.users.update_one({"id": user_id}, {"$inc": {"wallet_balance": -float(doc["total_amount"])}})

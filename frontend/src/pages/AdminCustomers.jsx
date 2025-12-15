@@ -19,6 +19,8 @@ const AdminCustomers = ({ user, logout, settings }) => {
 
   const [selected, setSelected] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [blockReason, setBlockReason] = useState('Scam/Fraud');
+  const [blocking, setBlocking] = useState(false);
 
   const [walletAction, setWalletAction] = useState('credit');
   const [walletAmount, setWalletAmount] = useState('');
@@ -58,6 +60,7 @@ const AdminCustomers = ({ user, logout, settings }) => {
       setDetailOpen(true);
       setWalletAmount('');
       setCreditsAmount('');
+      setBlockReason('Scam/Fraud');
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Error loading customer');
     }
@@ -125,6 +128,36 @@ const AdminCustomers = ({ user, logout, settings }) => {
     }
   };
 
+  const blockCustomer = async () => {
+    if (!selected) return;
+    setBlocking(true);
+    try {
+      const res = await axiosInstance.post(`/admin/customers/${selected.id}/block`, { reason: blockReason });
+      toast.success('Customer blocked');
+      setSelected(res.data);
+      await loadCustomers();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Error blocking customer');
+    } finally {
+      setBlocking(false);
+    }
+  };
+
+  const unblockCustomer = async () => {
+    if (!selected) return;
+    setBlocking(true);
+    try {
+      const res = await axiosInstance.post(`/admin/customers/${selected.id}/unblock`);
+      toast.success('Customer unblocked');
+      setSelected(res.data);
+      await loadCustomers();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Error unblocking customer');
+    } finally {
+      setBlocking(false);
+    }
+  };
+
   const cards = useMemo(() => customers, [customers]);
 
   return (
@@ -189,6 +222,9 @@ const AdminCustomers = ({ user, logout, settings }) => {
                         <p className="text-white font-bold truncate">{c.full_name || c.username || 'Customer'}</p>
                         <p className="text-white/70 text-sm truncate">{c.email}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
+                          {c.is_blocked && (
+                            <Badge variant="destructive">BLOCKED</Badge>
+                          )}
                           {c.customer_id && (
                             <Badge variant="secondary" className="font-mono">
                               {c.customer_id}
@@ -224,6 +260,11 @@ const AdminCustomers = ({ user, logout, settings }) => {
                     <p className="text-white font-bold">{selected.full_name || 'Customer'}</p>
                     <p className="text-white/70 text-sm">{selected.email}</p>
                     <p className="text-white/60 text-xs mt-1">User ID: {selected.id}</p>
+                    {selected.is_blocked && (
+                      <p className="text-red-300 text-sm mt-2">
+                        Blocked{selected.blocked_reason ? `: ${selected.blocked_reason}` : ''}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {selected.customer_id && (
@@ -242,6 +283,35 @@ const AdminCustomers = ({ user, logout, settings }) => {
                   <Badge variant="secondary">referral: ${Number(selected.referral_balance || 0).toFixed(2)}</Badge>
                 </div>
               </div>
+
+              <Card className="glass-effect border-white/20">
+                <CardContent className="p-4 space-y-3">
+                  <p className="text-white font-semibold">Account Status</p>
+                  <div className="flex flex-col md:flex-row gap-3 md:items-end">
+                    <div className="flex-1">
+                      <Label className="text-white/70">Block reason</Label>
+                      <Input
+                        value={blockReason}
+                        onChange={(e) => setBlockReason(e.target.value)}
+                        className="bg-white/10 border-white/20 text-white mt-2"
+                        placeholder="Reason (scam/fraud, chargeback, etc.)"
+                      />
+                    </div>
+                    {selected.is_blocked ? (
+                      <Button onClick={unblockCustomer} disabled={blocking} className="bg-green-600 hover:bg-green-700 text-white">
+                        {blocking ? '...' : 'Unblock'}
+                      </Button>
+                    ) : (
+                      <Button onClick={blockCustomer} disabled={blocking} variant="destructive">
+                        {blocking ? '...' : 'Block'}
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-white/60 text-xs">
+                    Blocked customers cannot login or create new orders/topups.
+                  </p>
+                </CardContent>
+              </Card>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="glass-effect border-white/20">

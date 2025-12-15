@@ -134,6 +134,9 @@ class _FakeDB:
         self.minutes_transfers = _FakeCollection()
         self.orders = _FakeCollection()
         self.credits_transactions = _FakeCollection()
+        self.withdrawals = _FakeCollection()
+        self.wallet_topups = _FakeCollection()
+        self.minutes_transfers = _FakeCollection()
 
 
 @pytest.fixture()
@@ -390,3 +393,20 @@ def test_admin_adjust_credits(app_module):
     assert r.status_code == 200, r.text
     u = next(x for x in app_module.db.users._docs if x["id"] == "cu-3")
     assert int(u.get("credits_balance", 0)) == 100
+
+
+def test_block_customer_prevents_login(app_module):
+    app_module.db.users._docs.append(
+        {
+            "id": "blk-1",
+            "role": "customer",
+            "email": "blk@example.com",
+            "full_name": "Blocked",
+            "password": app_module.pwd_context.hash("pass12345"),
+            "customer_id": "KC-90909090",
+            "is_blocked": True,
+        }
+    )
+    client = TestClient(app_module.app)
+    r = client.post("/api/auth/login", json={"email": "blk@example.com", "password": "pass12345"})
+    assert r.status_code == 403
