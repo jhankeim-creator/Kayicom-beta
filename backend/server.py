@@ -268,6 +268,13 @@ class SiteSettings(BaseModel):
             "MATIC": ""
         }
     }
+    # Minutes Transfer (international mobile minutes / airtime)
+    minutes_transfer_enabled: Optional[bool] = False
+    minutes_transfer_fee_type: Optional[str] = "percent"  # percent or fixed
+    minutes_transfer_fee_value: Optional[float] = 0.0  # percent (0-100) or fixed USD
+    minutes_transfer_min_amount: Optional[float] = 1.0
+    minutes_transfer_max_amount: Optional[float] = 500.0
+    minutes_transfer_instructions: Optional[str] = None
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SettingsUpdate(BaseModel):
@@ -289,6 +296,12 @@ class SettingsUpdate(BaseModel):
     product_categories: Optional[List[str]] = None
     payment_gateways: Optional[dict] = None
     crypto_settings: Optional[dict] = None
+    minutes_transfer_enabled: Optional[bool] = None
+    minutes_transfer_fee_type: Optional[str] = None
+    minutes_transfer_fee_value: Optional[float] = None
+    minutes_transfer_min_amount: Optional[float] = None
+    minutes_transfer_max_amount: Optional[float] = None
+    minutes_transfer_instructions: Optional[str] = None
 
 # Bulk Email Model
 class BulkEmailRequest(BaseModel):
@@ -1166,6 +1179,18 @@ async def plisio_callback(data: Dict[str, Any]):
                         "created_at": datetime.now(timezone.utc).isoformat()
                     })
                     await db.wallet_topups.update_one({"id": order_id}, {"$set": {"credited": True}})
+            else:
+                # Then try minutes transfers
+                transfer = await db.minutes_transfers.find_one({"id": order_id}, {"_id": 0})
+                if transfer:
+                    await db.minutes_transfers.update_one(
+                        {"id": order_id},
+                        {"$set": {
+                            "payment_status": "paid",
+                            "transfer_status": "processing",
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }}
+                    )
     
     return {"status": "ok"}
 
@@ -2034,6 +2059,220 @@ async def update_wallet_topup_status(topup_id: str, payment_status: str):
         await db.wallet_topups.update_one({"id": topup_id}, {"$set": {"credited": True}})
 
     return {"message": "Topup updated"}
+
+
+# ==================== MINUTES TRANSFER (INTERNATIONAL) ====================
+
+class MinutesQuoteResponse(BaseModel):
+    amount: float
+    fee_amount: float
+    total_amount: float
+    currency: str = "USD"
+
+
+class MinutesTransferCreate(BaseModel):
+    country: str
+    phone_number: str
+    amount: float  # USD amount customer wants to send
+    payment_method: str  # wallet, crypto_plisio, or manual gateways
+
+
+class MinutesTransferProof(BaseModel):
+    transfer_id: str
+    transaction_id: str
+    payment_proof_url: str
+
+
+class MinutesTransferStatusUpdate(BaseModel):
+    payment_status: Optional[str] = None  # pending, pending_verification, paid, failed, rejected, processing
+    transfer_status: Optional[str] = None  # pending, processing, completed, cancelled
+
+
+def _calc_minutes_fee(settings: dict, amount: float) -> Dict[str, float]:
+    fee_type = (settings or {}).get("minutes_transfer_fee_type") or "percent"
+    fee_value = float((settings or {}).get("minutes_transfer_fee_value") or 0.0)
+    if fee_type not in ["percent", "fixed"]:
+        fee_type = "percent"
+    if fee_type == "percent":
+        fee_amount = amount * max(0.0, fee_value) / 100.0
+    else:
+        fee_amount = max(0.0, fee_value)
+    fee_amount = round(float(fee_amount), 2)
+    total = round(float(amount + fee_amount), 2)
+    return {"fee_amount": fee_amount, "total_amount": total}
+
+
+@api_router.get("/minutes/quote", response_model=MinutesQuoteResponse)
+async def minutes_quote(amount: float, country: Optional[str] = None):
+    settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+    if not settings.get("minutes_transfer_enabled"):
+        raise HTTPException(status_code=400, detail="Minutes transfer is disabled")
+
+    amt = float(amount)
+    if amt <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be > 0")
+    min_amt = float(settings.get("minutes_transfer_min_amount") or 1.0)
+    max_amt = float(settings.get("minutes_transfer_max_amount") or 500.0)
+    if amt + 1e-9 < min_amt or amt - 1e-9 > max_amt:
+        raise HTTPException(status_code=400, detail=f"Amount must be between {min_amt} and {max_amt}")
+
+    fee = _calc_minutes_fee(settings, amt)
+    return {"amount": round(amt, 2), "fee_amount": fee["fee_amount"], "total_amount": fee["total_amount"], "currency": "USD"}
+
+
+@api_router.post("/minutes/transfers")
+async def create_minutes_transfer(payload: MinutesTransferCreate, user_id: str, user_email: str):
+    settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+    if not settings.get("minutes_transfer_enabled"):
+        raise HTTPException(status_code=400, detail="Minutes transfer is disabled")
+
+    country = (payload.country or "").strip()
+    phone = (payload.phone_number or "").strip()
+    if not country or not phone:
+        raise HTTPException(status_code=400, detail="Country and phone number are required")
+
+    amt = float(payload.amount)
+    min_amt = float(settings.get("minutes_transfer_min_amount") or 1.0)
+    max_amt = float(settings.get("minutes_transfer_max_amount") or 500.0)
+    if amt <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be > 0")
+    if amt + 1e-9 < min_amt or amt - 1e-9 > max_amt:
+        raise HTTPException(status_code=400, detail=f"Amount must be between {min_amt} and {max_amt}")
+
+    fee = _calc_minutes_fee(settings, amt)
+    transfer_id = str(uuid.uuid4())
+    doc = {
+        "id": transfer_id,
+        "user_id": user_id,
+        "user_email": user_email,
+        "country": country,
+        "phone_number": phone,
+        "amount": round(float(amt), 2),
+        "fee_amount": fee["fee_amount"],
+        "total_amount": fee["total_amount"],
+        "payment_method": payload.payment_method,
+        "payment_status": "pending",
+        "transfer_status": "pending",
+        "transaction_id": None,
+        "payment_proof_url": None,
+        "plisio_invoice_id": None,
+        "plisio_invoice_url": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    # Payment validation
+    if payload.payment_method == "wallet":
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        wallet_balance = float(user.get("wallet_balance", 0.0))
+        if wallet_balance + 1e-9 < float(doc["total_amount"]):
+            raise HTTPException(status_code=400, detail="Insufficient wallet balance")
+        await db.users.update_one({"id": user_id}, {"$inc": {"wallet_balance": -float(doc["total_amount"])}})
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "user_email": user_email,
+            "order_id": None,
+            "type": "minutes_transfer",
+            "amount": -float(doc["total_amount"]),
+            "reason": f"Minutes transfer {transfer_id}",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        doc["payment_status"] = "paid"
+        doc["transfer_status"] = "processing"
+
+    elif payload.payment_method == "crypto_plisio":
+        if not settings.get("plisio_api_key"):
+            raise HTTPException(status_code=400, detail="Plisio not configured")
+        try:
+            plisio = PlisioHelper(settings["plisio_api_key"])
+            invoice_response = await plisio.create_invoice(
+                amount=float(doc["total_amount"]),
+                currency="USDT",
+                order_name=f"Minutes Transfer {transfer_id}",
+                order_number=transfer_id,
+                email=user_email,
+            )
+            if invoice_response.get("success"):
+                doc["plisio_invoice_id"] = invoice_response.get("invoice_id")
+                doc["plisio_invoice_url"] = invoice_response.get("invoice_url")
+        except Exception as e:
+            logging.error(f"Plisio minutes transfer error: {e}")
+    else:
+        gateways = settings.get("payment_gateways") or {}
+        gateway = gateways.get(payload.payment_method) or {}
+        if not gateway.get("enabled"):
+            raise HTTPException(status_code=400, detail="Payment method not enabled")
+
+    await db.minutes_transfers.insert_one(doc)
+
+    payment_info = {}
+    if payload.payment_method not in ["wallet", "crypto_plisio"]:
+        gateways = settings.get("payment_gateways") or {}
+        gateway = gateways.get(payload.payment_method) or {}
+        if gateway.get("enabled"):
+            payment_info = {
+                "method": payload.payment_method,
+                "email": gateway.get("email", ""),
+                "instructions": gateway.get("instructions", ""),
+            }
+    if settings.get("minutes_transfer_instructions"):
+        payment_info["service_instructions"] = settings.get("minutes_transfer_instructions")
+
+    return {"transfer": doc, "payment_info": payment_info}
+
+
+@api_router.get("/minutes/transfers/user/{user_id}")
+async def get_user_minutes_transfers(user_id: str):
+    transfers = await db.minutes_transfers.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return transfers
+
+
+@api_router.get("/minutes/transfers/all")
+async def get_all_minutes_transfers():
+    transfers = await db.minutes_transfers.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return transfers
+
+
+@api_router.post("/minutes/transfers/proof")
+async def submit_minutes_transfer_proof(proof: MinutesTransferProof):
+    res = await db.minutes_transfers.update_one(
+        {"id": proof.transfer_id},
+        {"$set": {
+            "transaction_id": proof.transaction_id,
+            "payment_proof_url": proof.payment_proof_url,
+            "payment_status": "pending_verification",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Transfer not found")
+    return {"message": "Payment proof submitted"}
+
+
+@api_router.put("/minutes/transfers/{transfer_id}/status")
+async def update_minutes_transfer_status(transfer_id: str, updates: MinutesTransferStatusUpdate):
+    update_data = {}
+    if updates.payment_status is not None:
+        if updates.payment_status not in ["pending", "pending_verification", "paid", "failed", "rejected", "processing", "cancelled"]:
+            raise HTTPException(status_code=400, detail="Invalid payment_status")
+        update_data["payment_status"] = updates.payment_status
+    if updates.transfer_status is not None:
+        if updates.transfer_status not in ["pending", "processing", "completed", "cancelled"]:
+            raise HTTPException(status_code=400, detail="Invalid transfer_status")
+        update_data["transfer_status"] = updates.transfer_status
+
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No updates provided")
+
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    res = await db.minutes_transfers.update_one({"id": transfer_id}, {"$set": update_data})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Transfer not found")
+    updated = await db.minutes_transfers.find_one({"id": transfer_id}, {"_id": 0})
+    return updated or {"message": "Updated"}
 
 @api_router.post("/orders/{order_id}/refund")
 async def refund_order_to_wallet(order_id: str, adjustment: WalletAdjustment):

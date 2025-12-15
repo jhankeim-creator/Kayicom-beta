@@ -47,6 +47,9 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
                 <Link to="/dashboard" className="text-white font-medium hover:text-pink-400 transition">
                   Dashboard
                 </Link>
+                <Link to="/minutes" className="text-white font-medium hover:text-pink-400 transition">
+                  Send Minutes
+                </Link>
                 <Link to="/referral" className="text-white font-medium hover:text-pink-400 transition">
                   Referral
                 </Link>
@@ -103,6 +106,11 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
                   <DropdownMenuItem asChild>
                     <Link to="/wallet" className="cursor-pointer text-gray-300 hover:text-pink-400">
                       💳 Wallet
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/minutes" className="cursor-pointer text-gray-300 hover:text-pink-400">
+                      📲 Send Minutes
                     </Link>
                   </DropdownMenuItem>
                   {/* Mobile only - show nav items in dropdown */}

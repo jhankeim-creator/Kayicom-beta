@@ -107,6 +107,17 @@ class _FakeDB:
         self.users = _FakeCollection()
         self.products = _FakeCollection()
         self.wallet_transactions = _FakeCollection()
+        self.settings = _FakeCollection([{
+            "id": "site_settings",
+            "minutes_transfer_enabled": True,
+            "minutes_transfer_fee_type": "percent",
+            "minutes_transfer_fee_value": 10.0,
+            "minutes_transfer_min_amount": 1.0,
+            "minutes_transfer_max_amount": 500.0,
+            "payment_gateways": {"paypal": {"enabled": True, "email": "x", "instructions": "pay"}},
+            "plisio_api_key": "dummy"
+        }])
+        self.minutes_transfers = _FakeCollection()
 
 
 @pytest.fixture()
@@ -245,3 +256,34 @@ def test_products_search_and_category_combined(app_module):
     items = r.json()
     assert len(items) == 1
     assert items[0]["id"] == "s1"
+
+
+def test_minutes_quote_and_wallet_create(app_module):
+    # Seed a user with wallet funds
+    app_module.db.users._docs.append(
+        {
+            "id": "u-m1",
+            "email": "m1@example.com",
+            "full_name": "M1",
+            "role": "customer",
+            "password": app_module.pwd_context.hash("x"),
+            "wallet_balance": 100.0,
+            "customer_id": "KC-22223333",
+        }
+    )
+    client = TestClient(app_module.app)
+
+    r = client.get("/api/minutes/quote?amount=10&country=Haiti")
+    assert r.status_code == 200, r.text
+    q = r.json()
+    assert q["fee_amount"] == pytest.approx(1.0)
+    assert q["total_amount"] == pytest.approx(11.0)
+
+    r2 = client.post(
+        "/api/minutes/transfers?user_id=u-m1&user_email=m1@example.com",
+        json={"country": "Haiti", "phone_number": "+50912345678", "amount": 10, "payment_method": "wallet"},
+    )
+    assert r2.status_code == 200, r2.text
+    data = r2.json()
+    assert data["transfer"]["payment_status"] == "paid"
+    assert data["transfer"]["transfer_status"] == "processing"

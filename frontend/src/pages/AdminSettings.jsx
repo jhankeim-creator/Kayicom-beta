@@ -53,7 +53,13 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
       transaction_fee_percent: 2.0,
       min_transaction_usd: 10.0,
       wallets: { BEP20: '', TRC20: '', MATIC: '' }
-    }
+    },
+    minutes_transfer_enabled: false,
+    minutes_transfer_fee_type: 'percent',
+    minutes_transfer_fee_value: 0,
+    minutes_transfer_min_amount: 1,
+    minutes_transfer_max_amount: 500,
+    minutes_transfer_instructions: ''
   });
   const [newCategory, setNewCategory] = useState('');
   const [bulkEmail, setBulkEmail] = useState({
@@ -100,7 +106,13 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
             transaction_fee_percent: 2.0,
             min_transaction_usd: 10.0,
             wallets: { BEP20: '', TRC20: '', MATIC: '' }
-          }
+          },
+          minutes_transfer_enabled: currentSettings.minutes_transfer_enabled || false,
+          minutes_transfer_fee_type: currentSettings.minutes_transfer_fee_type || 'percent',
+          minutes_transfer_fee_value: currentSettings.minutes_transfer_fee_value ?? 0,
+          minutes_transfer_min_amount: currentSettings.minutes_transfer_min_amount ?? 1,
+          minutes_transfer_max_amount: currentSettings.minutes_transfer_max_amount ?? 500,
+          minutes_transfer_instructions: currentSettings.minutes_transfer_instructions || ''
         });
       });
     }
@@ -519,6 +531,81 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                     <div>
                       <h3 className="text-xl font-bold text-white mb-4">Payment Gateway Configuration</h3>
                       <p className="text-gray-400 mb-6">Configure payment methods, wallets, and instructions for customers.</p>
+
+                      {/* Minutes Transfer Settings */}
+                      <div className="bg-white/5 p-4 rounded-lg mb-6 border border-white/10">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-white font-semibold flex items-center gap-2">
+                            <span>📲</span> Minutes Transfer Service
+                          </h4>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={formData.minutes_transfer_enabled}
+                              onChange={(e) => handleChange('minutes_transfer_enabled', e.target.checked)}
+                              className="w-4 h-4"
+                            />
+                            <span className="text-white text-sm">Enabled</span>
+                          </label>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-white/70 text-sm">Fee Type</Label>
+                            <Select
+                              value={formData.minutes_transfer_fee_type}
+                              onValueChange={(v) => handleChange('minutes_transfer_fee_type', v)}
+                            >
+                              <SelectTrigger className="bg-white/10 border-white/20 text-white mt-1">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="percent">Percent (%)</SelectItem>
+                                <SelectItem value="fixed">Fixed (USD)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Fee Value</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.minutes_transfer_fee_value}
+                              onChange={(e) => handleChange('minutes_transfer_fee_value', parseFloat(e.target.value || '0'))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Minimum Amount (USD)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.minutes_transfer_min_amount}
+                              onChange={(e) => handleChange('minutes_transfer_min_amount', parseFloat(e.target.value || '0'))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70 text-sm">Maximum Amount (USD)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              value={formData.minutes_transfer_max_amount}
+                              onChange={(e) => handleChange('minutes_transfer_max_amount', parseFloat(e.target.value || '0'))}
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <Label className="text-white/70 text-sm">Service Instructions (shown to customers)</Label>
+                          <Textarea
+                            className="bg-white/10 border-white/20 text-white mt-1"
+                            rows={2}
+                            value={formData.minutes_transfer_instructions}
+                            onChange={(e) => handleChange('minutes_transfer_instructions', e.target.value)}
+                            placeholder="Example: Make sure the phone number includes country code."
+                          />
+                        </div>
+                      </div>
                       
                       {/* PayPal */}
                       <div className="bg-white/5 p-4 rounded-lg mb-4">
