@@ -9,7 +9,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 import requests
 import base64
@@ -158,6 +158,7 @@ class Order(BaseModel):
     delivery_info: Optional[Dict[str, Any]] = None
     refunded_at: Optional[datetime] = None
     refunded_amount: Optional[float] = None
+    subscription_start_date: Optional[datetime] = None
     subscription_end_date: Optional[datetime] = None  # For subscription orders
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -278,6 +279,180 @@ class BulkEmailRequest(BaseModel):
     message: str
     recipient_type: str  # all, customers, specific_emails
     specific_emails: Optional[List[EmailStr]] = None
+
+
+# ==================== EMAIL HELPERS ====================
+
+def _frontend_base_url() -> str:
+    return os.environ.get("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+
+def _format_dt(dt: datetime) -> str:
+    try:
+        return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    except Exception:
+        return str(dt)
+
+def _send_resend_email(settings: dict, to_email: str, subject: str, html: str):
+    """Send one email via Resend. Raises HTTPException on misconfig."""
+    if not settings or not settings.get("resend_api_key"):
+        raise HTTPException(status_code=400, detail="Resend API key not configured")
+
+    resend_from = settings.get("resend_from_email") or settings.get("support_email")
+    if not resend_from:
+        raise HTTPException(status_code=400, detail="Resend from email not configured")
+
+    headers = {
+        "Authorization": f"Bearer {settings['resend_api_key']}",
+        "Content-Type": "application/json",
+    }
+    resp = requests.post(
+        "https://api.resend.com/emails",
+        headers=headers,
+        json={"from": resend_from, "to": [to_email], "subject": subject, "html": html},
+        timeout=20,
+    )
+    if not (200 <= resp.status_code < 300):
+        raise HTTPException(status_code=500, detail=f"Resend send failed: {resp.status_code}: {resp.text[:300]}")
+
+
+# ==================== SUBSCRIPTION HELPERS ====================
+
+def _parse_subscription_duration(product: dict) -> timedelta:
+    """
+    Return subscription duration as timedelta.
+    Preference:
+    - product.subscription_duration_months if present
+    - parse product.variant_name like "1 Month", "3 Months", "12 Months", "7 Days", "1 Year"
+    - fallback 30 days
+    """
+    months = product.get("subscription_duration_months")
+    if months:
+        try:
+            return timedelta(days=int(months) * 30)
+        except Exception:
+            pass
+
+    variant = (product.get("variant_name") or "").strip().lower()
+    if variant:
+        import re
+        m = re.search(r"(\d+)\s*(day|days|month|months|year|years)", variant)
+        if m:
+            n = int(m.group(1))
+            unit = m.group(2)
+            if "day" in unit:
+                return timedelta(days=n)
+            if "month" in unit:
+                return timedelta(days=n * 30)
+            if "year" in unit:
+                return timedelta(days=n * 365)
+
+    return timedelta(days=30)
+
+async def _set_subscription_dates_if_needed(order_id: str) -> Optional[Dict[str, Any]]:
+    """If order contains subscription products, set subscription_start_date/end_date."""
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        return None
+
+    # Idempotent: don't overwrite if already set
+    if order.get("subscription_end_date"):
+        return order
+
+    # Only if paid+completed
+    if order.get("payment_status") != "paid" or order.get("order_status") != "completed":
+        return None
+
+    max_end: Optional[datetime] = None
+    start = datetime.now(timezone.utc)
+
+    for item in order.get("items", []):
+        product = await db.products.find_one({"id": item.get("product_id")}, {"_id": 0})
+        if product and product.get("is_subscription"):
+            duration = _parse_subscription_duration(product)
+            end = start + duration
+            if (max_end is None) or (end > max_end):
+                max_end = end
+
+    if not max_end:
+        return None
+
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "subscription_start_date": start.isoformat(),
+            "subscription_end_date": max_end.isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    updated = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    return updated
+
+async def _maybe_send_subscription_emails(order: dict):
+    """Send reminder emails (5 days before + at expiry) once per order."""
+    if not order:
+        return
+    if order.get("payment_status") != "paid" or order.get("order_status") != "completed":
+        return
+    end_raw = order.get("subscription_end_date")
+    if not end_raw:
+        return
+    end = end_raw
+    if isinstance(end_raw, str):
+        try:
+            end = datetime.fromisoformat(end_raw)
+        except Exception:
+            return
+    if not isinstance(end, datetime):
+        return
+
+    settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+    user_email = order.get("user_email")
+    if not user_email:
+        return
+
+    now = datetime.now(timezone.utc)
+    reminder_at = end - timedelta(days=5)
+
+    # Ensure notification collection exists
+    # doc: {order_id, type, sent_at}
+    async def already_sent(kind: str) -> bool:
+        return bool(await db.subscription_notifications.find_one({"order_id": order["id"], "type": kind}))
+
+    def mark_sent(kind: str):
+        return db.subscription_notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "order_id": order["id"],
+            "type": kind,
+            "sent_at": datetime.now(timezone.utc).isoformat()
+        })
+
+    renew_link = f"{_frontend_base_url()}/products/subscription"
+
+    # 5-day reminder
+    if now >= reminder_at and now < end and not await already_sent("reminder_5d"):
+        subject = "Subscription renewal reminder"
+        html = (
+            f"<div style='font-family:Arial,sans-serif'>"
+            f"<h2>Reminder: your subscription is ending soon</h2>"
+            f"<p>Your subscription will end on <b>{_format_dt(end)}</b>.</p>"
+            f"<p>Renew here: <a href='{renew_link}'>{renew_link}</a></p>"
+            f"</div>"
+        )
+        _send_resend_email(settings, user_email, subject, html)
+        await mark_sent("reminder_5d")
+
+    # Expired notice
+    if now >= end and not await already_sent("expired"):
+        subject = "Subscription expired"
+        html = (
+            f"<div style='font-family:Arial,sans-serif'>"
+            f"<h2>Your subscription has expired</h2>"
+            f"<p>It ended on <b>{_format_dt(end)}</b>.</p>"
+            f"<p>Renew here: <a href='{renew_link}'>{renew_link}</a></p>"
+            f"</div>"
+        )
+        _send_resend_email(settings, user_email, subject, html)
+        await mark_sent("expired")
 
 
 # Withdrawal Models
@@ -813,6 +988,12 @@ async def update_order_status(order_id: str, payment_status: Optional[str] = Non
     if order_status == "completed":
         order = await db.orders.find_one({"id": order_id})
         if order:
+            # Set subscription dates (if applicable) and run emails
+            updated = await _set_subscription_dates_if_needed(order_id)
+            try:
+                await _maybe_send_subscription_emails(updated or order)
+            except Exception as e:
+                logging.error(f"Subscription email check error: {e}")
             await check_and_credit_referral(order)
     
     return {"message": "Order updated successfully"}
@@ -827,16 +1008,55 @@ async def update_order_delivery(order_id: str, delivery_info: DeliveryInfo):
     updates = {
         "delivery_info": {"details": delivery_info.delivery_details, "delivered_at": datetime.now(timezone.utc).isoformat()},
         "order_status": "completed",
+        "payment_status": "paid",
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
     result = await db.orders.update_one({"id": order_id}, {"$set": updates})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Order not found")
-    
-    # TODO: Send email to customer with delivery info
-    # This would use the resend API key from settings
-    
+
+    # Set subscription dates if this order is a subscription
+    order = await _set_subscription_dates_if_needed(order_id)
+    if not order:
+        order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+
+    # Send delivery email (includes expiry if subscription)
+    try:
+        settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+        if order and order.get("user_email"):
+            end = order.get("subscription_end_date")
+            end_str = ""
+            if end:
+                if isinstance(end, str):
+                    try:
+                        end_dt = datetime.fromisoformat(end)
+                        end_str = _format_dt(end_dt)
+                    except Exception:
+                        end_str = str(end)
+                elif isinstance(end, datetime):
+                    end_str = _format_dt(end)
+            extra = f"<p><b>Subscription ends:</b> {end_str}</p>" if end_str else ""
+            html = (
+                f"<div style='font-family:Arial,sans-serif'>"
+                f"<h2>Your order has been delivered</h2>"
+                f"<p><b>Order:</b> {order_id}</p>"
+                f"<p><b>Delivery details:</b></p>"
+                f"<pre style='background:#111827;color:#D1D5DB;padding:12px;border-radius:8px;white-space:pre-wrap'>{delivery_info.delivery_details}</pre>"
+                f"{extra}"
+                f"</div>"
+            )
+            _send_resend_email(settings, order["user_email"], "Your delivery is ready", html)
+    except Exception as e:
+        logging.error(f"Delivery email error: {e}")
+
+    # Schedule/trigger reminder checks immediately
+    if order:
+        try:
+            await _maybe_send_subscription_emails(order)
+        except Exception as e:
+            logging.error(f"Subscription email check error: {e}")
+
     return {"message": "Order delivered successfully"}
 
 
@@ -1023,6 +1243,30 @@ async def send_bulk_email(email_data: BulkEmailRequest):
     }
 
 # ==================== STATS ENDPOINTS ====================
+
+@api_router.post("/subscriptions/run-notifications")
+async def run_subscription_notifications():
+    """
+    Run subscription reminder checks for all paid+completed subscription orders.
+    Safe to call from a cron job.
+    """
+    now = datetime.now(timezone.utc)
+    # Find orders with subscription_end_date set
+    orders = await db.orders.find(
+        {"subscription_end_date": {"$ne": None}, "payment_status": "paid", "order_status": "completed"},
+        {"_id": 0}
+    ).to_list(5000)
+
+    processed = 0
+    for order in orders:
+        try:
+            # Ensure dates exist (and parseable)
+            await _maybe_send_subscription_emails(order)
+            processed += 1
+        except Exception as e:
+            logging.error(f"Subscription notification error for {order.get('id')}: {e}")
+
+    return {"processed": processed, "timestamp": now.isoformat()}
 
 @api_router.get("/stats/dashboard")
 async def get_dashboard_stats():
@@ -1758,9 +2002,18 @@ async def complete_order_with_referral_check(order_id: str):
         {"id": order_id},
         {"$set": {
             "order_status": "completed",
+            "payment_status": "paid",
             "updated_at": datetime.now(timezone.utc).isoformat()
         }}
     )
+
+    await _record_coupon_usage_if_needed(order_id)
+    await _set_subscription_dates_if_needed(order_id)
+    updated = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    try:
+        await _maybe_send_subscription_emails(updated or order)
+    except Exception as e:
+        logging.error(f"Subscription email check error: {e}")
     
     # Check and credit referral
     await check_and_credit_referral(order)

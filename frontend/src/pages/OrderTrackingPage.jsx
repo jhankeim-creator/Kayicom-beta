@@ -19,12 +19,18 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
   const [transactionId, setTransactionId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     if (orderId) {
       loadOrder();
     }
   }, [orderId]);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const loadOrder = async () => {
     try {
@@ -133,6 +139,18 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
     );
   }
 
+  const subscriptionEnd = order.subscription_end_date ? new Date(order.subscription_end_date) : null;
+  const subscriptionRemaining = (() => {
+    if (!subscriptionEnd) return null;
+    const diffMs = subscriptionEnd.getTime() - now;
+    const diff = Math.max(0, diffMs);
+    const days = Math.floor(diff / (24 * 3600 * 1000));
+    const hours = Math.floor((diff % (24 * 3600 * 1000)) / (3600 * 1000));
+    const mins = Math.floor((diff % (3600 * 1000)) / (60 * 1000));
+    const secs = Math.floor((diff % (60 * 1000)) / 1000);
+    return { diffMs, days, hours, mins, secs };
+  })();
+
   return (
     <div className="min-h-screen gradient-bg">
       <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
@@ -220,6 +238,23 @@ const OrderTrackingPage = ({ user, logout, settings }) => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Subscription Countdown */}
+          {subscriptionEnd && subscriptionRemaining && (
+            <Card className="glass-effect border-cyan-500/30 border-2">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold text-white mb-2">Subscription Status</h3>
+                <p className="text-white/70 text-sm">Ends: {subscriptionEnd.toLocaleString()}</p>
+                {subscriptionRemaining.diffMs > 0 ? (
+                  <p className="text-cyan-300 font-mono text-2xl mt-3">
+                    {subscriptionRemaining.days}d {String(subscriptionRemaining.hours).padStart(2, '0')}:{String(subscriptionRemaining.mins).padStart(2, '0')}:{String(subscriptionRemaining.secs).padStart(2, '0')}
+                  </p>
+                ) : (
+                  <p className="text-red-300 font-semibold mt-3">Expired</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Plisio Crypto Payment Instructions */}
           {order.payment_method === 'crypto_plisio' && order.payment_status === 'pending' && order.plisio_invoice_id && (

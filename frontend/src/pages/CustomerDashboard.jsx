@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { axiosInstance } from '../App';
 import Navbar from '../components/Navbar';
@@ -6,18 +6,24 @@ import Footer from '../components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, Eye } from 'lucide-react';
+import { Package, Eye, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CustomerDashboard = ({ user, logout, settings }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     if (user) {
       loadOrders();
     }
   }, [user]);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const loadOrders = async () => {
     try {
@@ -40,6 +46,21 @@ const CustomerDashboard = ({ user, logout, settings }) => {
     };
     return variants[status] || 'secondary';
   };
+
+  const subscriptionOrders = useMemo(() => {
+    return orders
+      .filter(o => o.subscription_end_date)
+      .map(o => {
+        const end = new Date(o.subscription_end_date);
+        const diffMs = end.getTime() - now;
+        const diff = Math.max(0, diffMs);
+        const days = Math.floor(diff / (24 * 3600 * 1000));
+        const hours = Math.floor((diff % (24 * 3600 * 1000)) / (3600 * 1000));
+        const mins = Math.floor((diff % (3600 * 1000)) / (60 * 1000));
+        const secs = Math.floor((diff % (60 * 1000)) / 1000);
+        return { order: o, end, diffMs, remaining: { days, hours, mins, secs } };
+      });
+  }, [orders, now]);
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -125,6 +146,51 @@ const CustomerDashboard = ({ user, logout, settings }) => {
               )}
             </CardContent>
           </Card>
+
+          {/* Subscriptions */}
+          {subscriptionOrders.length > 0 && (
+            <Card className="glass-effect border-white/20 mt-8">
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                  <Clock className="text-cyan-300" size={22} />
+                  My Subscriptions
+                </h2>
+                <div className="space-y-4">
+                  {subscriptionOrders.map(({ order, end, diffMs, remaining }) => (
+                    <div key={order.id} className="p-4 rounded-lg bg-white/5 border border-white/10">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div>
+                          <p className="text-white font-semibold">Order #{order.id.slice(0, 8)}</p>
+                          <p className="text-white/60 text-sm">Ends: {end.toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          {diffMs > 0 ? (
+                            <p className="text-green-300 font-mono text-lg">
+                              {remaining.days}d {String(remaining.hours).padStart(2, '0')}:{String(remaining.mins).padStart(2, '0')}:{String(remaining.secs).padStart(2, '0')}
+                            </p>
+                          ) : (
+                            <p className="text-red-300 font-semibold">Expired</p>
+                          )}
+                          <div className="mt-2 flex gap-2 justify-end">
+                            <Link to={`/track/${order.id}`}>
+                              <Button size="sm" variant="outline" className="border-white/20 text-white">
+                                View
+                              </Button>
+                            </Link>
+                            <Link to="/products/subscription">
+                              <Button size="sm" className="bg-white text-purple-600 hover:bg-gray-100">
+                                Renew
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
