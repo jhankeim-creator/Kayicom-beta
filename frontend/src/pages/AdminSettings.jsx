@@ -33,6 +33,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     z2u_api_key: '',
     resend_api_key: '',
     resend_from_email: '',
+    announcement_enabled: false,
+    announcement_message: '',
     trustpilot_enabled: false,
     trustpilot_business_id: '',
     product_categories: [],
@@ -86,6 +88,8 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
           z2u_api_key: currentSettings.z2u_api_key || '',
           resend_api_key: currentSettings.resend_api_key || '',
           resend_from_email: currentSettings.resend_from_email || '',
+          announcement_enabled: currentSettings.announcement_enabled || false,
+          announcement_message: currentSettings.announcement_message || '',
           trustpilot_enabled: currentSettings.trustpilot_enabled || false,
           trustpilot_business_id: currentSettings.trustpilot_business_id || '',
           product_categories: currentSettings.product_categories || ['giftcard', 'topup', 'subscription', 'service'],
@@ -332,6 +336,38 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                       {formData.logo_url && (
                         <div className="mt-2">
                           <img src={formData.logo_url} alt="Logo preview" className="h-16 bg-white/10 p-2 rounded" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <Label className="text-white">Announcement (Flash Message)</Label>
+                          <p className="text-white/60 text-sm mt-1">
+                            Show a message bar at the top of the site.
+                          </p>
+                        </div>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={formData.announcement_enabled}
+                            onChange={(e) => handleChange('announcement_enabled', e.target.checked)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-white text-sm">Enabled</span>
+                        </label>
+                      </div>
+                      {formData.announcement_enabled && (
+                        <div className="mt-3">
+                          <Label className="text-white/70 text-sm">Message</Label>
+                          <Textarea
+                            value={formData.announcement_message}
+                            onChange={(e) => handleChange('announcement_message', e.target.value)}
+                            className="bg-white/10 border-white/20 text-white mt-1"
+                            rows={2}
+                            placeholder="Eg: Promo! 10% off with code KAYI10"
+                          />
                         </div>
                       )}
                     </div>

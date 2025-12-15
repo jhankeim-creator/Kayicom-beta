@@ -17,13 +17,28 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
   const [loading, setLoading] = useState(false);
   const [playerIds, setPlayerIds] = useState({});
   const [credentials, setCredentials] = useState({});
+  const [couponCode, setCouponCode] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(null);
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const total = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const total = Math.max(0, subtotal - (discountAmount || 0));
 
   // Check if any item needs player ID or credentials
   const needsPlayerIds = cart.some(item => item.product.requires_player_id);
   const needsCredentials = cart.some(item => item.product.requires_credentials);
+
+  const loadWalletBalance = async () => {
+    try {
+      const res = await axiosInstance.get(`/wallet/balance?user_id=${user.user_id}`);
+      setWalletBalance(res.data?.wallet_balance ?? 0);
+    } catch (e) {
+      setWalletBalance(null);
+    }
+  };
 
   const handlePlayerIdChange = (productId, value) => {
     setPlayerIds(prev => ({
@@ -88,7 +103,8 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
 
       const response = await axiosInstance.post(`/orders?user_id=${user.user_id}&user_email=${user.email}`, {
         items: orderItems,
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        coupon_code: appliedCoupon?.code || null
       });
 
       const order = response.data;
@@ -100,7 +116,7 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
         toast.success('Redirecting to payment...');
         navigate(`/track/${order.id}`);
       } else {
-        toast.success('Order created! Please submit your payment proof.');
+        toast.success(paymentMethod === 'wallet' ? 'Paid with wallet successfully!' : 'Order created! Please submit your payment proof.');
         navigate(`/track/${order.id}`);
       }
     } catch (error) {
@@ -109,6 +125,33 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyCoupon = async () => {
+    const code = (couponCode || '').trim();
+    if (!code) {
+      toast.error('Enter a coupon code');
+      return;
+    }
+    setApplyingCoupon(true);
+    try {
+      const res = await axiosInstance.get(`/coupons/validate?code=${encodeURIComponent(code)}&amount=${subtotal}`);
+      setDiscountAmount(res.data?.discount_amount || 0);
+      setAppliedCoupon({ code: res.data?.code || code.toUpperCase() });
+      toast.success('Coupon applied');
+    } catch (e) {
+      setDiscountAmount(0);
+      setAppliedCoupon(null);
+      toast.error(e.response?.data?.detail || 'Invalid coupon');
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const clearCoupon = () => {
+    setCouponCode('');
+    setDiscountAmount(0);
+    setAppliedCoupon(null);
   };
 
   if (!user) {
@@ -142,6 +185,42 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
               
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                 <div className="space-y-4">
+                  {/* Wallet Payment */}
+                  <label
+                    className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
+                      paymentMethod === 'wallet' ? 'border-green-400 bg-green-400/10' : 'border-white/20 hover:border-white/40'
+                    }`}
+                    onClick={() => {
+                      if (walletBalance === null) loadWalletBalance();
+                    }}
+                  >
+                    <RadioGroupItem value="wallet" className="mt-1" />
+                    <div className="ml-4 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Wallet className="text-green-400" size={20} />
+                        <span className="text-white font-semibold">Wallet Balance</span>
+                      </div>
+                      <p className="text-white/70 text-sm mt-1">
+                        {walletBalance === null ? 'Click to load wallet balance' : `Balance: $${Number(walletBalance).toFixed(2)}`}
+                      </p>
+                      {walletBalance !== null && walletBalance + 1e-9 < total && (
+                        <p className="text-red-300 text-xs mt-1">Insufficient balance. Top up your wallet first.</p>
+                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-2 border-white/20 text-white"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate('/wallet');
+                        }}
+                      >
+                        Top up wallet
+                      </Button>
+                    </div>
+                  </label>
+
                   {/* Crypto Payment */}
                   <label className={`flex items-start p-4 rounded-lg border-2 cursor-pointer transition ${
                     paymentMethod === 'crypto_plisio' ? 'border-cyan-400 bg-cyan-400/10' : 'border-white/20 hover:border-white/40'
@@ -384,16 +463,52 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
               </div>
 
               <div className="border-t border-white/20 pt-4 mb-6">
+                <div className="flex justify-between text-white/80">
+                  <span>Subtotal:</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-300">
+                    <span>Discount{appliedCoupon?.code ? ` (${appliedCoupon.code})` : ''}:</span>
+                    <span>- ${Number(discountAmount).toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-white text-xl font-bold">
                   <span>Total:</span>
                   <span data-testid="checkout-total">${total.toFixed(2)}</span>
                 </div>
               </div>
 
+              {/* Coupon */}
+              <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-lg">
+                <Label className="text-white">Coupon Code</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    className="bg-white/10 border-white/20 text-white"
+                    placeholder="Enter coupon"
+                  />
+                  <Button
+                    type="button"
+                    onClick={applyCoupon}
+                    disabled={applyingCoupon}
+                    className="bg-white text-purple-600 hover:bg-gray-100"
+                  >
+                    {applyingCoupon ? 'Applying...' : 'Apply'}
+                  </Button>
+                  {appliedCoupon && (
+                    <Button type="button" variant="outline" className="border-white/20 text-white" onClick={clearCoupon}>
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               <Button
                 className="w-full bg-white text-purple-600 hover:bg-gray-100 py-6 text-lg"
                 onClick={handleCheckout}
-                disabled={loading}
+                disabled={loading || (paymentMethod === 'wallet' && walletBalance !== null && walletBalance + 1e-9 < total)}
                 data-testid="place-order-btn"
               >
                 {loading ? 'Processing...' : 'Place Order'}

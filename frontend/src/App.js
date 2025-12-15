@@ -22,11 +22,14 @@ import AdminSettings from './pages/AdminSettings';
 import AdminWithdrawals from './pages/AdminWithdrawals';
 import AdminCrypto from './pages/AdminCrypto';
 import AdminCryptoTransactions from './pages/AdminCryptoTransactions';
+import AdminWalletTopups from './pages/AdminWalletTopups';
+import AdminCoupons from './pages/AdminCoupons';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ReferralPage from './pages/ReferralPage';
 import WithdrawPage from './pages/WithdrawPage';
 import CryptoPage from './pages/CryptoPage';
+import WalletPage from './pages/WalletPage';
 import WhatsAppButton from './components/WhatsAppButton';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -231,6 +234,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/wallet"
+            element={
+              <ProtectedRoute>
+                <WalletPage user={user} logout={logout} settings={settings} />
+              </ProtectedRoute>
+            }
+          />
           
           <Route path="/crypto" element={<CryptoPage user={user} logout={logout} settings={settings} />} />
           
@@ -305,6 +317,24 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <AdminCryptoTransactions user={user} logout={logout} settings={settings} />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/wallet-topups"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminWalletTopups user={user} logout={logout} settings={settings} />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/coupons"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminCoupons user={user} logout={logout} settings={settings} />
               </ProtectedRoute>
             }
           />

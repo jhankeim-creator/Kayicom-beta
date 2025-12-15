@@ -16,6 +16,13 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
 
   return (
     <nav className="sticky top-0 z-50 shadow-lg border-b border-purple-500/20" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      {settings?.announcement_enabled && settings?.announcement_message && (
+        <div className="w-full bg-black/30 border-b border-white/10">
+          <div className="w-full max-w-[1400px] mx-auto px-3 py-2 text-center text-white/90 text-sm">
+            {settings.announcement_message}
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-[1400px] mx-auto px-2 md:px-6 py-2 md:py-4">
         <div className="flex items-center justify-between gap-0.5 md:gap-4">
           {/* Logo */}
@@ -93,6 +100,11 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
                       </Link>
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem asChild>
+                    <Link to="/wallet" className="cursor-pointer text-gray-300 hover:text-pink-400">
+                      💳 Wallet
+                    </Link>
+                  </DropdownMenuItem>
                   {/* Mobile only - show nav items in dropdown */}
                   <div className="lg:hidden">
                     <DropdownMenuItem asChild>

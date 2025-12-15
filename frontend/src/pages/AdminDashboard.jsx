@@ -146,6 +146,26 @@ const AdminDashboard = ({ user, logout, settings }) => {
                 </CardContent>
               </Card>
             </Link>
+
+            <Link to="/admin/wallet-topups">
+              <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer">
+                <CardContent className="p-8 text-center">
+                  <span className="text-5xl mb-4 block">💳</span>
+                  <h3 className="text-xl font-bold text-white mb-2">Wallet Topups</h3>
+                  <p className="text-white/70">Approve wallet funding requests</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link to="/admin/coupons">
+              <Card className="glass-effect border-white/20 hover:border-white/40 transition cursor-pointer">
+                <CardContent className="p-8 text-center">
+                  <span className="text-5xl mb-4 block">🏷️</span>
+                  <h3 className="text-xl font-bold text-white mb-2">Coupons</h3>
+                  <p className="text-white/70">Create promo codes</p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>

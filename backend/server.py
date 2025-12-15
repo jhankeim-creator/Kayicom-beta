@@ -15,6 +15,7 @@ import requests
 import base64
 from plisio_helper import PlisioHelper
 
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -142,8 +143,12 @@ class Order(BaseModel):
     user_email: str
     items: List[OrderItem]
     total_amount: float
+    subtotal_amount: Optional[float] = None
+    discount_amount: Optional[float] = None
+    coupon_code: Optional[str] = None
+    coupon_usage_recorded: Optional[bool] = None
     currency: str = "USD"
-    payment_method: str  # crypto_plisio, paypal, skrill, moncash, binance_pay, zelle, cashapp
+    payment_method: str  # wallet, crypto_plisio, paypal, skrill, moncash, binance_pay, zelle, cashapp
     payment_status: str = "pending"  # pending, paid, failed, cancelled
     order_status: str = "pending"  # pending, processing, completed, cancelled
     payment_proof_url: Optional[str] = None
@@ -160,6 +165,40 @@ class Order(BaseModel):
 class OrderCreate(BaseModel):
     items: List[OrderItem]
     payment_method: str
+    coupon_code: Optional[str] = None
+
+
+# ==================== COUPON MODELS ====================
+
+class Coupon(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    code: str
+    discount_type: str  # percent or fixed
+    discount_value: float
+    active: bool = True
+    min_order_amount: float = 0.0
+    usage_limit: Optional[int] = None
+    used_count: int = 0
+    expires_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CouponCreate(BaseModel):
+    code: str
+    discount_type: str  # percent or fixed
+    discount_value: float
+    active: bool = True
+    min_order_amount: float = 0.0
+    usage_limit: Optional[int] = None
+    expires_at: Optional[datetime] = None
+
+class CouponUpdate(BaseModel):
+    discount_type: Optional[str] = None
+    discount_value: Optional[float] = None
+    active: Optional[bool] = None
+    min_order_amount: Optional[float] = None
+    usage_limit: Optional[int] = None
+    expires_at: Optional[datetime] = None
 
 # Payment Models
 class ManualPaymentProof(BaseModel):
@@ -182,6 +221,8 @@ class SiteSettings(BaseModel):
     z2u_api_key: Optional[str] = None
     resend_api_key: Optional[str] = None
     resend_from_email: Optional[str] = None  # e.g. "KayiCom <no-reply@yourdomain.com>"
+    announcement_enabled: Optional[bool] = False
+    announcement_message: Optional[str] = None
     trustpilot_enabled: Optional[bool] = False
     trustpilot_business_id: Optional[str] = None
     product_categories: Optional[List[str]] = ["giftcard", "topup", "subscription", "service"]
@@ -223,6 +264,8 @@ class SettingsUpdate(BaseModel):
     z2u_api_key: Optional[str] = None
     resend_api_key: Optional[str] = None
     resend_from_email: Optional[str] = None
+    announcement_enabled: Optional[bool] = None
+    announcement_message: Optional[str] = None
     trustpilot_enabled: Optional[bool] = None
     trustpilot_business_id: Optional[str] = None
     product_categories: Optional[List[str]] = None
@@ -435,13 +478,173 @@ async def delete_product(product_id: str):
         raise HTTPException(status_code=404, detail="Product not found")
     return {"message": "Product deleted successfully"}
 
+
+# ==================== COUPON ENDPOINTS ====================
+
+def _normalize_coupon_code(code: str) -> str:
+    return (code or "").strip().upper()
+
+async def _get_valid_coupon(code: str, order_amount: float) -> Optional[dict]:
+    """Return coupon doc if valid for given amount, else None."""
+    normalized = _normalize_coupon_code(code)
+    if not normalized:
+        return None
+
+    coupon = await db.coupons.find_one({"code": normalized}, {"_id": 0})
+    if not coupon:
+        return None
+    if not coupon.get("active", True):
+        return None
+    expires_at = coupon.get("expires_at")
+    if isinstance(expires_at, str):
+        try:
+            expires_at = datetime.fromisoformat(expires_at)
+        except Exception:
+            expires_at = None
+    if expires_at and expires_at < datetime.now(timezone.utc):
+        return None
+    if float(order_amount) < float(coupon.get("min_order_amount", 0.0)):
+        return None
+    usage_limit = coupon.get("usage_limit")
+    if usage_limit is not None and int(coupon.get("used_count", 0)) >= int(usage_limit):
+        return None
+    return coupon
+
+def _calculate_discount(coupon: dict, subtotal: float) -> float:
+    discount_type = coupon.get("discount_type")
+    value = float(coupon.get("discount_value", 0.0))
+    if value <= 0:
+        return 0.0
+    if discount_type == "percent":
+        return max(0.0, min(subtotal, subtotal * (value / 100.0)))
+    if discount_type == "fixed":
+        return max(0.0, min(subtotal, value))
+    return 0.0
+
+async def _record_coupon_usage_if_needed(order_id: str):
+    """Increment coupon usage once per paid order."""
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        return
+    code = _normalize_coupon_code(order.get("coupon_code"))
+    if not code:
+        return
+    if order.get("coupon_usage_recorded"):
+        return
+    if order.get("payment_status") != "paid":
+        return
+
+    coupon = await db.coupons.find_one({"code": code}, {"_id": 0})
+    if not coupon:
+        # Still mark recorded to avoid retry loops
+        await db.orders.update_one({"id": order_id}, {"$set": {"coupon_usage_recorded": True}})
+        return
+
+    usage_limit = coupon.get("usage_limit")
+    if usage_limit is not None and int(coupon.get("used_count", 0)) >= int(usage_limit):
+        # Coupon exhausted; keep order as-is but mark recorded to avoid retry loops
+        await db.orders.update_one({"id": order_id}, {"$set": {"coupon_usage_recorded": True}})
+        return
+
+    await db.coupons.update_one({"code": code}, {"$inc": {"used_count": 1}})
+    await db.orders.update_one({"id": order_id}, {"$set": {"coupon_usage_recorded": True}})
+
+@api_router.get("/coupons/validate")
+async def validate_coupon(code: str, amount: float):
+    coupon = await _get_valid_coupon(code, amount)
+    if not coupon:
+        raise HTTPException(status_code=400, detail="Invalid coupon")
+    discount = _calculate_discount(coupon, float(amount))
+    return {
+        "code": coupon["code"],
+        "discount_amount": discount,
+        "total_after_discount": float(amount) - discount
+    }
+
+@api_router.get("/coupons", response_model=List[Coupon])
+async def list_coupons():
+    coupons = await db.coupons.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    for c in coupons:
+        if isinstance(c.get("created_at"), str):
+            c["created_at"] = datetime.fromisoformat(c["created_at"])
+        if isinstance(c.get("expires_at"), str):
+            try:
+                c["expires_at"] = datetime.fromisoformat(c["expires_at"])
+            except Exception:
+                c["expires_at"] = None
+    return coupons
+
+@api_router.post("/coupons", response_model=Coupon)
+async def create_coupon(data: CouponCreate):
+    code = _normalize_coupon_code(data.code)
+    if not code:
+        raise HTTPException(status_code=400, detail="Coupon code required")
+    if data.discount_type not in ["percent", "fixed"]:
+        raise HTTPException(status_code=400, detail="Invalid discount_type")
+    if data.discount_value <= 0:
+        raise HTTPException(status_code=400, detail="discount_value must be > 0")
+
+    existing = await db.coupons.find_one({"code": code})
+    if existing:
+        raise HTTPException(status_code=400, detail="Coupon code already exists")
+
+    coupon = Coupon(
+        code=code,
+        discount_type=data.discount_type,
+        discount_value=float(data.discount_value),
+        active=bool(data.active),
+        min_order_amount=float(data.min_order_amount or 0.0),
+        usage_limit=data.usage_limit,
+        expires_at=data.expires_at,
+    )
+    doc = coupon.model_dump()
+    doc["created_at"] = coupon.created_at.isoformat()
+    if coupon.expires_at:
+        doc["expires_at"] = coupon.expires_at.isoformat()
+    await db.coupons.insert_one(doc)
+    return coupon
+
+@api_router.put("/coupons/{coupon_id}", response_model=Coupon)
+async def update_coupon(coupon_id: str, updates: CouponUpdate):
+    existing = await db.coupons.find_one({"id": coupon_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+
+    update_data = {k: v for k, v in updates.model_dump().items() if v is not None}
+    if "discount_type" in update_data and update_data["discount_type"] not in ["percent", "fixed"]:
+        raise HTTPException(status_code=400, detail="Invalid discount_type")
+    if "discount_value" in update_data and float(update_data["discount_value"]) <= 0:
+        raise HTTPException(status_code=400, detail="discount_value must be > 0")
+
+    # Convert dates to isoformat for storage
+    if "expires_at" in update_data and isinstance(update_data["expires_at"], datetime):
+        update_data["expires_at"] = update_data["expires_at"].isoformat()
+
+    await db.coupons.update_one({"id": coupon_id}, {"$set": update_data})
+    updated = await db.coupons.find_one({"id": coupon_id}, {"_id": 0})
+    if isinstance(updated.get("created_at"), str):
+        updated["created_at"] = datetime.fromisoformat(updated["created_at"])
+    if isinstance(updated.get("expires_at"), str):
+        try:
+            updated["expires_at"] = datetime.fromisoformat(updated["expires_at"])
+        except Exception:
+            updated["expires_at"] = None
+    return updated
+
+@api_router.delete("/coupons/{coupon_id}")
+async def delete_coupon(coupon_id: str):
+    res = await db.coupons.delete_one({"id": coupon_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    return {"message": "Coupon deleted"}
+
 # ==================== ORDER ENDPOINTS ====================
 
 @api_router.post("/orders", response_model=Order)
 async def create_order(order_data: OrderCreate, user_id: str, user_email: str):
     # Validate items & calculate total using authoritative product pricing/settings
     validated_items: List[OrderItem] = []
-    total = 0.0
+    subtotal = 0.0
     for item in order_data.items:
         product = await db.products.find_one({"id": item.product_id}, {"_id": 0})
         if not product:
@@ -467,7 +670,7 @@ async def create_order(order_data: OrderCreate, user_id: str, user_email: str):
                 )
 
         price = float(product.get("price", item.price))
-        total += price * quantity
+        subtotal += price * quantity
 
         validated_items.append(
             OrderItem(
@@ -480,13 +683,51 @@ async def create_order(order_data: OrderCreate, user_id: str, user_email: str):
             )
         )
     
+    # Apply coupon (if any)
+    coupon_code = _normalize_coupon_code(order_data.coupon_code) if order_data.coupon_code else None
+    discount_amount = 0.0
+    if coupon_code:
+        coupon = await _get_valid_coupon(coupon_code, subtotal)
+        if not coupon:
+            raise HTTPException(status_code=400, detail="Invalid coupon")
+        discount_amount = _calculate_discount(coupon, subtotal)
+
+    total = max(0.0, float(subtotal) - float(discount_amount))
+
     order = Order(
         user_id=user_id,
         user_email=user_email,
         items=validated_items,
+        subtotal_amount=subtotal,
+        discount_amount=discount_amount if discount_amount > 0 else None,
+        coupon_code=coupon_code,
+        coupon_usage_recorded=False if coupon_code else None,
         total_amount=total,
         payment_method=order_data.payment_method
     )
+
+    # Wallet payment: instantly mark paid and deduct balance
+    if order_data.payment_method == "wallet":
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        wallet_balance = float(user.get("wallet_balance", 0.0))
+        if wallet_balance + 1e-9 < total:
+            raise HTTPException(status_code=400, detail="Insufficient wallet balance")
+
+        await db.users.update_one({"id": user_id}, {"$inc": {"wallet_balance": -float(total)}})
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "user_email": user_email,
+            "order_id": order.id,
+            "type": "purchase",
+            "amount": -float(total),
+            "reason": "Order payment (wallet)",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        order.payment_status = "paid"
+        order.order_status = "processing"
     
     # If crypto payment, create Plisio invoice
     if order_data.payment_method == "crypto_plisio":
@@ -564,6 +805,10 @@ async def update_order_status(order_id: str, payment_status: Optional[str] = Non
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Order not found")
 
+    # Record coupon usage once payment is marked as paid
+    if payment_status == "paid":
+        await _record_coupon_usage_if_needed(order_id)
+
     # If order is completed, trigger referral payout check (idempotent)
     if order_status == "completed":
         order = await db.orders.find_one({"id": order_id})
@@ -622,14 +867,42 @@ async def plisio_callback(data: Dict[str, Any]):
     status = data.get('status')
     
     if status == 'completed':
-        await db.orders.update_one(
-            {"id": order_id},
-            {"$set": {
-                "payment_status": "paid",
-                "order_status": "processing",
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }}
-        )
+        # First try normal orders
+        order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+        if order:
+            await db.orders.update_one(
+                {"id": order_id},
+                {"$set": {
+                    "payment_status": "paid",
+                    "order_status": "processing",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            await _record_coupon_usage_if_needed(order_id)
+        else:
+            # Then try wallet topups
+            topup = await db.wallet_topups.find_one({"id": order_id}, {"_id": 0})
+            if topup:
+                await db.wallet_topups.update_one(
+                    {"id": order_id},
+                    {"$set": {
+                        "payment_status": "paid",
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                if not topup.get("credited"):
+                    await db.users.update_one({"id": topup["user_id"]}, {"$inc": {"wallet_balance": float(topup["amount"])}})
+                    await db.wallet_transactions.insert_one({
+                        "id": str(uuid.uuid4()),
+                        "user_id": topup["user_id"],
+                        "user_email": topup.get("user_email"),
+                        "order_id": None,
+                        "type": "topup",
+                        "amount": float(topup["amount"]),
+                        "reason": f"Wallet topup {order_id} (Plisio)",
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    })
+                    await db.wallet_topups.update_one({"id": order_id}, {"$set": {"credited": True}})
     
     return {"status": "ok"}
 
@@ -1293,6 +1566,15 @@ class WalletAdjustment(BaseModel):
     amount: float
     reason: Optional[str] = None
 
+class WalletTopupCreate(BaseModel):
+    amount: float
+    payment_method: str  # crypto_plisio or manual gateways
+
+class WalletTopupProof(BaseModel):
+    topup_id: str
+    transaction_id: str
+    payment_proof_url: str
+
 @api_router.get("/wallet/balance")
 async def get_wallet_balance(user_id: str):
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
@@ -1304,6 +1586,118 @@ async def get_wallet_balance(user_id: str):
 async def get_wallet_transactions(user_id: str):
     txs = await db.wallet_transactions.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
     return txs
+
+@api_router.post("/wallet/topups")
+async def create_wallet_topup(topup: WalletTopupCreate, user_id: str, user_email: str):
+    if float(topup.amount) <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be > 0")
+
+    settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+
+    topup_id = str(uuid.uuid4())
+    doc = {
+        "id": topup_id,
+        "user_id": user_id,
+        "user_email": user_email,
+        "amount": float(topup.amount),
+        "payment_method": topup.payment_method,
+        "payment_status": "pending",
+        "transaction_id": None,
+        "payment_proof_url": None,
+        "plisio_invoice_id": None,
+        "plisio_invoice_url": None,
+        "credited": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    # If crypto payment, create Plisio invoice
+    if topup.payment_method == "crypto_plisio" and settings.get("plisio_api_key"):
+        try:
+            plisio = PlisioHelper(settings["plisio_api_key"])
+            invoice_response = await plisio.create_invoice(
+                amount=float(topup.amount),
+                currency="USDT",
+                order_name=f"Wallet Topup {topup_id}",
+                order_number=topup_id,
+                email=user_email,
+            )
+            if invoice_response.get("success"):
+                doc["plisio_invoice_id"] = invoice_response.get("invoice_id")
+                doc["plisio_invoice_url"] = invoice_response.get("invoice_url")
+        except Exception as e:
+            logging.error(f"Plisio topup error: {e}")
+
+    await db.wallet_topups.insert_one(doc)
+
+    # Attach payment instructions for manual methods (optional)
+    payment_info = {}
+    gateways = settings.get("payment_gateways") or {}
+    gateway = gateways.get(topup.payment_method) or {}
+    if gateway.get("enabled"):
+        payment_info = {
+            "method": topup.payment_method,
+            "email": gateway.get("email", ""),
+            "instructions": gateway.get("instructions", "")
+        }
+
+    return {"topup": doc, "payment_info": payment_info}
+
+@api_router.get("/wallet/topups/user/{user_id}")
+async def get_user_wallet_topups(user_id: str):
+    topups = await db.wallet_topups.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return topups
+
+@api_router.get("/wallet/topups/all")
+async def get_all_wallet_topups():
+    topups = await db.wallet_topups.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return topups
+
+@api_router.post("/wallet/topups/proof")
+async def submit_wallet_topup_proof(proof: WalletTopupProof):
+    res = await db.wallet_topups.update_one(
+        {"id": proof.topup_id},
+        {"$set": {
+            "transaction_id": proof.transaction_id,
+            "payment_proof_url": proof.payment_proof_url,
+            "payment_status": "pending_verification",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Topup not found")
+    return {"message": "Topup proof submitted"}
+
+@api_router.put("/wallet/topups/{topup_id}/status")
+async def update_wallet_topup_status(topup_id: str, payment_status: str):
+    if payment_status not in ["paid", "failed", "rejected", "processing"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+
+    topup = await db.wallet_topups.find_one({"id": topup_id}, {"_id": 0})
+    if not topup:
+        raise HTTPException(status_code=404, detail="Topup not found")
+
+    await db.wallet_topups.update_one(
+        {"id": topup_id},
+        {"$set": {"payment_status": payment_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    # Credit wallet once when marked paid
+    if payment_status == "paid" and not topup.get("credited"):
+        await db.users.update_one({"id": topup["user_id"]}, {"$inc": {"wallet_balance": float(topup["amount"])}})
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": topup["user_id"],
+            "user_email": topup.get("user_email"),
+            "order_id": None,
+            "type": "topup",
+            "amount": float(topup["amount"]),
+            "reason": f"Wallet topup {topup_id}",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        await db.wallet_topups.update_one({"id": topup_id}, {"$set": {"credited": True}})
+
+    return {"message": "Topup updated"}
 
 @api_router.post("/orders/{order_id}/refund")
 async def refund_order_to_wallet(order_id: str, adjustment: WalletAdjustment):
