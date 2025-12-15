@@ -50,7 +50,9 @@ const AdminCrypto = () => {
 
   const updateTransactionStatus = async (txId, status) => {
     try {
-      await axiosInstance.put(`/crypto/transactions/${txId}/status?status=${status}`);
+      await axiosInstance.put(`/crypto/transactions/${txId}/status`, {
+        status
+      });
       toast.success('Status updated');
       loadTransactions();
     } catch (error) {

@@ -33,6 +33,9 @@ const AdminOrders = ({ user, logout, settings }) => {
   const [deliveryDialog, setDeliveryDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [deliveryInfo, setDeliveryInfo] = useState('');
+  const [refundDialog, setRefundDialog] = useState(false);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('');
 
   useEffect(() => {
     loadOrders();
@@ -89,6 +92,34 @@ const AdminOrders = ({ user, logout, settings }) => {
     setSelectedOrder(order);
     setDeliveryInfo('');
     setDeliveryDialog(true);
+  };
+
+  const handleRefundOrder = (order) => {
+    setSelectedOrder(order);
+    setRefundAmount(String(order.total_amount || ''));
+    setRefundReason('Order refund');
+    setRefundDialog(true);
+  };
+
+  const submitRefund = async () => {
+    const amt = parseFloat(refundAmount);
+    if (!amt || amt <= 0) {
+      toast.error('Please enter a valid refund amount');
+      return;
+    }
+
+    try {
+      await axiosInstance.post(`/orders/${selectedOrder.id}/refund`, {
+        amount: amt,
+        reason: refundReason
+      });
+      toast.success('Refunded to wallet successfully');
+      setRefundDialog(false);
+      loadOrders();
+    } catch (error) {
+      console.error('Error refunding order:', error);
+      toast.error(error.response?.data?.detail || 'Error refunding order');
+    }
   };
 
   const submitDelivery = async () => {
@@ -282,6 +313,16 @@ const AdminOrders = ({ user, logout, settings }) => {
                             </Button>
                           </>
                         )}
+
+                        {order.payment_status === 'paid' && !order.refunded_at && (
+                          <Button
+                            variant="outline"
+                            className="w-full border-yellow-400 text-yellow-300 hover:bg-yellow-400/10"
+                            onClick={() => handleRefundOrder(order)}
+                          >
+                            Refund to Wallet
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -324,6 +365,43 @@ const AdminOrders = ({ user, logout, settings }) => {
                 Send & Complete
               </Button>
               <Button onClick={() => setDeliveryDialog(false)} variant="outline" className="border-white/20 text-white">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Refund Dialog */}
+      <Dialog open={refundDialog} onOpenChange={setRefundDialog}>
+        <DialogContent className="bg-gray-900 border-white/20">
+          <DialogHeader>
+            <DialogTitle className="text-white">Refund Order #{selectedOrder?.id?.slice(0, 8)} to Wallet</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-white">Refund Amount (USD)</Label>
+              <Input
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 mt-2"
+                placeholder="Enter amount"
+              />
+            </div>
+            <div>
+              <Label className="text-white">Reason</Label>
+              <Input
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 mt-2"
+                placeholder="Refund reason"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={submitRefund} className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black">
+                Refund
+              </Button>
+              <Button onClick={() => setRefundDialog(false)} variant="outline" className="border-white/20 text-white">
                 Cancel
               </Button>
             </div>

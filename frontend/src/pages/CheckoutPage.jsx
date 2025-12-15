@@ -82,7 +82,8 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
         product_name: item.product.name,
         quantity: item.quantity,
         price: item.product.price,
-        player_id: playerIds[item.product.id] || null
+        player_id: playerIds[item.product.id] || null,
+        credentials: credentials[item.product.id] || null
       }));
 
       const response = await axiosInstance.post(`/orders?user_id=${user.user_id}&user_email=${user.email}`, {
@@ -311,19 +312,55 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
                     {cart.filter(item => item.product.requires_player_id).map(item => (
                       <div key={item.product.id}>
                         <Label htmlFor={`player-id-${item.product.id}`} className="text-white">
-                          Player ID for {item.product.name}
+                          {(item.product.player_id_label || 'Player ID')} for {item.product.name}
                         </Label>
                         <Input
                           id={`player-id-${item.product.id}`}
                           value={playerIds[item.product.id] || ''}
                           onChange={(e) => handlePlayerIdChange(item.product.id, e.target.value)}
                           className="bg-white/10 border-white/20 text-white placeholder:text-white/50 mt-2"
-                          placeholder="Enter your Player ID / User ID"
+                          placeholder={`Enter your ${item.product.player_id_label || 'Player ID'}`}
                           required
                           data-testid={`player-id-${item.product.id}`}
                         />
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Credentials Section */}
+              {needsCredentials && (
+                <div className="mt-6 border-t border-white/20 pt-6">
+                  <h3 className="text-xl font-bold text-white mb-4">
+                    Account Credentials Required
+                  </h3>
+                  <div className="space-y-6">
+                    {cart.filter(item => item.product.requires_credentials).map(item => {
+                      const fields = item.product.credential_fields && item.product.credential_fields.length > 0
+                        ? item.product.credential_fields
+                        : ['email', 'password'];
+                      return (
+                        <div key={item.product.id} className="p-4 rounded-lg bg-white/5 border border-white/10">
+                          <p className="text-white font-semibold mb-3">{item.product.name}</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {fields.map((field) => (
+                              <div key={field}>
+                                <Label className="text-white capitalize">{field}</Label>
+                                <Input
+                                  type={field.toLowerCase().includes('password') ? 'password' : 'text'}
+                                  value={(credentials[item.product.id] || {})[field] || ''}
+                                  onChange={(e) => handleCredentialChange(item.product.id, field, e.target.value)}
+                                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 mt-2"
+                                  placeholder={`Enter ${field}`}
+                                  required
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

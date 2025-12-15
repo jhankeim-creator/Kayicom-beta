@@ -42,6 +42,32 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  // Group variants by parent_product_id so giftcards/topups show cleanly
+  const groupedProducts = (() => {
+    const groups = new Map();
+    for (const p of products) {
+      const groupId = p.parent_product_id || p.id;
+      const group = groups.get(groupId) || { groupId, variants: [] };
+      group.variants.push(p);
+      groups.set(groupId, group);
+    }
+
+    // Representative: cheapest variant in group
+    return Array.from(groups.values()).map(g => {
+      const sorted = [...g.variants].sort((a, b) => (a.price || 0) - (b.price || 0));
+      const rep = sorted[0];
+      const minPrice = sorted[0]?.price ?? rep.price;
+      const maxPrice = sorted[sorted.length - 1]?.price ?? rep.price;
+      return {
+        ...rep,
+        _variant_count: g.variants.length,
+        _min_price: minPrice,
+        _max_price: maxPrice,
+        _group_id: g.groupId
+      };
+    });
+  })();
+
   return (
     <div className="min-h-screen gradient-bg">
       <Navbar user={user} logout={logout} cartItemCount={cartItemCount} settings={settings} />
@@ -72,9 +98,9 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
         {/* Products Grid */}
         {loading ? (
           <div className="text-center text-white text-xl">Loading products...</div>
-        ) : products.length > 0 ? (
+        ) : groupedProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" data-testid="products-grid">
-            {products.map((product) => (
+            {groupedProducts.map((product) => (
               <Card key={product.id} className="product-card overflow-hidden bg-white/10 backdrop-blur-lg border-white/20 hover:border-white/40" data-testid={`product-card-${product.id}`}>
                 <div className="h-48 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
                   {product.image_url ? (
@@ -87,13 +113,20 @@ const ProductsPage = ({ user, logout, addToCart, cart, settings }) => {
                   <h3 className="text-lg font-bold text-white mb-2">{product.name}</h3>
                   <p className="text-white/70 text-sm mb-4 line-clamp-2">{product.description}</p>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-2xl font-bold text-white">${product.price}</span>
+                    <span className="text-2xl font-bold text-white">
+                      {product._variant_count > 1 ? `From $${Number(product._min_price).toFixed(2)}` : `$${Number(product.price).toFixed(2)}`}
+                    </span>
                     {product.stock_available ? (
                       <span className="text-xs text-green-400 bg-green-400/20 px-2 py-1 rounded">Available</span>
                     ) : (
                       <span className="text-xs text-red-400 bg-red-400/20 px-2 py-1 rounded">Out of Stock</span>
                     )}
                   </div>
+                  {product._variant_count > 1 && (
+                    <p className="text-white/60 text-xs mb-3">
+                      {product._variant_count} options available
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     <Link to={`/product/${product.id}`} className="flex-1">
                       <Button size="sm" variant="outline" className="w-full border-white text-white hover:bg-white/10" data-testid={`view-btn-${product.id}`}>

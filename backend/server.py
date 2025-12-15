@@ -52,6 +52,7 @@ class User(UserBase):
     referral_code: str = Field(default_factory=lambda: str(uuid.uuid4())[:8].upper())
     referred_by: Optional[str] = None  # referral_code of referrer
     referral_balance: float = 0.0  # Balance from referrals
+    wallet_balance: float = 0.0  # Store credit / refunds
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class LoginRequest(BaseModel):
@@ -75,6 +76,9 @@ class Product(BaseModel):
     variant_name: Optional[str] = None  # For variants like "100 Diamonds", "500 UC", etc
     parent_product_id: Optional[str] = None  # Link to parent product for variants
     requires_player_id: bool = False  # For topup products that need player ID
+    player_id_label: Optional[str] = None  # Custom label: UID, Character ID, etc
+    requires_credentials: bool = False  # For subscription/services that need login credentials
+    credential_fields: Optional[List[str]] = None  # e.g. ["email","password"]
     region: Optional[str] = None  # For gift cards: US, EU, ASIA, etc.
     is_subscription: bool = False  # Track if this triggers referral payout
     metadata: Optional[Dict[str, Any]] = None
@@ -94,6 +98,9 @@ class ProductCreate(BaseModel):
     variant_name: Optional[str] = None
     parent_product_id: Optional[str] = None
     requires_player_id: bool = False
+    player_id_label: Optional[str] = None
+    requires_credentials: bool = False
+    credential_fields: Optional[List[str]] = None
     region: Optional[str] = None
     is_subscription: bool = False
     metadata: Optional[Dict[str, Any]] = None
@@ -112,6 +119,9 @@ class ProductUpdate(BaseModel):
     variant_name: Optional[str] = None
     parent_product_id: Optional[str] = None
     requires_player_id: Optional[bool] = None
+    player_id_label: Optional[str] = None
+    requires_credentials: Optional[bool] = None
+    credential_fields: Optional[List[str]] = None
     region: Optional[str] = None
     is_subscription: Optional[bool] = None
     metadata: Optional[Dict[str, Any]] = None
@@ -123,6 +133,7 @@ class OrderItem(BaseModel):
     quantity: int
     price: float
     player_id: Optional[str] = None  # For topup products
+    credentials: Optional[Dict[str, str]] = None  # For subscription/services (email/password, etc)
 
 class Order(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -138,7 +149,10 @@ class Order(BaseModel):
     payment_proof_url: Optional[str] = None
     transaction_id: Optional[str] = None
     plisio_invoice_id: Optional[str] = None
+    plisio_invoice_url: Optional[str] = None
     delivery_info: Optional[Dict[str, Any]] = None
+    refunded_at: Optional[datetime] = None
+    refunded_amount: Optional[float] = None
     subscription_end_date: Optional[datetime] = None  # For subscription orders
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -359,10 +373,12 @@ async def login(credentials: LoginRequest):
 # ==================== PRODUCT ENDPOINTS ====================
 
 @api_router.get("/products", response_model=List[Product])
-async def get_products(category: Optional[str] = None):
+async def get_products(category: Optional[str] = None, parent_product_id: Optional[str] = None):
     query = {}
     if category:
         query['category'] = category
+    if parent_product_id:
+        query['parent_product_id'] = parent_product_id
     
     products = await db.products.find(query, {"_id": 0}).to_list(1000)
     for product in products:
@@ -416,13 +432,51 @@ async def delete_product(product_id: str):
 
 @api_router.post("/orders", response_model=Order)
 async def create_order(order_data: OrderCreate, user_id: str, user_email: str):
-    # Calculate total
-    total = sum(item.price * item.quantity for item in order_data.items)
+    # Validate items & calculate total using authoritative product pricing/settings
+    validated_items: List[OrderItem] = []
+    total = 0.0
+    for item in order_data.items:
+        product = await db.products.find_one({"id": item.product_id}, {"_id": 0})
+        if not product:
+            raise HTTPException(status_code=400, detail=f"Invalid product_id: {item.product_id}")
+
+        quantity = int(item.quantity)
+        if quantity <= 0:
+            raise HTTPException(status_code=400, detail="Quantity must be at least 1")
+
+        # Required fields validation
+        if product.get("requires_player_id") and not (item.player_id and str(item.player_id).strip()):
+            label = product.get("player_id_label") or "Player ID"
+            raise HTTPException(status_code=400, detail=f"{label} is required for {product.get('name')}")
+
+        if product.get("requires_credentials"):
+            creds = item.credentials or {}
+            required_fields = product.get("credential_fields") or ["email", "password"]
+            missing = [f for f in required_fields if not (creds.get(f) and str(creds.get(f)).strip())]
+            if missing:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Missing credentials fields for {product.get('name')}: {', '.join(missing)}"
+                )
+
+        price = float(product.get("price", item.price))
+        total += price * quantity
+
+        validated_items.append(
+            OrderItem(
+                product_id=product["id"],
+                product_name=product.get("name", item.product_name),
+                quantity=quantity,
+                price=price,
+                player_id=item.player_id,
+                credentials=item.credentials,
+            )
+        )
     
     order = Order(
         user_id=user_id,
         user_email=user_email,
-        items=order_data.items,
+        items=validated_items,
         total_amount=total,
         payment_method=order_data.payment_method
     )
@@ -469,6 +523,10 @@ async def get_orders(user_id: Optional[str] = None):
             order['created_at'] = datetime.fromisoformat(order['created_at'])
         if isinstance(order.get('updated_at'), str):
             order['updated_at'] = datetime.fromisoformat(order['updated_at'])
+        if isinstance(order.get('refunded_at'), str):
+            order['refunded_at'] = datetime.fromisoformat(order['refunded_at'])
+        if isinstance(order.get('subscription_end_date'), str):
+            order['subscription_end_date'] = datetime.fromisoformat(order['subscription_end_date'])
     return orders
 
 @api_router.get("/orders/{order_id}", response_model=Order)
@@ -481,6 +539,10 @@ async def get_order(order_id: str):
         order['created_at'] = datetime.fromisoformat(order['created_at'])
     if isinstance(order.get('updated_at'), str):
         order['updated_at'] = datetime.fromisoformat(order['updated_at'])
+    if isinstance(order.get('refunded_at'), str):
+        order['refunded_at'] = datetime.fromisoformat(order['refunded_at'])
+    if isinstance(order.get('subscription_end_date'), str):
+        order['subscription_end_date'] = datetime.fromisoformat(order['subscription_end_date'])
     return order
 
 @api_router.put("/orders/{order_id}/status")
@@ -494,6 +556,12 @@ async def update_order_status(order_id: str, payment_status: Optional[str] = Non
     result = await db.orders.update_one({"id": order_id}, {"$set": updates})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    # If order is completed, trigger referral payout check (idempotent)
+    if order_status == "completed":
+        order = await db.orders.find_one({"id": order_id})
+        if order:
+            await check_and_credit_referral(order)
     
     return {"message": "Order updated successfully"}
 
@@ -841,8 +909,16 @@ async def get_crypto_config():
     
     # Get wallet addresses from settings
     settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0})
-    if settings and settings.get('crypto_settings'):
-        config['crypto_settings'] = settings['crypto_settings']
+    crypto_settings = (settings or {}).get('crypto_settings') or {}
+    if crypto_settings:
+        config['crypto_settings'] = crypto_settings
+
+    # Compatibility fields expected by frontend (CryptoPage)
+    # Prefer site_settings.crypto_settings, fallback to crypto_config defaults.
+    config['buy_rate_usdt'] = float(crypto_settings.get('buy_rate_usdt', config.get('buy_rate_bep20', 1.02)))
+    config['sell_rate_usdt'] = float(crypto_settings.get('sell_rate_usdt', config.get('sell_rate_bep20', 0.98)))
+    config['transaction_fee_percent'] = float(crypto_settings.get('transaction_fee_percent', config.get('buy_fee_percent', 2.0)))
+    config['min_transaction_usd'] = float(crypto_settings.get('min_transaction_usd', config.get('min_buy_usd', 10.0)))
     
     return config
 
@@ -878,17 +954,20 @@ async def buy_crypto(request: CryptoBuyRequest, user_id: str = None, user_email:
     # For BUY USDT, customer pays with FIAT (PayPal, AirTM, Skrill)
     # No need for Plisio - just show admin payment info
     
-    # Check limits
-    if request.amount_usd < config['min_buy_usd'] or request.amount_usd > config['max_buy_usd']:
-        raise HTTPException(status_code=400, detail=f"Amount must be between ${config['min_buy_usd']} and ${config['max_buy_usd']}")
+    # Check limits (support both old + new naming)
+    min_usd = float(config.get('min_buy_usd', config.get('min_transaction_usd', 10.0)))
+    max_usd = float(config.get('max_buy_usd', 10000.0))
+    if request.amount_usd < min_usd or request.amount_usd > max_usd:
+        raise HTTPException(status_code=400, detail=f"Amount must be between ${min_usd} and ${max_usd}")
     
     # Get rate
     rate_key = f"buy_rate_{request.chain.lower()}"
-    exchange_rate = config.get(rate_key, 1.02)
+    exchange_rate = float(config.get(rate_key, config.get("buy_rate_usdt", 1.02)))
     
     # Calculate
     amount_crypto = request.amount_usd / exchange_rate
-    fee = request.amount_usd * (config['buy_fee_percent'] / 100)
+    fee_percent = float(config.get('buy_fee_percent', config.get('transaction_fee_percent', 2.0)))
+    fee = request.amount_usd * (fee_percent / 100)
     total_usd = request.amount_usd + fee
     
     # Create transaction
@@ -942,16 +1021,19 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
         raise HTTPException(status_code=500, detail="Crypto config not found")
     
     # Check limits
-    if request.amount_crypto < config['min_sell_usdt'] or request.amount_crypto > config['max_sell_usdt']:
-        raise HTTPException(status_code=400, detail=f"Amount must be between {config['min_sell_usdt']} and {config['max_sell_usdt']} USDT")
+    min_sell = float(config.get('min_sell_usdt', 10.0))
+    max_sell = float(config.get('max_sell_usdt', 10000.0))
+    if request.amount_crypto < min_sell or request.amount_crypto > max_sell:
+        raise HTTPException(status_code=400, detail=f"Amount must be between {min_sell} and {max_sell} USDT")
     
     # Get rate
     rate_key = f"sell_rate_{request.chain.lower()}"
-    exchange_rate = config.get(rate_key, 0.98)
+    exchange_rate = float(config.get(rate_key, config.get("sell_rate_usdt", 0.98)))
     
     # Calculate
     amount_usd = request.amount_crypto * exchange_rate
-    fee = amount_usd * (config['sell_fee_percent'] / 100)
+    fee_percent = float(config.get('sell_fee_percent', config.get('transaction_fee_percent', 2.0)))
+    fee = amount_usd * (fee_percent / 100)
     total_usd = amount_usd - fee
     
     transaction_id = str(uuid.uuid4())
@@ -1107,43 +1189,37 @@ async def upload_image(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
-    result = await db.crypto_transactions.update_one(
-        {"id": transaction_id},
-        {"$set": updates}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-    
-    return {"message": f"Transaction status updated to {status}"}
-
 # ==================== REFERRAL PAYOUT TRACKING ====================
 
 async def check_and_credit_referral(order: dict):
     """Check if order qualifies for referral payout and credit referrer"""
+    # Only for paid + completed orders
+    if order.get("payment_status") != "paid" or order.get("order_status") != "completed":
+        return
+
+    # Idempotency: don't pay twice for same order
+    already_paid = await db.referral_payouts.find_one({"order_id": order.get("id")})
+    if already_paid:
+        return
+
     # Check if user was referred
     user = await db.users.find_one({"id": order['user_id']})
     if not user or not user.get('referred_by'):
         return
     
     # Check if order contains subscription
-    has_subscription = False
-    for item in order['items']:
-        product = await db.products.find_one({"id": item['product_id']})
+    subscription_product_ids: List[str] = []
+    for item in order.get('items', []):
+        product = await db.products.find_one({"id": item.get('product_id')})
         if product and product.get('is_subscription'):
-            has_subscription = True
-            break
-    
-    if not has_subscription:
+            subscription_product_ids.append(product.get("id"))
+
+    if not subscription_product_ids:
         return
     
-    # Check if this is first subscription purchase
-    previous_subscription_orders = await db.orders.find({
-        "user_id": order['user_id'],
-        "items.product_id": {"$in": [p['product_id'] for p in order['items'] if p.get('is_subscription')]}
-    }).to_list(10)
-    
-    if len(previous_subscription_orders) > 1:  # More than current order
+    # Check if this is the first PAID+COMPLETED subscription order for this referred user
+    prior_payout = await db.referral_payouts.find_one({"referred_user_id": order['user_id']})
+    if prior_payout:
         return
     
     # Credit referrer $1
@@ -1162,6 +1238,71 @@ async def check_and_credit_referral(order: dict):
         "amount": 1.0,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
+
+
+# ==================== WALLET (STORE CREDIT) ENDPOINTS ====================
+
+class WalletAdjustment(BaseModel):
+    amount: float
+    reason: Optional[str] = None
+
+@api_router.get("/wallet/balance")
+async def get_wallet_balance(user_id: str):
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"user_id": user_id, "wallet_balance": float(user.get("wallet_balance", 0.0))}
+
+@api_router.get("/wallet/transactions")
+async def get_wallet_transactions(user_id: str):
+    txs = await db.wallet_transactions.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return txs
+
+@api_router.post("/orders/{order_id}/refund")
+async def refund_order_to_wallet(order_id: str, adjustment: WalletAdjustment):
+    """
+    Refund an order to the user's wallet (store credit).
+    This is intended for admin use (no auth implemented in this project).
+    """
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.get("refunded_at"):
+        raise HTTPException(status_code=400, detail="Order already refunded")
+
+    if float(adjustment.amount) <= 0:
+        raise HTTPException(status_code=400, detail="Refund amount must be > 0")
+
+    user_id = order.get("user_id")
+    user_email = order.get("user_email")
+
+    # Credit wallet
+    await db.users.update_one({"id": user_id}, {"$inc": {"wallet_balance": float(adjustment.amount)}})
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user_email,
+        "order_id": order_id,
+        "type": "refund",
+        "amount": float(adjustment.amount),
+        "reason": adjustment.reason or "Order refund",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    # Update order
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "order_status": "cancelled",
+            "payment_status": "cancelled",
+            "refunded_amount": float(adjustment.amount),
+            "refunded_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+
+    return {"message": "Refunded to wallet", "user_id": user_id, "amount": float(adjustment.amount)}
 
 # Modify order status endpoint to trigger referral check
 @api_router.put("/orders/{order_id}/complete")

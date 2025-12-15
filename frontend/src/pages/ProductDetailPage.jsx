@@ -5,12 +5,15 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Package, ShoppingCart, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [variants, setVariants] = useState([]);
+  const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +24,24 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
   const loadProduct = async () => {
     try {
       const response = await axiosInstance.get(`/products/${id}`);
-      setProduct(response.data);
+      const p = response.data;
+      setProduct(p);
+
+      // Load variants for this group (if any)
+      const groupId = p.parent_product_id || p.id;
+      try {
+        const variantsResp = await axiosInstance.get(`/products?parent_product_id=${groupId}`);
+        const list = Array.isArray(variantsResp.data) ? variantsResp.data : [];
+        // Sort by price asc for clean UX
+        const sorted = [...list].sort((a, b) => (a.price || 0) - (b.price || 0));
+        setVariants(sorted);
+        const current = sorted.find(v => v.id === p.id);
+        setSelectedVariantId((current || sorted[0] || p).id);
+      } catch (e) {
+        // If variants endpoint fails, fall back to single product
+        setVariants([]);
+        setSelectedVariantId(p.id);
+      }
     } catch (error) {
       console.error('Error loading product:', error);
       toast.error('Error loading product');
@@ -31,7 +51,8 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
   };
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    const chosen = variants.find(v => v.id === selectedVariantId) || product;
+    addToCart(chosen, quantity);
   };
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -40,7 +61,7 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
     return (
       <div className="min-h-screen gradient-bg">
         <Navbar user={user} logout={logout} cartItemCount={cartItemCount} settings={settings} />
-        <div className="container mx-auto px-4 py-20 text-center text-white text-xl">Chajman...</div>
+        <div className="container mx-auto px-4 py-20 text-center text-white text-xl">Ap chaje...</div>
       </div>
     );
   }
@@ -53,6 +74,8 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
       </div>
     );
   }
+
+  const selectedProduct = variants.find(v => v.id === selectedVariantId) || product;
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -75,35 +98,54 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
 
           {/* Product Details */}
           <div className="text-white" data-testid="product-details">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4" data-testid="product-name">{product.name}</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4" data-testid="product-name">{selectedProduct.name}</h1>
             
             <div className="flex items-center gap-4 mb-6">
-              <span className="text-4xl font-bold" data-testid="product-price">${product.price}</span>
-              {product.stock_available ? (
+              <span className="text-4xl font-bold" data-testid="product-price">${selectedProduct.price}</span>
+              {selectedProduct.stock_available ? (
                 <span className="flex items-center text-green-400 bg-green-400/20 px-3 py-1 rounded" data-testid="stock-status">
                   <CheckCircle size={16} className="mr-1" />
                   Disponib
                 </span>
               ) : (
                 <span className="text-red-400 bg-red-400/20 px-3 py-1 rounded" data-testid="stock-status">
-                  Epize
+                  Epuize
                 </span>
               )}
             </div>
 
             <div className="mb-6">
               <span className="inline-block bg-white/10 px-3 py-1 rounded text-sm" data-testid="product-category">
-                {product.category === 'giftcard' && 'Gift Card'}
-                {product.category === 'topup' && 'Game Topup'}
-                {product.category === 'subscription' && 'Abònman'}
-                {product.category === 'service' && 'Sèvis'}
+                {selectedProduct.category === 'giftcard' && 'Gift Card'}
+                {selectedProduct.category === 'topup' && 'Game Topup'}
+                {selectedProduct.category === 'subscription' && 'Abònman'}
+                {selectedProduct.category === 'service' && 'Sèvis'}
               </span>
             </div>
 
             <div className="mb-8">
               <h2 className="text-2xl font-bold mb-3">Deskripsyon</h2>
-              <p className="text-white/80 text-lg leading-relaxed" data-testid="product-description">{product.description}</p>
+              <p className="text-white/80 text-lg leading-relaxed" data-testid="product-description">{selectedProduct.description}</p>
             </div>
+
+            {/* Variant selector */}
+            {variants.length > 1 && (
+              <div className="mb-6 glass-effect p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-3">Chwazi opsyon an</h3>
+                <Select value={selectedVariantId} onValueChange={setSelectedVariantId}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="Chwazi..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {variants.map(v => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.variant_name ? `${v.variant_name} - $${Number(v.price).toFixed(2)}` : `${v.name} - $${Number(v.price).toFixed(2)}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Quantity & Add to Cart */}
             <div className="glass-effect p-6 rounded-lg">
@@ -135,13 +177,13 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between text-lg">
                   <span>Total:</span>
-                  <span className="text-2xl font-bold" data-testid="total-price">${(product.price * quantity).toFixed(2)}</span>
+                  <span className="text-2xl font-bold" data-testid="total-price">${(selectedProduct.price * quantity).toFixed(2)}</span>
                 </div>
                 <Button
                   size="lg"
                   className="w-full bg-white text-purple-600 hover:bg-gray-100 text-lg py-6"
                   onClick={handleAddToCart}
-                  disabled={!product.stock_available}
+                  disabled={!selectedProduct.stock_available}
                   data-testid="add-to-cart-btn"
                 >
                   <ShoppingCart className="mr-2" size={24} />
@@ -154,7 +196,7 @@ const ProductDetailPage = ({ user, logout, addToCart, cart, settings }) => {
             <div className="mt-6 glass-effect p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-3">Delivery Information</h3>
               <ul className="space-y-2 text-white/80">
-                {product.delivery_type === 'automatic' ? (
+                {selectedProduct.delivery_type === 'automatic' ? (
                   <>
                     <li className="flex items-center">
                       <span className="mr-2">⚡</span>

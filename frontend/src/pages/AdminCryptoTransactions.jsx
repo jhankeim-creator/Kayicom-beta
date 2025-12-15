@@ -81,7 +81,7 @@ const AdminCryptoTransactions = ({ user, logout, settings }) => {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <p className="text-white font-bold text-lg">
-                      {tx.trade_type === 'buy' ? '🟢 BUY' : '🔵 SELL'} - {tx.chain}
+                      {tx.transaction_type === 'buy' ? '🟢 BUY' : '🔵 SELL'} - {tx.chain}
                     </p>
                     <p className="text-white/70">
                       User: {tx.user_email || tx.user_id}
