@@ -59,7 +59,16 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
     minutes_transfer_fee_value: 0,
     minutes_transfer_min_amount: 1,
     minutes_transfer_max_amount: 500,
-    minutes_transfer_instructions: ''
+    minutes_transfer_instructions: '',
+    social_links: {
+      facebook: '',
+      instagram: '',
+      tiktok: '',
+      youtube: '',
+      twitter: '',
+      telegram: '',
+      whatsapp: ''
+    }
   });
   const [newCategory, setNewCategory] = useState('');
   const [bulkEmail, setBulkEmail] = useState({
@@ -112,7 +121,16 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
           minutes_transfer_fee_value: currentSettings.minutes_transfer_fee_value ?? 0,
           minutes_transfer_min_amount: currentSettings.minutes_transfer_min_amount ?? 1,
           minutes_transfer_max_amount: currentSettings.minutes_transfer_max_amount ?? 500,
-          minutes_transfer_instructions: currentSettings.minutes_transfer_instructions || ''
+          minutes_transfer_instructions: currentSettings.minutes_transfer_instructions || '',
+          social_links: currentSettings.social_links || {
+            facebook: '',
+            instagram: '',
+            tiktok: '',
+            youtube: '',
+            twitter: '',
+            telegram: '',
+            whatsapp: ''
+          }
         });
       });
     }
@@ -215,6 +233,16 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
           ...((prev.crypto_settings || {}).wallets || {}),
           [chain]: value
         }
+      }
+    }));
+  }, []);
+
+  const handleSocialLinkChange = useCallback((key, value) => {
+    setFormData(prev => ({
+      ...prev,
+      social_links: {
+        ...(prev.social_links || {}),
+        [key]: value
       }
     }));
   }, []);
@@ -382,6 +410,32 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                           />
                         </div>
                       )}
+                    </div>
+
+                    <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                      <Label className="text-white">Social Media (Follow buttons)</Label>
+                      <p className="text-white/60 text-sm mt-1">Add your social links to show follow buttons in the footer.</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        {[
+                          { key: 'facebook', label: 'Facebook URL' },
+                          { key: 'instagram', label: 'Instagram URL' },
+                          { key: 'tiktok', label: 'TikTok URL' },
+                          { key: 'youtube', label: 'YouTube URL' },
+                          { key: 'twitter', label: 'Twitter/X URL' },
+                          { key: 'telegram', label: 'Telegram URL' },
+                          { key: 'whatsapp', label: 'WhatsApp URL' }
+                        ].map(item => (
+                          <div key={item.key}>
+                            <Label className="text-white/70 text-sm">{item.label}</Label>
+                            <Input
+                              value={(formData.social_links || {})[item.key] || ''}
+                              onChange={(e) => handleSocialLinkChange(item.key, e.target.value)}
+                              className="bg-white/10 border-white/20 text-white mt-1"
+                              placeholder="https://..."
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </TabsContent>
 

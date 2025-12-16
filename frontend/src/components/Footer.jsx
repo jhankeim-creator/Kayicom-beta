@@ -1,9 +1,20 @@
 import { useContext } from 'react';
-import { Mail, MessageCircle } from 'lucide-react';
+import { Mail, MessageCircle, Facebook, Instagram, Youtube, Twitter } from 'lucide-react';
 import { LanguageContext } from '../App';
 
 const Footer = ({ settings }) => {
   const { t } = useContext(LanguageContext);
+
+  const links = settings?.social_links || {};
+  const socialItems = [
+    { key: 'facebook', label: 'Facebook', href: links.facebook, Icon: Facebook },
+    { key: 'instagram', label: 'Instagram', href: links.instagram, Icon: Instagram },
+    { key: 'tiktok', label: 'TikTok', href: links.tiktok, Icon: null },
+    { key: 'youtube', label: 'YouTube', href: links.youtube, Icon: Youtube },
+    { key: 'twitter', label: 'X', href: links.twitter, Icon: Twitter },
+    { key: 'telegram', label: 'Telegram', href: links.telegram, Icon: null },
+    { key: 'whatsapp', label: 'WhatsApp', href: links.whatsapp, Icon: MessageCircle },
+  ].filter(i => i.href && String(i.href).trim());
   
   return (
     <footer className="glass-effect mt-20 py-8 border-t border-white/5">
@@ -39,6 +50,26 @@ const Footer = ({ settings }) => {
             </div>
           </div>
         </div>
+
+        {socialItems.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <h3 className="text-xl font-bold mb-4 text-white text-center">Follow Us</h3>
+            <div className="flex flex-wrap justify-center gap-3">
+              {socialItems.map(({ key, label, href, Icon }) => (
+                <a
+                  key={key}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/90 hover:bg-white/10 hover:border-white/20 transition"
+                >
+                  {Icon ? <Icon size={18} /> : <span className="text-base font-semibold">{label.slice(0, 1)}</span>}
+                  <span className="text-sm font-medium">{label}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         
         {/* Trustpilot Link */}
         {settings?.trustpilot_enabled && settings?.trustpilot_business_id && (

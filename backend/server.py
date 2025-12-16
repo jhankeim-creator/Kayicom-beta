@@ -281,6 +281,16 @@ class SiteSettings(BaseModel):
     minutes_transfer_min_amount: Optional[float] = 1.0
     minutes_transfer_max_amount: Optional[float] = 500.0
     minutes_transfer_instructions: Optional[str] = None
+    # Social links (follow buttons)
+    social_links: Optional[dict] = {
+        "facebook": "",
+        "instagram": "",
+        "tiktok": "",
+        "youtube": "",
+        "twitter": "",
+        "telegram": "",
+        "whatsapp": "",
+    }
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SettingsUpdate(BaseModel):
@@ -308,6 +318,7 @@ class SettingsUpdate(BaseModel):
     minutes_transfer_min_amount: Optional[float] = None
     minutes_transfer_max_amount: Optional[float] = None
     minutes_transfer_instructions: Optional[str] = None
+    social_links: Optional[dict] = None
 
 # Bulk Email Model
 class BulkEmailRequest(BaseModel):
