@@ -1,6 +1,9 @@
 [build]
 builder = "NIXPACKS"
 
+[variables]
+NODE_VERSION = "20"
+
 [deploy]
 startCommand = "npx serve -s build -l $PORT"
 healthcheckPath = "/"

@@ -20,6 +20,7 @@ This guide will help you deploy KayiCom on Railway in just a few steps.
 3. Railway will automatically provision a MongoDB instance
 4. Click on the MongoDB service → Go to **"Variables"** tab
 5. Copy the `MONGO_URL` value (it will look like: `mongodb://mongo:...@containers-us-west-xxx.railway.app:xxxxx/railway`)
+mongodb://mongo:FWpxsduISMAnPGgoeFhJBJAzLaqYUKHG@shortline.proxy.rlwy.net:40254
 
 ### Step 2: Deploy Backend API
 
