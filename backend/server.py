@@ -16,12 +16,16 @@ import base64
 from plisio_helper import PlisioHelper
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+load_dotenv(ROOT_DIR / '.env', override=False)  # Don't override if already set
 
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+mongo_url = os.environ.get('MONGO_URL')
+if not mongo_url:
+    raise ValueError("MONGO_URL environment variable is required")
+
+db_name = os.environ.get('DB_NAME', 'kayicom')
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[db_name]
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -665,10 +669,17 @@ async def get_dashboard_stats():
         "pending_payments": pending_payments
     }
 
+# CORS configuration - handle Railway deployment
+cors_origins = os.environ.get('CORS_ORIGINS', '*')
+if cors_origins != '*':
+    cors_origins = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
+else:
+    cors_origins = ['*']
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -1107,16 +1118,6 @@ async def upload_image(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
-    result = await db.crypto_transactions.update_one(
-        {"id": transaction_id},
-        {"$set": updates}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-    
-    return {"message": f"Transaction status updated to {status}"}
-
 # ==================== REFERRAL PAYOUT TRACKING ====================
 
 async def check_and_credit_referral(order: dict):
@@ -1187,6 +1188,15 @@ async def complete_order_with_referral_check(order_id: str):
 
 # Include the router (must be after all endpoints are defined)
 app.include_router(api_router)
+
+# Health check endpoint for Railway
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "KayiCom API is running"}
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
