@@ -8,5 +8,4 @@ NODE_VERSION = "20"
 startCommand = "npx serve -s build -l $PORT"
 healthcheckPath = "/"
 healthcheckTimeout = 100
-buildCommand = "npm install --legacy-peer-deps && npm run build"
 
