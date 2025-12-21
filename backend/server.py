@@ -1189,6 +1189,303 @@ async def complete_order_with_referral_check(order_id: str):
 # Include the router (must be after all endpoints are defined)
 app.include_router(api_router)
 
+# ==================== TEMPORARY INTERNAL SEEDING ENDPOINT ====================
+# ⚠️  SECURITY WARNING: Remove this endpoint after initial setup!
+# This endpoint is for one-time database seeding in Railway deployment
+
+from pydantic import BaseModel
+from typing import Dict, Any
+import traceback
+
+class SeedRequest(BaseModel):
+    secret: str
+
+class SeedResponse(BaseModel):
+    success: bool
+    message: str
+    results: Dict[str, Any]
+
+async def create_admin_internal() -> Dict[str, Any]:
+    """Create admin user if doesn't exist"""
+    try:
+        # Check if admin already exists
+        existing = await db.users.find_one({"email": "admin@kayicom.com"})
+
+        if existing:
+            return {"status": "skipped", "message": "Admin user already exists", "user_id": str(existing["_id"])}
+
+        # Create admin user
+        hashed_password = pwd_context.hash("admin123")
+
+        admin_user = {
+            "id": "admin-001",
+            "email": "admin@kayicom.com",
+            "full_name": "Admin User",
+            "password": hashed_password,
+            "role": "admin",
+            "referral_code": "ADMIN001",
+            "referral_balance": 0.0,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+
+        result = await db.users.insert_one(admin_user)
+        return {"status": "created", "message": "Admin user created successfully", "user_id": str(result.inserted_id)}
+
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to create admin: {str(e)}", "error": traceback.format_exc()}
+
+async def seed_demo_products_internal() -> Dict[str, Any]:
+    """Seed demo products if not already seeded"""
+    try:
+        # Check if products already exist
+        existing_count = await db.products.count_documents({})
+        if existing_count > 0:
+            return {"status": "skipped", "message": f"Products already exist ({existing_count} products found)"}
+
+        DEMO_PRODUCTS = [
+            # Gift Cards
+            {
+                "name": "Amazon Gift Card",
+                "description": "Amazon gift card with instant delivery. Valid in selected regions.",
+                "category": "giftcard",
+                "image_url": "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=400",
+                "delivery_type": "manual",
+                "requires_player_id": False,
+                "variants": [
+                    {"region": "US", "value": "$25", "price": 25.00},
+                    {"region": "US", "value": "$50", "price": 50.00},
+                    {"region": "US", "value": "$100", "price": 100.00},
+                ]
+            },
+            {
+                "name": "iTunes Gift Card",
+                "description": "Apple iTunes gift card for App Store, Apple Music, and more.",
+                "category": "giftcard",
+                "image_url": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400",
+                "delivery_type": "manual",
+                "requires_player_id": False,
+                "variants": [
+                    {"region": "US", "value": "$25", "price": 25.00},
+                    {"region": "US", "value": "$50", "price": 50.00},
+                ]
+            },
+            # Game Top-ups
+            {
+                "name": "Free Fire Diamonds",
+                "description": "Top up your Free Fire account with diamonds instantly.",
+                "category": "topup",
+                "image_url": "https://images.unsplash.com/photo-1556438064-2d7646166914?w=400",
+                "delivery_type": "automatic",
+                "requires_player_id": True,
+                "player_id_label": "Free Fire Player ID",
+                "variants": [
+                    {"value": "100 Diamonds", "price": 5.00},
+                    {"value": "310 Diamonds", "price": 15.00},
+                    {"value": "520 Diamonds", "price": 25.00},
+                    {"value": "1080 Diamonds", "price": 50.00},
+                ]
+            },
+            # Subscriptions
+            {
+                "name": "Premium Subscription",
+                "description": "1 month premium access with all features unlocked.",
+                "category": "subscription",
+                "image_url": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400",
+                "delivery_type": "automatic",
+                "requires_player_id": False,
+                "is_subscription": True,
+                "variants": [
+                    {"duration": "1 Month", "price": 9.99},
+                    {"duration": "3 Months", "price": 24.99},
+                    {"duration": "6 Months", "price": 44.99},
+                ]
+            },
+        ]
+
+        total_added = 0
+
+        for product_group in DEMO_PRODUCTS:
+            variants = product_group.pop("variants", [])
+
+            if variants:
+                # Create parent product
+                parent_id = str(uuid.uuid4())
+                parent_product = {
+                    **product_group,
+                    "id": parent_id,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.products.insert_one(parent_product)
+
+                # Create variant products
+                for variant in variants:
+                    variant_product = {
+                        **product_group,
+                        "id": str(uuid.uuid4()),
+                        "parent_product_id": parent_id,
+                        "variant_name": variant.get("value") or variant.get("duration"),
+                        "price": variant["price"],
+                        "region": variant.get("region"),
+                        "subscription_duration_months": None,  # Will be set if duration
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+
+                    # Handle duration for subscriptions
+                    if "duration" in variant:
+                        duration_map = {
+                            "1 Month": 1,
+                            "3 Months": 3,
+                            "6 Months": 6,
+                            "12 Months": 12,
+                            "24 Months": 24
+                        }
+                        variant_product["subscription_duration_months"] = duration_map.get(variant["duration"])
+
+                    await db.products.insert_one(variant_product)
+                    total_added += 1
+            else:
+                # Single product without variants
+                single_product = {
+                    **product_group,
+                    "id": str(uuid.uuid4()),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.products.insert_one(single_product)
+                total_added += 1
+
+        return {"status": "created", "message": f"Successfully seeded {total_added} demo products"}
+
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to seed products: {str(e)}", "error": traceback.format_exc()}
+
+async def seed_games_internal() -> Dict[str, Any]:
+    """Seed game configurations if not already seeded"""
+    try:
+        # Check if games already exist
+        existing_count = await db.games.count_documents({})
+        if existing_count > 0:
+            return {"status": "skipped", "message": f"Game configurations already exist ({existing_count} games found)"}
+
+        GAMES_CONFIG = [
+            {
+                "name": "Free Fire",
+                "game_id": "freefire",
+                "description": "Garena Free Fire battle royale game",
+                "image_url": "https://images.unsplash.com/photo-1556438064-2d7646166914?w=400",
+                "regions": ["Global"],
+                "currencies": ["Diamonds"],
+                "is_active": True,
+                "api_supported": True,
+                "player_id_format": "Player ID",
+                "denominations": [
+                    {"amount": 100, "price": 5.00, "currency": "Diamonds"},
+                    {"amount": 310, "price": 15.00, "currency": "Diamonds"},
+                    {"amount": 520, "price": 25.00, "currency": "Diamonds"},
+                    {"amount": 1080, "price": 50.00, "currency": "Diamonds"},
+                ]
+            },
+            {
+                "name": "Mobile Legends",
+                "game_id": "mobilelegends",
+                "description": "Mobile Legends: Bang Bang MOBA game",
+                "image_url": "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400",
+                "regions": ["Global"],
+                "currencies": ["Diamonds"],
+                "is_active": True,
+                "api_supported": True,
+                "player_id_format": "User ID",
+                "denominations": [
+                    {"amount": 100, "price": 5.00, "currency": "Diamonds"},
+                    {"amount": 250, "price": 12.00, "currency": "Diamonds"},
+                    {"amount": 500, "price": 23.00, "currency": "Diamonds"},
+                    {"amount": 1000, "price": 45.00, "currency": "Diamonds"},
+                ]
+            },
+            {
+                "name": "PUBG Mobile",
+                "game_id": "pubgm",
+                "description": "PUBG Mobile battle royale game",
+                "image_url": "https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=400",
+                "regions": ["Global"],
+                "currencies": ["UC"],
+                "is_active": True,
+                "api_supported": True,
+                "player_id_format": "Character ID",
+                "denominations": [
+                    {"amount": 60, "price": 5.00, "currency": "UC"},
+                    {"amount": 325, "price": 25.00, "currency": "UC"},
+                    {"amount": 660, "price": 50.00, "currency": "UC"},
+                    {"amount": 1800, "price": 125.00, "currency": "UC"},
+                ]
+            }
+        ]
+
+        added_games = []
+        for game_config in GAMES_CONFIG:
+            game_doc = {
+                **game_config,
+                "id": str(uuid.uuid4()),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.games.insert_one(game_doc)
+            added_games.append(game_config["name"])
+
+        return {"status": "created", "message": f"Successfully seeded {len(added_games)} game configurations", "games": added_games}
+
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to seed games: {str(e)}", "error": traceback.format_exc()}
+
+@api_router.post("/__internal/seed", response_model=SeedResponse)
+async def seed_database(request: SeedRequest):
+    """
+    TEMPORARY INTERNAL ENDPOINT - Remove after use!
+    Seeds the database with admin user, demo products, and game configurations.
+    Protected by SEED_SECRET environment variable.
+    """
+    # Check seed secret
+    expected_secret = os.environ.get("SEED_SECRET")
+    if not expected_secret:
+        raise HTTPException(status_code=500, detail="SEED_SECRET environment variable not configured")
+
+    if request.secret != expected_secret:
+        raise HTTPException(status_code=403, detail="Invalid seed secret")
+
+    try:
+        results = {}
+
+        # Run seeding operations
+        results["admin_user"] = await create_admin_internal()
+        results["demo_products"] = await seed_demo_products_internal()
+        results["game_configs"] = await seed_games_internal()
+
+        # Check final state
+        final_admin = await db.users.count_documents({"email": "admin@kayicom.com"})
+        final_products = await db.products.count_documents({})
+        final_games = await db.games.count_documents({})
+
+        results["summary"] = {
+            "admin_users": final_admin,
+            "products": final_products,
+            "games": final_games,
+            "total_items": final_admin + final_products + final_games
+        }
+
+        return SeedResponse(
+            success=True,
+            message="Database seeding completed successfully",
+            results=results
+        )
+
+    except Exception as e:
+        return SeedResponse(
+            success=False,
+            message=f"Database seeding failed: {str(e)}",
+            results={"error": traceback.format_exc()}
+        )
+
+# ==================== END TEMPORARY SEEDING ENDPOINT ====================
+
 # Health check endpoint for Railway
 @app.get("/")
 async def root():
