@@ -1186,9 +1186,6 @@ async def complete_order_with_referral_check(order_id: str):
     
     return {"message": "Order completed"}
 
-# Include the router (must be after all endpoints are defined)
-app.include_router(api_router)
-
 # ==================== TEMPORARY INTERNAL SEEDING ENDPOINT ====================
 # ⚠️  SECURITY WARNING: Remove this endpoint after initial setup!
 # This endpoint is for one-time database seeding in Railway deployment
@@ -1485,6 +1482,9 @@ async def seed_database(request: SeedRequest):
         )
 
 # ==================== END TEMPORARY SEEDING ENDPOINT ====================
+
+# Include the router (must be after all endpoints are defined)
+app.include_router(api_router)
 
 # Health check endpoint for Railway
 @app.get("/")
