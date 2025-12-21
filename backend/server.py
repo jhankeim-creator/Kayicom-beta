@@ -364,15 +364,52 @@ async def login(credentials: LoginRequest):
 
 @api_router.get("/products", response_model=List[Product])
 async def get_products(category: Optional[str] = None):
-    query = {}
-    if category:
-        query['category'] = category
-    
-    products = await db.products.find(query, {"_id": 0}).to_list(1000)
-    for product in products:
-        if isinstance(product.get('created_at'), str):
-            product['created_at'] = datetime.fromisoformat(product['created_at'])
-    return products
+    try:
+        query = {}
+        if category:
+            query['category'] = category
+
+        products = await db.products.find(query, {"_id": 0}).to_list(1000)
+
+        # Convert datetime strings and validate data
+        validated_products = []
+        for product in products:
+            try:
+                # Convert created_at if it's a string
+                if isinstance(product.get('created_at'), str):
+                    product['created_at'] = datetime.fromisoformat(product['created_at'])
+
+                # Ensure required fields exist with defaults
+                validated_product = {
+                    "id": product.get("id", ""),
+                    "name": product.get("name", ""),
+                    "description": product.get("description", ""),
+                    "category": product.get("category", ""),
+                    "price": float(product.get("price", 0)),
+                    "currency": product.get("currency", "USD"),
+                    "image_url": product.get("image_url"),
+                    "stock_available": product.get("stock_available", True),
+                    "delivery_type": product.get("delivery_type", "automatic"),
+                    "subscription_duration_months": product.get("subscription_duration_months"),
+                    "subscription_auto_check": product.get("subscription_auto_check", False),
+                    "variant_name": product.get("variant_name"),
+                    "parent_product_id": product.get("parent_product_id"),
+                    "requires_player_id": product.get("requires_player_id", False),
+                    "region": product.get("region"),
+                    "is_subscription": product.get("is_subscription", False),
+                    "metadata": product.get("metadata", {}),
+                    "created_at": product.get("created_at", datetime.now(timezone.utc))
+                }
+
+                validated_products.append(validated_product)
+            except Exception as e:
+                print(f"Error validating product {product.get('id')}: {e}")
+                continue
+
+        return validated_products
+    except Exception as e:
+        print(f"Error in get_products: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @api_router.get("/products/{product_id}", response_model=Product)
 async def get_product(product_id: str):
