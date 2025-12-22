@@ -688,42 +688,6 @@ const AdminSettings = ({ user, logout, settings: currentSettings, loadSettings }
                         </div>
                       </div>
 
-                      {/* USDT */}
-                      <div className="bg-white/5 p-4 rounded-lg mb-4">
-                        <div className="flex justify-between items-center mb-3">
-                          <h4 className="text-white font-semibold flex items-center gap-2">
-                            <span>₮</span> USDT (Multiple Chains)
-                          </h4>
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" defaultChecked className="w-4 h-4" />
-                            <span className="text-white text-sm">Enabled</span>
-                          </label>
-                        </div>
-                        <div className="space-y-3">
-                          <div>
-                            <Label className="text-white/70 text-sm">BEP20 Wallet (Binance Smart Chain)</Label>
-                            <Input
-                              placeholder="0x..."
-                              className="bg-white/10 border-white/20 text-white mt-1"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-white/70 text-sm">TRC20 Wallet (Tron)</Label>
-                            <Input
-                              placeholder="T..."
-                              className="bg-white/10 border-white/20 text-white mt-1"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-white/70 text-sm">MATIC Wallet (Polygon)</Label>
-                            <Input
-                              placeholder="0x..."
-                              className="bg-white/10 border-white/20 text-white mt-1"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
                       <Button 
                         onClick={() => toast.success('Payment settings saved!')} 
                         className="w-full bg-white text-purple-600 hover:bg-gray-100"

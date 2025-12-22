@@ -10,7 +10,7 @@ const Footer = ({ settings }) => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-gray-300">
           <div>
-            <h3 className="text-xl font-bold mb-4 gradient-text">{settings?.site_name || 'KayiCom'}</h3>
+            <img src="/images/kayeecomlogo.png" alt="KayiCom" className="h-10 w-auto mb-4" />
             <p className="text-sm text-gray-400">
               Platform for purchasing gift cards, game top-ups, subscriptions and digital services.
             </p>
