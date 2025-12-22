@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
+from dateutil.relativedelta import relativedelta
 from passlib.context import CryptContext
 import requests
 import base64
@@ -510,6 +511,8 @@ async def get_orders(user_id: Optional[str] = None):
             order['created_at'] = datetime.fromisoformat(order['created_at'])
         if isinstance(order.get('updated_at'), str):
             order['updated_at'] = datetime.fromisoformat(order['updated_at'])
+        if isinstance(order.get('subscription_end_date'), str):
+            order['subscription_end_date'] = datetime.fromisoformat(order['subscription_end_date'])
     return orders
 
 @api_router.get("/orders/{order_id}", response_model=Order)
@@ -522,6 +525,8 @@ async def get_order(order_id: str):
         order['created_at'] = datetime.fromisoformat(order['created_at'])
     if isinstance(order.get('updated_at'), str):
         order['updated_at'] = datetime.fromisoformat(order['updated_at'])
+    if isinstance(order.get('subscription_end_date'), str):
+        order['subscription_end_date'] = datetime.fromisoformat(order['subscription_end_date'])
     return order
 
 @api_router.put("/orders/{order_id}/status")
@@ -535,6 +540,10 @@ async def update_order_status(order_id: str, payment_status: Optional[str] = Non
     result = await db.orders.update_one({"id": order_id}, {"$set": updates})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    # If the order is completed (or just got paid), finalize subscription + referral logic.
+    if order_status == "completed" or payment_status == "paid":
+        await finalize_order_completion(order_id)
     
     return {"message": "Order updated successfully"}
 
@@ -554,6 +563,9 @@ async def update_order_delivery(order_id: str, delivery_info: DeliveryInfo):
     result = await db.orders.update_one({"id": order_id}, {"$set": updates})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    # Delivery marks the order completed, so finalize subscription + referral logic.
+    await finalize_order_completion(order_id)
     
     # TODO: Send email to customer with delivery info
     # This would use the resend API key from settings
@@ -1159,29 +1171,36 @@ async def upload_image(file: UploadFile = File(...)):
 
 async def check_and_credit_referral(order: dict):
     """Check if order qualifies for referral payout and credit referrer"""
+    # Idempotency: don't pay twice.
+    if order.get("referral_paid"):
+        return
+
+    # Only pay referral for completed & paid orders.
+    if order.get("order_status") != "completed" or order.get("payment_status") != "paid":
+        return
+
     # Check if user was referred
     user = await db.users.find_one({"id": order['user_id']})
     if not user or not user.get('referred_by'):
         return
+
+    # Only one payout per referred user (first subscription purchase).
+    existing_payout = await db.referral_payouts.find_one({"referred_user_id": order["user_id"]})
+    if existing_payout:
+        return
     
     # Check if order contains subscription
     has_subscription = False
-    for item in order['items']:
-        product = await db.products.find_one({"id": item['product_id']})
+    for item in order.get('items', []):
+        product_id = item.get('product_id')
+        if not product_id:
+            continue
+        product = await db.products.find_one({"id": product_id}, {"_id": 0})
         if product and product.get('is_subscription'):
             has_subscription = True
             break
     
     if not has_subscription:
-        return
-    
-    # Check if this is first subscription purchase
-    previous_subscription_orders = await db.orders.find({
-        "user_id": order['user_id'],
-        "items.product_id": {"$in": [p['product_id'] for p in order['items'] if p.get('is_subscription')]}
-    }).to_list(10)
-    
-    if len(previous_subscription_orders) > 1:  # More than current order
         return
     
     # Credit referrer $1
@@ -1197,9 +1216,78 @@ async def check_and_credit_referral(order: dict):
         "referrer_code": referrer_code,
         "referred_user_id": order['user_id'],
         "order_id": order['id'],
+        "payout_type": "first_subscription",
         "amount": 1.0,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
+
+    # Mark order so we don't pay again.
+    await db.orders.update_one(
+        {"id": order["id"]},
+        {"$set": {"referral_paid": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+
+async def calculate_subscription_end_date(order: dict) -> Optional[str]:
+    """Return ISO subscription end date for a completed order (or None)."""
+    now = datetime.now(timezone.utc)
+    end_dates: List[datetime] = []
+
+    for item in order.get("items", []):
+        product_id = item.get("product_id")
+        if not product_id:
+            continue
+
+        product = await db.products.find_one({"id": product_id}, {"_id": 0})
+        if not product or not product.get("is_subscription"):
+            continue
+
+        months = product.get("subscription_duration_months")
+        if months is None:
+            # Default to 1 month if admin didn't set it (keeps system working).
+            months = 1
+        try:
+            months = int(months)
+        except Exception:
+            continue
+        if months <= 0:
+            continue
+
+        end_dates.append(now + relativedelta(months=+months))
+
+    if not end_dates:
+        return None
+
+    return max(end_dates).isoformat()
+
+
+async def finalize_order_completion(order_id: str) -> None:
+    """
+    Finalize any completion-time effects:
+    - set subscription_end_date for subscription orders
+    - apply referral payout (only once) for first subscription order
+    """
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        return
+
+    # Only finalize paid + completed orders.
+    if order.get("order_status") != "completed" or order.get("payment_status") != "paid":
+        return
+
+    updates: Dict[str, Any] = {"updated_at": datetime.now(timezone.utc).isoformat()}
+
+    # Subscription end date (idempotent).
+    if not order.get("subscription_end_date"):
+        sub_end = await calculate_subscription_end_date(order)
+        if sub_end:
+            updates["subscription_end_date"] = sub_end
+
+    if len(updates) > 1:
+        await db.orders.update_one({"id": order_id}, {"$set": updates})
+
+    # Referral payout (idempotent).
+    await check_and_credit_referral(order)
 
 # Modify order status endpoint to trigger referral check
 @api_router.put("/orders/{order_id}/complete")
@@ -1218,8 +1306,8 @@ async def complete_order_with_referral_check(order_id: str):
         }}
     )
     
-    # Check and credit referral
-    await check_and_credit_referral(order)
+    # Finalize completion effects (subscription_end_date + referral payout)
+    await finalize_order_completion(order_id)
     
     return {"message": "Order completed"}
 
