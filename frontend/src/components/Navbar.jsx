@@ -30,7 +30,7 @@ const Navbar = ({ user, logout, cartItemCount, settings }) => {
             {settings?.logo_url ? (
               <img src={settings.logo_url} alt="Logo" className="h-8 md:h-14 w-auto" />
             ) : (
-              <h1 className="text-lg md:text-2xl font-bold text-white drop-shadow-lg">{settings?.site_name || 'KayiCom'}</h1>
+              <img src="/images/kayeecomlogo.png" alt="KayiCom" className="h-8 md:h-14 w-auto" />
             )}
           </Link>
 

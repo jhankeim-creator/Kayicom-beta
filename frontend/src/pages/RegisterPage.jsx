@@ -76,8 +76,12 @@ const RegisterPage = ({ login, settings }) => {
         <Card className="glass-effect border-white/10" data-testid="register-form">
           <CardHeader>
             <CardTitle className="text-2xl text-center text-white">
-              {settings?.logo_url && <img src={settings.logo_url} alt="Logo" className="h-12 mx-auto mb-4" />}
-              {t('createAccount')} - {settings?.site_name || 'KayiCom'}
+              {settings?.logo_url ? (
+                <img src={settings.logo_url} alt="Logo" className="h-12 mx-auto mb-4" />
+              ) : (
+                <img src="/images/kayeecomlogo.png" alt="KayiCom" className="h-12 mx-auto mb-4" />
+              )}
+              {t('createAccount')}
             </CardTitle>
           </CardHeader>
           <CardContent>
