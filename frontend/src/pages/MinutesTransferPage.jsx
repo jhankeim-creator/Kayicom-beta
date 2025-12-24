@@ -75,7 +75,7 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
 
   useEffect(() => {
     const amt = parseFloat(amount);
-    if (!amt || amt <= 0) {
+    if (!amt || amt <= 0 || isNaN(amt)) {
       setQuote(null);
       return;
     }
@@ -83,42 +83,84 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
     const run = async () => {
       setQuoting(true);
       try {
-        const res = await axiosInstance.get(`/mobile-topup/quote?amount=${encodeURIComponent(amt)}&country=${encodeURIComponent(country || '')}`);
-        if (!cancelled) setQuote(res.data);
+        // Build URL with optional country parameter
+        let url = `/mobile-topup/quote?amount=${encodeURIComponent(amt)}`;
+        if (country && country.trim()) {
+          url += `&country=${encodeURIComponent(country.trim())}`;
+        }
+        const res = await axiosInstance.get(url);
+        if (!cancelled && res.data) {
+          setQuote(res.data);
+        }
       } catch (e) {
-        if (!cancelled) setQuote(null);
+        if (!cancelled) {
+          setQuote(null);
+          // Only show error if amount is valid (user is actively entering)
+          if (amt > 0 && amount.trim()) {
+            console.error('Quote error:', e.response?.data?.detail || e.message);
+          }
+        }
       } finally {
         if (!cancelled) setQuoting(false);
       }
     };
-    run();
+    // Debounce quote requests
+    const timeoutId = setTimeout(run, 500);
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, [amount, country]);
 
   const createTransfer = async () => {
     const amt = parseFloat(amount);
-    if (!country.trim() || !phone.trim() || !amt || amt <= 0) {
-      toast.error('Please fill country, phone and amount');
+    if (!country || !country.trim()) {
+      toast.error('Please enter a country');
       return;
     }
+    if (!phone || !phone.trim()) {
+      toast.error('Please enter a phone number');
+      return;
+    }
+    if (!amt || amt <= 0 || isNaN(amt)) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    
+    // Check if quote is available
+    if (!quote) {
+      toast.error('Please wait for quote calculation');
+      return;
+    }
+    
     setCreating(true);
     try {
       const res = await axiosInstance.post(
-        `/mobile-topup/requests?user_id=${userId}&user_email=${encodeURIComponent(user.email)}`,
-        { country, phone_number: phone, amount: amt, payment_method: paymentMethod }
+        `/mobile-topup/requests?user_id=${userId}&user_email=${encodeURIComponent(user.email || '')}`,
+        { 
+          country: country.trim(), 
+          phone_number: phone.trim(), 
+          amount: amt, 
+          payment_method: paymentMethod 
+        }
       );
-      toast.success('Minutes transfer created');
+      toast.success('Mobile topup request created successfully!');
       setPaymentInfo(res.data?.payment_info || null);
       const id = res.data?.transfer?.id;
       setSelectedTransferId(id || null);
       setProofTxId('');
       setProofUrl('');
+      // Reset form
+      setCountry('');
+      setPhone('');
+      setAmount('');
+      setQuote(null);
       await loadTransfers();
       await loadWallet();
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Error creating transfer');
+      const errorMsg = e.response?.data?.detail || e.message || 'Error creating transfer';
+      console.error('Transfer creation error:', e);
+      toast.error(errorMsg);
     } finally {
       setCreating(false);
     }

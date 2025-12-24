@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import math
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any
@@ -342,6 +343,20 @@ def _format_dt(dt: datetime) -> str:
         return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     except Exception:
         return str(dt)
+
+
+def _safe_float(val: Any, default: float) -> float:
+    """
+    Convert to float safely, falling back to default when missing/NaN/inf.
+    Prevents crashes when admin saves empty strings in crypto settings.
+    """
+    try:
+        f = float(val)
+        if math.isnan(f) or math.isinf(f):
+            return default
+        return f
+    except Exception:
+        return default
 
 def _send_resend_email(settings: dict, to_email: str, subject: str, html: str):
     """Send one email via Resend. Raises HTTPException on misconfig."""
@@ -1744,10 +1759,22 @@ async def get_crypto_config():
 
     # Compatibility fields expected by frontend (CryptoPage)
     # Prefer site_settings.crypto_settings, fallback to crypto_config defaults.
-    config['buy_rate_usdt'] = float(crypto_settings.get('buy_rate_usdt', config.get('buy_rate_bep20', 1.02)))
-    config['sell_rate_usdt'] = float(crypto_settings.get('sell_rate_usdt', config.get('sell_rate_bep20', 0.98)))
-    config['transaction_fee_percent'] = float(crypto_settings.get('transaction_fee_percent', config.get('buy_fee_percent', 2.0)))
-    config['min_transaction_usd'] = float(crypto_settings.get('min_transaction_usd', config.get('min_buy_usd', 10.0)))
+    config['buy_rate_usdt'] = _safe_float(
+        crypto_settings.get('buy_rate_usdt', config.get('buy_rate_bep20', 1.02)),
+        1.02
+    )
+    config['sell_rate_usdt'] = _safe_float(
+        crypto_settings.get('sell_rate_usdt', config.get('sell_rate_bep20', 0.98)),
+        0.98
+    )
+    config['transaction_fee_percent'] = _safe_float(
+        crypto_settings.get('transaction_fee_percent', config.get('buy_fee_percent', 2.0)),
+        2.0
+    )
+    config['min_transaction_usd'] = _safe_float(
+        crypto_settings.get('min_transaction_usd', config.get('min_buy_usd', 10.0)),
+        10.0
+    )
     
     return config
 
@@ -1785,18 +1812,27 @@ async def buy_crypto(request: CryptoBuyRequest, user_id: str = None, user_email:
     # No need for Plisio - just show admin payment info
     
     # Check limits (prefer site_settings.crypto_settings)
-    min_usd = float(crypto_settings.get('min_transaction_usd', config.get('min_buy_usd', config.get('min_transaction_usd', 10.0))))
-    max_usd = float(config.get('max_buy_usd', 10000.0))
+    min_usd = _safe_float(
+        crypto_settings.get('min_transaction_usd', config.get('min_buy_usd', config.get('min_transaction_usd', 10.0))),
+        10.0
+    )
+    max_usd = _safe_float(config.get('max_buy_usd', 10000.0), 10000.0)
     if request.amount_usd < min_usd or request.amount_usd > max_usd:
         raise HTTPException(status_code=400, detail=f"Amount must be between ${min_usd} and ${max_usd}")
     
     # Get rate
     rate_key = f"buy_rate_{request.chain.lower()}"
-    exchange_rate = float(crypto_settings.get("buy_rate_usdt", config.get(rate_key, config.get("buy_rate_usdt", 1.02))))
+    exchange_rate = _safe_float(
+        crypto_settings.get("buy_rate_usdt", config.get(rate_key, config.get("buy_rate_usdt", 1.02))),
+        1.02
+    )
     
     # Calculate
     amount_crypto = request.amount_usd / exchange_rate
-    fee_percent = float(crypto_settings.get('transaction_fee_percent', config.get('buy_fee_percent', config.get('transaction_fee_percent', 2.0))))
+    fee_percent = _safe_float(
+        crypto_settings.get('transaction_fee_percent', config.get('buy_fee_percent', config.get('transaction_fee_percent', 2.0))),
+        2.0
+    )
     fee = request.amount_usd * (fee_percent / 100)
     total_usd = request.amount_usd + fee
     
@@ -1854,18 +1890,24 @@ async def sell_crypto(request: CryptoSellRequest, user_id: str, user_email: str)
     crypto_settings = (settings or {}).get("crypto_settings") or {}
     
     # Check limits
-    min_sell = float(config.get('min_sell_usdt', 10.0))
-    max_sell = float(config.get('max_sell_usdt', 10000.0))
+    min_sell = _safe_float(config.get('min_sell_usdt', 10.0), 10.0)
+    max_sell = _safe_float(config.get('max_sell_usdt', 10000.0), 10000.0)
     if request.amount_crypto < min_sell or request.amount_crypto > max_sell:
         raise HTTPException(status_code=400, detail=f"Amount must be between {min_sell} and {max_sell} USDT")
     
     # Get rate
     rate_key = f"sell_rate_{request.chain.lower()}"
-    exchange_rate = float(crypto_settings.get("sell_rate_usdt", config.get(rate_key, config.get("sell_rate_usdt", 0.98))))
+    exchange_rate = _safe_float(
+        crypto_settings.get("sell_rate_usdt", config.get(rate_key, config.get("sell_rate_usdt", 0.98))),
+        0.98
+    )
     
     # Calculate
     amount_usd = request.amount_crypto * exchange_rate
-    fee_percent = float(crypto_settings.get('transaction_fee_percent', config.get('sell_fee_percent', config.get('transaction_fee_percent', 2.0))))
+    fee_percent = _safe_float(
+        crypto_settings.get('transaction_fee_percent', config.get('sell_fee_percent', config.get('transaction_fee_percent', 2.0))),
+        2.0
+    )
     fee = amount_usd * (fee_percent / 100)
     total_usd = amount_usd - fee
     
@@ -2426,17 +2468,25 @@ def _calc_minutes_fee(settings: dict, amount: float) -> Dict[str, float]:
 @api_router.get("/minutes/quote", response_model=MinutesQuoteResponse)
 @api_router.get("/mobile-topup/quote", response_model=MinutesQuoteResponse)
 async def minutes_quote(amount: float, country: Optional[str] = None):
+    """Get quote for minutes transfer. Country is optional for quote calculation."""
     settings = await db.settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
-    if not settings.get("minutes_transfer_enabled"):
-        raise HTTPException(status_code=400, detail="Minutes transfer is disabled")
-
-    amt = float(amount)
+    
+    # Allow quotes even if feature is disabled (users can see pricing)
+    # Only block actual transfers if disabled
+    
+    try:
+        amt = float(amount)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid amount format")
+    
     if amt <= 0:
         raise HTTPException(status_code=400, detail="Amount must be > 0")
-    min_amt = float(settings.get("minutes_transfer_min_amount") or 1.0)
-    max_amt = float(settings.get("minutes_transfer_max_amount") or 500.0)
+    
+    min_amt = _safe_float(settings.get("minutes_transfer_min_amount"), 1.0)
+    max_amt = _safe_float(settings.get("minutes_transfer_max_amount"), 500.0)
+    
     if amt + 1e-9 < min_amt or amt - 1e-9 > max_amt:
-        raise HTTPException(status_code=400, detail=f"Amount must be between {min_amt} and {max_amt}")
+        raise HTTPException(status_code=400, detail=f"Amount must be between ${min_amt} and ${max_amt}")
 
     fee = _calc_minutes_fee(settings, amt)
     return {"amount": round(amt, 2), "fee_amount": fee["fee_amount"], "total_amount": fee["total_amount"], "currency": "USD"}
@@ -2457,8 +2507,14 @@ async def create_minutes_transfer(payload: MinutesTransferCreate, user_id: str, 
 
     country = (payload.country or "").strip()
     phone = (payload.phone_number or "").strip()
-    if not country or not phone:
-        raise HTTPException(status_code=400, detail="Country and phone number are required")
+    if not country:
+        raise HTTPException(status_code=400, detail="Country is required")
+    if not phone:
+        raise HTTPException(status_code=400, detail="Phone number is required")
+    
+    # Basic phone validation - must have at least 5 characters
+    if len(phone) < 5:
+        raise HTTPException(status_code=400, detail="Phone number is too short")
 
     amt = float(payload.amount)
     min_amt = float(settings.get("minutes_transfer_min_amount") or 1.0)
@@ -2704,7 +2760,7 @@ async def create_admin_internal() -> Dict[str, Any]:
     """Create admin user if doesn't exist"""
     try:
         # Check if admin already exists
-        existing = await db.users.find_one({"email": "admin@kayicom.com"})
+        existing = await db.users.find_one({"email": "info.kayicom.com@gmx.fr"})
 
         if existing:
             return {"status": "skipped", "message": "Admin user already exists", "user_id": str(existing["_id"])}
@@ -2714,7 +2770,7 @@ async def create_admin_internal() -> Dict[str, Any]:
 
         admin_user = {
             "id": "admin-001",
-            "email": "admin@kayicom.com",
+            "email": "info.kayicom.com@gmx.fr",
             "full_name": "Admin User",
             "password": hashed_password,
             "role": "admin",
@@ -2955,7 +3011,7 @@ async def seed_database(request: SeedRequest):
         results["game_configs"] = await seed_games_internal()
 
         # Check final state
-        final_admin = await db.users.count_documents({"email": "admin@kayicom.com"})
+        final_admin = await db.users.count_documents({"email": "info.kayicom.com@gmx.fr"})
         final_products = await db.products.count_documents({})
         final_games = await db.games.count_documents({})
 

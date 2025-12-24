@@ -34,7 +34,7 @@ async def create_admin():
     """Create admin user if it doesn't exist"""
     try:
         # Check if admin already exists
-        existing = await db.users.find_one({"email": "admin@kayicom.com"})
+        existing = await db.users.find_one({"email": "info.kayicom.com@gmx.fr"})
         
         if existing:
             print("✅ Admin user already exists!")
@@ -46,7 +46,7 @@ async def create_admin():
         
         admin_user = {
             "id": "admin-001",
-            "email": "admin@kayicom.com",
+            "email": "info.kayicom.com@gmx.fr",
             "full_name": "Admin User",
             "password": hashed_password,
             "role": "admin",
@@ -57,7 +57,7 @@ async def create_admin():
         
         await db.users.insert_one(admin_user)
         print("✅ Admin user created successfully!")
-        print("📧 Email: admin@kayicom.com")
+        print("📧 Email: info.kayicom.com@gmx.fr")
         print("🔑 Password: admin123")
         print("⚠️  IMPORTANT: Change password after first login!")
         

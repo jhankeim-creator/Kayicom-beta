@@ -31,6 +31,13 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
   const needsPlayerIds = cart.some(item => item.product.requires_player_id);
   const needsCredentials = cart.some(item => item.product.requires_credentials);
 
+  const getCredentialFields = (product) => {
+    if (product?.credential_fields && product.credential_fields.length > 0) {
+      return product.credential_fields;
+    }
+    return ['email', 'password'];
+  };
+
   const loadWalletBalance = async () => {
     try {
       const res = await axiosInstance.get(`/wallet/balance?user_id=${user.user_id}`);
@@ -82,8 +89,13 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
     for (const item of cart) {
       if (item.product.requires_credentials) {
         const creds = credentials[item.product.id];
-        if (!creds || !creds.email || !creds.password) {
-          toast.error(`Please enter account credentials for ${item.product.name}`);
+        const fields = getCredentialFields(item.product);
+        const missing = fields.filter((f) => {
+          const val = creds?.[f];
+          return !val || !String(val).trim();
+        });
+        if (missing.length > 0) {
+          toast.error(`Please enter ${missing.join(', ')} for ${item.product.name}`);
           return;
         }
       }
@@ -416,9 +428,7 @@ const CheckoutPage = ({ user, logout, cart, clearCart, settings }) => {
                   </h3>
                   <div className="space-y-6">
                     {cart.filter(item => item.product.requires_credentials).map(item => {
-                      const fields = item.product.credential_fields && item.product.credential_fields.length > 0
-                        ? item.product.credential_fields
-                        : ['email', 'password'];
+                      const fields = getCredentialFields(item.product);
                       return (
                         <div key={item.product.id} className="p-4 rounded-lg bg-white/5 border border-white/10">
                           <p className="text-white font-semibold mb-3">{item.product.name}</p>

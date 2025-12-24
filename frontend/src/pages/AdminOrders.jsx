@@ -247,6 +247,40 @@ const AdminOrders = ({ user, logout, settings }) => {
                           </div>
                         )}
 
+                        {/* Order Items with Details */}
+                        <div className="mt-4 space-y-2">
+                          <p className="text-white font-semibold text-sm mb-2">Order Items:</p>
+                          {order.items && order.items.map((item, idx) => (
+                            <div key={idx} className="p-3 bg-white/5 border border-white/10 rounded-lg">
+                              <p className="text-white font-medium text-sm">{item.product_name} x {item.quantity}</p>
+                              <p className="text-white/70 text-xs">Price: ${Number(item.price).toFixed(2)} each</p>
+                              
+                              {/* Player ID */}
+                              {item.player_id && (
+                                <div className="mt-2 p-2 bg-cyan-500/10 border border-cyan-500/20 rounded">
+                                  <p className="text-cyan-300 text-xs font-semibold mb-1">Player ID:</p>
+                                  <p className="text-white text-sm font-mono">{item.player_id}</p>
+                                </div>
+                              )}
+                              
+                              {/* Credentials */}
+                              {item.credentials && Object.keys(item.credentials).length > 0 && (
+                                <div className="mt-2 p-2 bg-purple-500/10 border border-purple-500/20 rounded">
+                                  <p className="text-purple-300 text-xs font-semibold mb-1">Account Credentials:</p>
+                                  <div className="space-y-1">
+                                    {Object.entries(item.credentials).map(([key, value]) => (
+                                      <div key={key} className="flex gap-2">
+                                        <span className="text-white/70 text-xs capitalize min-w-[80px]">{key}:</span>
+                                        <span className="text-white text-xs font-mono break-all">{String(value)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
                         {/* Delivery Information */}
                         {order.delivery_info && (
                           <div className="mt-3 p-3 bg-green-900/20 border border-green-500/30 rounded">

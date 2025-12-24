@@ -137,19 +137,27 @@ const AdminProducts = ({ user, logout, settings }) => {
 
   const handleEdit = (product) => {
     setEditingProduct(product);
+    setShowVariantMode(!!product.parent_product_id);
     setFormData({
       name: product.name,
       description: product.description,
       category: product.category,
-      price: product.price.toString(),
+      price: product.price?.toString?.() || '',
       image_url: product.image_url || '',
       stock_available: product.stock_available,
       delivery_type: product.delivery_type,
       requires_player_id: product.requires_player_id || false,
+      player_id_label: product.player_id_label || 'Player ID',
+      requires_credentials: product.requires_credentials || false,
+      credential_fields: product.credential_fields && product.credential_fields.length > 0
+        ? product.credential_fields
+        : ['email', 'password'],
       region: product.region || '',
       giftcard_category: product.giftcard_category || '',
       is_subscription: product.is_subscription || false,
-      variant_name: product.variant_name || ''
+      variant_name: product.variant_name || '',
+      parent_product_id: product.parent_product_id || null,
+      is_variant: !!product.parent_product_id
     });
     setDialogOpen(true);
   };
@@ -177,53 +185,69 @@ const AdminProducts = ({ user, logout, settings }) => {
       stock_available: true,
       delivery_type: 'manual',
       requires_player_id: false,
+      requires_credentials: false,
+      player_id_label: 'Player ID',
+      credential_fields: ['email', 'password'],
       region: '',
       giftcard_category: '',
       is_subscription: false,
-      variant_name: ''
+      variant_name: '',
+      parent_product_id: null,
+      is_variant: false
     });
     setEditingProduct(null);
+    setShowVariantMode(false);
+    setParentProduct(null);
   };
 
   return (
     <div className="min-h-screen gradient-bg">
       <Navbar user={user} logout={logout} cartItemCount={0} settings={settings} />
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex justify-between items-center w-full">
-            <h1 className="text-4xl font-bold text-white" data-testid="products-title">Manage Products</h1>
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-12">
+        {/* Header Section - Mobile Responsive */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white" data-testid="products-title">
+              Manage Products
+            </h1>
             <Button 
               onClick={() => window.location.href = '/admin'}
-              className="bg-gradient-to-r from-pink-500 to-blue-500 text-white px-6 py-3"
+              className="bg-gradient-to-r from-pink-500 to-blue-500 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base w-full sm:w-auto"
             >
               🏠 Admin Home
             </Button>
           </div>
+          
+          {/* Action Buttons - Stack on Mobile */}
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-pink-500 to-blue-500 text-white" data-testid="add-product-btn">
-                <Plus size={20} className="mr-2" />
-                Add New Product
-              </Button>
-            </DialogTrigger>
-            
-            <DialogTrigger asChild>
-              <Button 
-                className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white ml-2"
-                onClick={() => setShowVariantMode(true)}
-              >
-                <Plus size={20} className="mr-2" />
-                Add Product Variant
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-white/20">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-pink-500 to-blue-500 text-white w-full sm:w-auto text-sm sm:text-base" data-testid="add-product-btn">
+                  <Plus size={18} className="mr-2 sm:mr-2" />
+                  <span className="hidden sm:inline">Add New Product</span>
+                  <span className="sm:hidden">Add Product</span>
+                </Button>
+              </DialogTrigger>
+              
+              <DialogTrigger asChild>
+                <Button 
+                  className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white w-full sm:w-auto text-sm sm:text-base"
+                  onClick={() => setShowVariantMode(true)}
+                >
+                  <Plus size={18} className="mr-2 sm:mr-2" />
+                  <span className="hidden sm:inline">Add Product Variant</span>
+                  <span className="sm:hidden">Add Variant</span>
+                </Button>
+              </DialogTrigger>
+            </div>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-white/20 w-[95vw] sm:w-full">
               <DialogHeader>
-                <DialogTitle className="text-white">
+                <DialogTitle className="text-white text-lg sm:text-xl">
                   {editingProduct ? 'Edit Product' : (showVariantMode ? 'Add Product Variant' : 'Add New Product')}
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 py-4">
+              <div className="space-y-4 py-4 px-1 sm:px-4">
                 {/* Variant Mode: Select Parent Product */}
                 {showVariantMode && !editingProduct && (
                   <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
@@ -285,7 +309,7 @@ const AdminProducts = ({ user, logout, settings }) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="category" className="text-white">Category</Label>
                     <Select value={formData.category} onValueChange={(value) => handleChange('category', value)}>
@@ -394,7 +418,7 @@ const AdminProducts = ({ user, logout, settings }) => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="delivery_type" className="text-white">Delivery Type</Label>
                     <Select value={formData.delivery_type} onValueChange={(value) => handleChange('delivery_type', value)}>
@@ -408,7 +432,7 @@ const AdminProducts = ({ user, logout, settings }) => {
                     </Select>
                   </div>
 
-                  <div className="flex items-center space-x-2 pt-8">
+                  <div className="flex items-center space-x-2 sm:pt-8">
                     <Checkbox
                       id="stock"
                       checked={formData.stock_available}
@@ -418,14 +442,23 @@ const AdminProducts = ({ user, logout, settings }) => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="requires_player_id"
                       checked={formData.requires_player_id}
                       onCheckedChange={(checked) => handleChange('requires_player_id', checked)}
                     />
-                    <Label htmlFor="requires_player_id" className="text-white">Requires Player ID</Label>
+                    <Label htmlFor="requires_player_id" className="text-white text-sm sm:text-base">Requires Player ID</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="requires_credentials"
+                      checked={formData.requires_credentials}
+                      onCheckedChange={(checked) => handleChange('requires_credentials', checked)}
+                    />
+                    <Label htmlFor="requires_credentials" className="text-white text-sm sm:text-base">Requires Credentials</Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
@@ -434,9 +467,60 @@ const AdminProducts = ({ user, logout, settings }) => {
                       checked={formData.is_subscription}
                       onCheckedChange={(checked) => handleChange('is_subscription', checked)}
                     />
-                    <Label htmlFor="is_subscription" className="text-white">Is Subscription (for referral)</Label>
+                    <Label htmlFor="is_subscription" className="text-white text-sm sm:text-base">Is Subscription (for referral)</Label>
                   </div>
                 </div>
+
+                {/* Credential Fields Configuration */}
+                {formData.requires_credentials && (
+                  <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+                    <Label className="text-white mb-2 block">Credential Fields Required</Label>
+                    <p className="text-white/70 text-xs mb-3">
+                      Specify which credential fields customers need to provide (e.g., email, password, username)
+                    </p>
+                    <div className="space-y-2">
+                      {formData.credential_fields && formData.credential_fields.length > 0 ? (
+                        formData.credential_fields.map((field, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <Input
+                              value={field}
+                              onChange={(e) => {
+                                const newFields = [...formData.credential_fields];
+                                newFields[idx] = e.target.value;
+                                handleChange('credential_fields', newFields);
+                              }}
+                              className="bg-white/10 border-white/20 text-white text-sm"
+                              placeholder="e.g., email, password"
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="border-red-400 text-red-400 hover:bg-red-400/10"
+                              onClick={() => {
+                                const newFields = formData.credential_fields.filter((_, i) => i !== idx);
+                                handleChange('credential_fields', newFields.length > 0 ? newFields : ['email', 'password']);
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ))
+                      ) : null}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 w-full"
+                        onClick={() => {
+                          handleChange('credential_fields', [...(formData.credential_fields || []), '']);
+                        }}
+                      >
+                        + Add Field
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 <Button
                   onClick={handleSubmit}
@@ -450,42 +534,42 @@ const AdminProducts = ({ user, logout, settings }) => {
           </Dialog>
         </div>
 
-        {/* Category Filter */}
-        <div className="flex flex-col md:flex-row gap-3 md:items-center mb-6">
-          <div className="flex-1">
+        {/* Category Filter - Mobile Responsive */}
+        <div className="flex flex-col gap-3 mb-6">
+          <div className="w-full">
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-              placeholder="Search products (name, description, category, variant, region)..."
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/50 w-full text-sm sm:text-base"
+              placeholder="Search products..."
             />
           </div>
-          <div className="flex gap-2 flex-wrap">
-          <Button
-            onClick={() => setCategoryFilter('all')}
-            className={categoryFilter === 'all' ? 'bg-pink-500' : 'bg-white/10'}
-          >
-            All ({products.length})
-          </Button>
-          {['giftcard', 'topup', 'subscription', 'service'].map(cat => {
-            const count = products.filter(p => p.category === cat).length;
-            return (
-              <Button
-                key={cat}
-                onClick={() => setCategoryFilter(cat)}
-                className={categoryFilter === cat ? 'bg-pink-500' : 'bg-white/10'}
-              >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)} ({count})
-              </Button>
-            );
-          })}
+          <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap">
+            <Button
+              onClick={() => setCategoryFilter('all')}
+              className={`${categoryFilter === 'all' ? 'bg-pink-500' : 'bg-white/10'} text-white whitespace-nowrap text-xs sm:text-sm px-3 py-2`}
+            >
+              All ({products.length})
+            </Button>
+            {['giftcard', 'topup', 'subscription', 'service'].map(cat => {
+              const count = products.filter(p => p.category === cat).length;
+              return (
+                <Button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={`${categoryFilter === cat ? 'bg-pink-500' : 'bg-white/10'} text-white whitespace-nowrap text-xs sm:text-sm px-3 py-2`}
+                >
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)} ({count})
+                </Button>
+              );
+            })}
           </div>
         </div>
 
         {loading ? (
-          <div className="text-center text-white text-xl py-12">Loading...</div>
+          <div className="text-center text-white text-lg sm:text-xl py-12">Loading...</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="products-list">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-testid="products-list">
             {products
               .filter(product => categoryFilter === 'all' || product.category === categoryFilter)
               .filter(product => {
@@ -505,42 +589,45 @@ const AdminProducts = ({ user, logout, settings }) => {
                 return hay.includes(q);
               })
               .map((product) => (
-              <Card key={product.id} className="glass-effect border-white/20" data-testid={`product-${product.id}`}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white mb-2">{product.name}</h3>
-                      <p className="text-white/70 text-sm mb-2">{product.description}</p>
-                      <div className="space-y-1 text-sm">
-                        <p className="text-white/60">Category: <span className="text-white">{product.category}</span></p>
-                        <p className="text-white/60">Price: <span className="text-white font-bold">${product.price}</span></p>
+              <Card key={product.id} className="glass-effect border-white/20 hover:border-white/40 transition" data-testid={`product-${product.id}`}>
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-2 break-words">{product.name}</h3>
+                      <p className="text-white/70 text-xs sm:text-sm mb-2 line-clamp-2">{product.description}</p>
+                      <div className="space-y-1 text-xs sm:text-sm">
+                        <p className="text-white/60">Category: <span className="text-white font-medium">{product.category}</span></p>
+                        <p className="text-white/60">Price: <span className="text-white font-bold text-base">${Number(product.price).toFixed(2)}</span></p>
                         {product.variant_name && <p className="text-cyan-400 text-xs">Variant: {product.variant_name}</p>}
                         {product.region && <p className="text-pink-400 text-xs">Region: {product.region}</p>}
-                        {product.requires_player_id && <p className="text-green-400 text-xs">✓ Requires Player ID</p>}
-                        {product.is_subscription && <p className="text-yellow-400 text-xs">✓ Subscription Product</p>}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {product.requires_player_id && <span className="text-green-400 text-xs bg-green-400/10 px-2 py-0.5 rounded">✓ Player ID</span>}
+                          {product.is_subscription && <span className="text-yellow-400 text-xs bg-yellow-400/10 px-2 py-0.5 rounded">✓ Subscription</span>}
+                        </div>
                       </div>
                     </div>
                     {product.image_url && (
-                      <img src={product.image_url} alt={product.name} className="w-16 h-16 object-cover rounded ml-4" />
+                      <img src={product.image_url} alt={product.name} className="w-20 h-20 sm:w-16 sm:h-16 object-cover rounded flex-shrink-0 mx-auto sm:mx-0 sm:ml-4" />
                     )}
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mt-4">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(product)}
-                      className="flex-1 border-white text-white hover:bg-white/10"
+                      className="flex-1 border-white text-white hover:bg-white/10 text-xs sm:text-sm py-2 sm:py-1.5"
                       data-testid={`edit-${product.id}`}
                     >
-                      <Edit2 size={14} className="mr-1" />
-                      Edit
+                      <Edit2 size={14} className="mr-1 sm:mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
+                      <span className="sm:hidden">Edit</span>
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleDelete(product.id)}
-                      className="border-red-400 text-red-400 hover:bg-red-400/10"
+                      className="border-red-400 text-red-400 hover:bg-red-400/10 px-3 sm:px-2 py-2 sm:py-1.5"
                       data-testid={`delete-${product.id}`}
                     >
                       <Trash2 size={14} />
