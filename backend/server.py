@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -1578,9 +1579,10 @@ else:
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=cors_origins,
+    allow_origins=cors_origins if cors_origins != ['*'] else ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 logging.basicConfig(
@@ -3073,6 +3075,43 @@ async def seed_database(request: SeedRequest):
 
 # Include the router (must be after all endpoints are defined)
 app.include_router(api_router)
+
+# Custom exception handler to ensure CORS headers on errors
+# Must be after router is included
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Ensure CORS headers are included in error responses"""
+    # Get the origin from request headers
+    origin = request.headers.get("origin")
+    
+    # Build response with CORS headers
+    response = JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
+    
+    # Add CORS headers
+    # When allow_credentials is True, we can't use "*" - must specify exact origin
+    if cors_origins == ["*"]:
+        # If wildcard is allowed, use the request origin
+        if origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        else:
+            response.headers["Access-Control-Allow-Origin"] = "*"
+    elif origin and origin in cors_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    elif cors_origins and len(cors_origins) > 0:
+        # Use first allowed origin as fallback if no origin match
+        response.headers["Access-Control-Allow-Origin"] = cors_origins[0]
+        if cors_origins[0] != "*":
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+    
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    
+    return response
 
 # Health check endpoint for Railway
 @app.get("/")
