@@ -6,6 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 const AdminWalletTopups = ({ user, logout, settings }) => {
@@ -15,6 +21,8 @@ const AdminWalletTopups = ({ user, logout, settings }) => {
   const [manualAmount, setManualAmount] = useState('');
   const [manualReason, setManualReason] = useState('');
   const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [proofViewerOpen, setProofViewerOpen] = useState(false);
+  const [selectedProofUrl, setSelectedProofUrl] = useState('');
 
   useEffect(() => {
     loadTopups();
@@ -156,16 +164,45 @@ const AdminWalletTopups = ({ user, logout, settings }) => {
                         {t.transaction_id && (
                           <p className="text-white/60 text-xs mt-1">TX: {t.transaction_id}</p>
                         )}
-                        {t.payment_proof_url && (
-                          <a href={t.payment_proof_url} target="_blank" rel="noopener noreferrer" className="text-pink-400 text-sm hover:underline">
-                            View proof
-                          </a>
-                        )}
-                        {t.plisio_invoice_url && (
-                          <a href={t.plisio_invoice_url} target="_blank" rel="noopener noreferrer" className="text-cyan-300 text-sm hover:underline ml-3">
-                            View invoice
-                          </a>
-                        )}
+                        <div className="flex flex-wrap items-center gap-3 mt-2">
+                          {t.payment_proof_url && (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-pink-400 text-pink-400 hover:bg-pink-400/10"
+                                onClick={() => {
+                                  setSelectedProofUrl(t.payment_proof_url);
+                                  setProofViewerOpen(true);
+                                }}
+                              >
+                                📸 View Payment Proof
+                              </Button>
+                              {t.payment_proof_url.startsWith('data:image') && (
+                                <img 
+                                  src={t.payment_proof_url} 
+                                  alt="Payment proof thumbnail" 
+                                  className="h-12 w-12 object-cover rounded border border-pink-400/30 cursor-pointer hover:border-pink-400/60 transition"
+                                  onClick={() => {
+                                    setSelectedProofUrl(t.payment_proof_url);
+                                    setProofViewerOpen(true);
+                                  }}
+                                  title="Click to view full size"
+                                />
+                              )}
+                            </div>
+                          )}
+                          {t.plisio_invoice_url && (
+                            <a 
+                              href={t.plisio_invoice_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-cyan-300 text-sm hover:underline"
+                            >
+                              🔗 View Invoice
+                            </a>
+                          )}
+                        </div>
                       </div>
 
                       <div className="flex gap-2">
@@ -189,6 +226,62 @@ const AdminWalletTopups = ({ user, logout, settings }) => {
           )}
         </div>
       </div>
+
+      {/* Payment Proof Viewer Modal */}
+      <Dialog open={proofViewerOpen} onOpenChange={setProofViewerOpen}>
+        <DialogContent className="bg-gray-900 border-white/20 max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white">Payment Proof</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {selectedProofUrl && (
+              <div className="flex flex-col items-center gap-4">
+                {selectedProofUrl.startsWith('data:image') ? (
+                  <img 
+                    src={selectedProofUrl} 
+                    alt="Payment proof" 
+                    className="max-w-full max-h-[70vh] object-contain rounded border border-white/20"
+                  />
+                ) : (
+                  <a 
+                    href={selectedProofUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-pink-400 hover:underline"
+                  >
+                    Open proof in new tab
+                  </a>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white"
+                    onClick={() => setProofViewerOpen(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-pink-400 text-pink-400 hover:bg-pink-400/10"
+                    onClick={() => {
+                      if (selectedProofUrl.startsWith('data:image')) {
+                        const link = document.createElement('a');
+                        link.href = selectedProofUrl;
+                        link.download = 'payment-proof.png';
+                        link.click();
+                      } else {
+                        window.open(selectedProofUrl, '_blank');
+                      }
+                    }}
+                  >
+                    Download / Open
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer settings={settings} />
     </div>

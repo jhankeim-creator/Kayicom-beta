@@ -15,6 +15,7 @@ from passlib.context import CryptContext
 import requests
 import base64
 from plisio_helper import PlisioHelper
+import re
 
 
 ROOT_DIR = Path(__file__).parent
@@ -2175,8 +2176,15 @@ async def admin_adjust_wallet(req: AdminWalletAdjustRequest):
     if req.action not in ["credit", "debit"]:
         raise HTTPException(status_code=400, detail="Invalid action")
 
+    ident_regex = {"$regex": f"^{re.escape(ident)}$", "$options": "i"}
     user = await db.users.find_one(
-        {"$or": [{"id": ident}, {"customer_id": ident}, {"email": ident}]},
+        {"$or": [
+            {"id": ident},
+            {"customer_id": ident},
+            {"customer_id": ident_regex},
+            {"email": ident},
+            {"email": ident_regex},
+        ]},
         {"_id": 0}
     )
     if not user:
@@ -2379,18 +2387,31 @@ async def get_all_wallet_topups():
 
 @api_router.post("/wallet/topups/proof")
 async def submit_wallet_topup_proof(proof: WalletTopupProof):
+    """Submit payment proof for a wallet topup"""
+    update_data = {
+        "transaction_id": proof.transaction_id,
+        "payment_proof_url": proof.payment_proof_url,
+        "payment_status": "pending_verification",
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
     res = await db.wallet_topups.update_one(
         {"id": proof.topup_id},
-        {"$set": {
-            "transaction_id": proof.transaction_id,
-            "payment_proof_url": proof.payment_proof_url,
-            "payment_status": "pending_verification",
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+        {"$set": update_data}
     )
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Topup not found")
-    return {"message": "Topup proof submitted"}
+    
+    # Return the updated topup document for confirmation
+    updated = await db.wallet_topups.find_one({"id": proof.topup_id}, {"_id": 0})
+    if not updated:
+        raise HTTPException(status_code=404, detail="Topup not found after update")
+    
+    logging.info(f"Payment proof submitted for topup {proof.topup_id}, URL length: {len(proof.payment_proof_url) if proof.payment_proof_url else 0}")
+    
+    return {
+        "message": "Topup proof submitted",
+        "topup": updated
+    }
 
 @api_router.put("/wallet/topups/{topup_id}/status")
 async def update_wallet_topup_status(topup_id: str, payment_status: str):
@@ -2603,7 +2624,20 @@ async def create_minutes_transfer(payload: MinutesTransferCreate, user_id: str, 
     if settings.get("minutes_transfer_instructions"):
         payment_info["service_instructions"] = settings.get("minutes_transfer_instructions")
 
-    return {"transfer": doc, "payment_info": payment_info}
+    try:
+        return {"transfer": doc, "payment_info": payment_info}
+    except Exception as e:
+        logging.error(f"Error returning minutes transfer response: {e}")
+        # Return minimal response if serialization fails
+        return {
+            "transfer": {
+                "id": transfer_id,
+                "user_id": user_id,
+                "payment_status": doc.get("payment_status", "pending"),
+                "transfer_status": doc.get("transfer_status", "pending")
+            },
+            "payment_info": payment_info
+        }
 
 
 @api_router.get("/minutes/transfers/user/{user_id}")

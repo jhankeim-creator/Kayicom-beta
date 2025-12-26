@@ -144,22 +144,49 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
           payment_method: paymentMethod 
         }
       );
-      toast.success('Mobile topup request created successfully!');
-      setPaymentInfo(res.data?.payment_info || null);
-      const id = res.data?.transfer?.id;
-      setSelectedTransferId(id || null);
-      setProofTxId('');
-      setProofUrl('');
-      // Reset form
-      setCountry('');
-      setPhone('');
-      setAmount('');
-      setQuote(null);
-      await loadTransfers();
-      await loadWallet();
+      
+      // Check if we got a valid response
+      if (res && res.data) {
+        toast.success('Mobile topup request created successfully!');
+        setPaymentInfo(res.data?.payment_info || null);
+        const id = res.data?.transfer?.id;
+        setSelectedTransferId(id || null);
+        setProofTxId('');
+        setProofUrl('');
+        // Reset form
+        setCountry('');
+        setPhone('');
+        setAmount('');
+        setQuote(null);
+        await loadTransfers();
+        await loadWallet();
+      } else {
+        // Response received but no data - still consider it success if admin can see it
+        toast.success('Request submitted. Please check your topup history.');
+        await loadTransfers();
+        await loadWallet();
+      }
     } catch (e) {
-      const errorMsg = e.response?.data?.detail || e.message || 'Error creating transfer';
       console.error('Transfer creation error:', e);
+      
+      // More detailed error handling
+      let errorMsg = 'Error creating transfer';
+      if (e.response) {
+        // Server responded with error status
+        errorMsg = e.response.data?.detail || e.response.data?.message || `Server error: ${e.response.status}`;
+      } else if (e.request) {
+        // Request made but no response received
+        errorMsg = 'Network error: No response from server. Please check if your request was created in the history.';
+        // Still try to reload in case it succeeded
+        setTimeout(() => {
+          loadTransfers();
+          loadWallet();
+        }, 1000);
+      } else {
+        // Error setting up the request
+        errorMsg = e.message || 'Error creating transfer';
+      }
+      
       toast.error(errorMsg);
     } finally {
       setCreating(false);
