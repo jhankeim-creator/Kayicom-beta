@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -1570,16 +1572,20 @@ async def get_dashboard_stats():
     }
 
 # CORS configuration - handle Railway deployment
-cors_origins = os.environ.get('CORS_ORIGINS', '*')
-if cors_origins != '*':
-    cors_origins = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
+cors_origins_env = os.environ.get('CORS_ORIGINS', '*')
+if cors_origins_env != '*':
+    cors_origins = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()]
 else:
     cors_origins = ['*']
 
+# CORS Middleware configuration
+# Note: When allow_credentials=True, we cannot use allow_origins=["*"]
+# So we'll use credentials=False with wildcard, or credentials=True with specific origins
+use_wildcard = cors_origins == ['*']
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=cors_origins if cors_origins != ['*'] else ["*"],
+    allow_credentials=not use_wildcard,  # False when using "*", True when using specific origins
+    allow_origins=["*"] if use_wildcard else cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
@@ -3090,23 +3096,23 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content={"detail": exc.detail}
     )
     
-    # Add CORS headers
-    # When allow_credentials is True, we can't use "*" - must specify exact origin
-    if cors_origins == ["*"]:
-        # If wildcard is allowed, use the request origin
-        if origin:
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-        else:
-            response.headers["Access-Control-Allow-Origin"] = "*"
+    # Add CORS headers - match the middleware configuration
+    use_wildcard = cors_origins == ['*']
+    
+    if use_wildcard:
+        # Wildcard mode: use "*" (credentials=False in middleware)
+        response.headers["Access-Control-Allow-Origin"] = "*"
     elif origin and origin in cors_origins:
+        # Specific origin match: use the request origin (credentials=True in middleware)
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
     elif cors_origins and len(cors_origins) > 0:
-        # Use first allowed origin as fallback if no origin match
+        # Fallback to first allowed origin
         response.headers["Access-Control-Allow-Origin"] = cors_origins[0]
-        if cors_origins[0] != "*":
-            response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    else:
+        # Ultimate fallback
+        response.headers["Access-Control-Allow-Origin"] = "*"
     
     response.headers["Access-Control-Allow-Methods"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "*"
