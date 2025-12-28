@@ -2799,20 +2799,28 @@ class SeedResponse(BaseModel):
     results: Dict[str, Any]
 
 async def create_admin_internal() -> Dict[str, Any]:
-    """Create admin user if doesn't exist"""
+    """Create admin user if doesn't exist, or update old admin email to new one"""
     try:
-        # Check if admin already exists
-        existing = await db.users.find_one({"email": "info.kayicom.com@gmx.fr"})
+        new_email = "kayicom509@gmail.com"
+        old_email = "info.kayicom.com@gmx.fr"
 
-        if existing:
-            return {"status": "skipped", "message": "Admin user already exists", "user_id": str(existing["_id"])}
+        # 1. Check if the new email already exists
+        existing_new = await db.users.find_one({"email": new_email})
+        if existing_new:
+            return {"status": "skipped", "message": "Admin user with new email already exists", "user_id": str(existing_new.get("_id"))}
+
+        # 2. Check if the old email exists to update it
+        existing_old = await db.users.find_one({"email": old_email})
+        if existing_old:
+            await db.users.update_one({"email": old_email}, {"$set": {"email": new_email}})
+            return {"status": "updated", "message": f"Updated admin email from {old_email} to {new_email}", "user_id": str(existing_old.get("_id"))}
 
         # Create admin user
         hashed_password = pwd_context.hash("admin123")
 
         admin_user = {
             "id": "admin-001",
-            "email": "info.kayicom.com@gmx.fr",
+            "email": "kayicom509@gmail.com",
             "full_name": "Admin User",
             "password": hashed_password,
             "role": "admin",
@@ -3053,7 +3061,7 @@ async def seed_database(request: SeedRequest):
         results["game_configs"] = await seed_games_internal()
 
         # Check final state
-        final_admin = await db.users.count_documents({"email": "info.kayicom.com@gmx.fr"})
+        final_admin = await db.users.count_documents({"email": "kayicom509@gmail.com"})
         final_products = await db.products.count_documents({})
         final_games = await db.games.count_documents({})
 
