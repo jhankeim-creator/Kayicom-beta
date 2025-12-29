@@ -1,8 +1,8 @@
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form, Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from starlette.requests import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -1578,6 +1578,30 @@ if cors_origins_env != '*':
 else:
     cors_origins = ['*']
 
+# Helper function to add CORS headers to responses
+def _add_cors_headers(response: Response, origin: Optional[str] = None):
+    """Helper to add CORS headers to a response"""
+    use_wildcard = cors_origins == ['*']
+    
+    if use_wildcard:
+        # Wildcard mode: use "*" (credentials=False in middleware)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    elif origin and origin in cors_origins:
+        # Specific origin match: use the request origin (credentials=True in middleware)
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    elif cors_origins and len(cors_origins) > 0:
+        # Fallback to first allowed origin
+        response.headers["Access-Control-Allow-Origin"] = cors_origins[0]
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    else:
+        # Ultimate fallback
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
 # CORS Middleware configuration
 # Note: When allow_credentials=True, we cannot use allow_origins=["*"]
 # So we'll use credentials=False with wildcard, or credentials=True with specific origins
@@ -1590,6 +1614,20 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+# Additional middleware to ensure CORS headers on ALL responses (including errors)
+# This runs after CORSMiddleware to catch any responses that might have been missed
+@app.middleware("http")
+async def add_cors_headers_middleware(request: Request, call_next):
+    """Ensure CORS headers are present on all responses"""
+    origin = request.headers.get("origin")
+    response = await call_next(request)
+    
+    # Only add if not already present (CORSMiddleware should have added them, but this is a safety net)
+    if "Access-Control-Allow-Origin" not in response.headers:
+        _add_cors_headers(response, origin)
+    
+    return response
 
 logging.basicConfig(
     level=logging.INFO,
@@ -2632,12 +2670,36 @@ async def create_minutes_transfer(payload: MinutesTransferCreate, user_id: str, 
     if settings.get("minutes_transfer_instructions"):
         payment_info["service_instructions"] = settings.get("minutes_transfer_instructions")
 
+    # Ensure all values are JSON-serializable
     try:
-        return {"transfer": doc, "payment_info": payment_info}
+        # Convert doc to a clean dict (remove any MongoDB-specific fields)
+        clean_doc = {
+            "id": doc.get("id"),
+            "user_id": doc.get("user_id"),
+            "user_email": doc.get("user_email"),
+            "country": doc.get("country"),
+            "phone_number": doc.get("phone_number"),
+            "amount": float(doc.get("amount", 0)),
+            "fee_amount": float(doc.get("fee_amount", 0)),
+            "total_amount": float(doc.get("total_amount", 0)),
+            "payment_method": doc.get("payment_method"),
+            "payment_status": doc.get("payment_status"),
+            "transfer_status": doc.get("transfer_status"),
+            "transaction_id": doc.get("transaction_id"),
+            "payment_proof_url": doc.get("payment_proof_url"),
+            "plisio_invoice_id": doc.get("plisio_invoice_id"),
+            "plisio_invoice_url": doc.get("plisio_invoice_url"),
+            "created_at": doc.get("created_at"),
+            "updated_at": doc.get("updated_at"),
+        }
+        return JSONResponse({
+            "transfer": clean_doc,
+            "payment_info": payment_info
+        })
     except Exception as e:
-        logging.error(f"Error returning minutes transfer response: {e}")
+        logging.error(f"Error serializing minutes transfer response: {e}")
         # Return minimal response if serialization fails
-        return {
+        return JSONResponse({
             "transfer": {
                 "id": transfer_id,
                 "user_id": user_id,
@@ -2645,7 +2707,7 @@ async def create_minutes_transfer(payload: MinutesTransferCreate, user_id: str, 
                 "transfer_status": doc.get("transfer_status", "pending")
             },
             "payment_info": payment_info
-        }
+        })
 
 
 @api_router.get("/minutes/transfers/user/{user_id}")
@@ -3090,41 +3152,28 @@ async def seed_database(request: SeedRequest):
 # Include the router (must be after all endpoints are defined)
 app.include_router(api_router)
 
-# Custom exception handler to ensure CORS headers on errors
-# Must be after router is included
+# Custom exception handler to ensure CORS headers on HTTPException errors
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     """Ensure CORS headers are included in error responses"""
-    # Get the origin from request headers
     origin = request.headers.get("origin")
-    
-    # Build response with CORS headers
     response = JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail}
     )
-    
-    # Add CORS headers - match the middleware configuration
-    use_wildcard = cors_origins == ['*']
-    
-    if use_wildcard:
-        # Wildcard mode: use "*" (credentials=False in middleware)
-        response.headers["Access-Control-Allow-Origin"] = "*"
-    elif origin and origin in cors_origins:
-        # Specific origin match: use the request origin (credentials=True in middleware)
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-    elif cors_origins and len(cors_origins) > 0:
-        # Fallback to first allowed origin
-        response.headers["Access-Control-Allow-Origin"] = cors_origins[0]
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-    else:
-        # Ultimate fallback
-        response.headers["Access-Control-Allow-Origin"] = "*"
-    
-    response.headers["Access-Control-Allow-Methods"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    
+    _add_cors_headers(response, origin)
+    return response
+
+# Custom exception handler for validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Ensure CORS headers are included in validation error responses"""
+    origin = request.headers.get("origin")
+    response = JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": exc.body}
+    )
+    _add_cors_headers(response, origin)
     return response
 
 # Health check endpoint for Railway

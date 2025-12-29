@@ -134,13 +134,20 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
     }
     
     setCreating(true);
+    // Store form values before submission to check if transfer was created
+    const formData = {
+      country: country.trim(),
+      phone: phone.trim(),
+      amount: amt
+    };
+    
     try {
       const res = await axiosInstance.post(
         `/mobile-topup/requests?user_id=${userId}&user_email=${encodeURIComponent(user.email || '')}`,
         { 
-          country: country.trim(), 
-          phone_number: phone.trim(), 
-          amount: amt, 
+          country: formData.country, 
+          phone_number: formData.phone, 
+          amount: formData.amount, 
           payment_method: paymentMethod 
         }
       );
@@ -171,23 +178,64 @@ const MinutesTransferPage = ({ user, logout, settings }) => {
       
       // More detailed error handling
       let errorMsg = 'Error creating transfer';
+      let transferWasCreated = false;
+      
       if (e.response) {
         // Server responded with error status
         errorMsg = e.response.data?.detail || e.response.data?.message || `Server error: ${e.response.status}`;
+        // Don't check for created transfer on actual server errors (400, 500, etc.)
       } else if (e.request) {
-        // Request made but no response received
-        errorMsg = 'Network error: No response from server. Please check if your request was created in the history.';
-        // Still try to reload in case it succeeded
-        setTimeout(() => {
-          loadTransfers();
-          loadWallet();
-        }, 1000);
+        // Request made but no response received - might have succeeded anyway
+        // Check if transfer was actually created by reloading and checking
+        try {
+          // Wait a moment for backend to finish processing
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const updatedTransfersRes = await axiosInstance.get(`/mobile-topup/requests/user/${userId}`);
+          const updatedTransfers = updatedTransfersRes.data || [];
+          
+          // Look for a transfer matching our form data created in the last 15 seconds
+          const recentTransfer = updatedTransfers.find(t => {
+            const matchesCountry = t.country?.toLowerCase() === formData.country.toLowerCase();
+            const matchesPhone = t.phone_number === formData.phone;
+            const matchesAmount = Math.abs(parseFloat(t.amount) - formData.amount) < 0.01;
+            const isRecent = new Date(t.created_at) > new Date(Date.now() - 15000);
+            return matchesCountry && matchesPhone && matchesAmount && isRecent;
+          });
+          
+          if (recentTransfer) {
+            // Transfer was created successfully despite network error
+            transferWasCreated = true;
+            toast.success('Mobile topup request created successfully!');
+            setSelectedTransferId(recentTransfer.id || null);
+            setProofTxId('');
+            setProofUrl('');
+            // Reset form
+            setCountry('');
+            setPhone('');
+            setAmount('');
+            setQuote(null);
+            // Update the transfers list in state
+            await loadTransfers();
+            await loadWallet();
+          }
+        } catch (checkError) {
+          console.error('Error checking if transfer was created:', checkError);
+        }
+        
+        if (!transferWasCreated) {
+          errorMsg = 'Network error: No response from server. Please check if your request was created in the history.';
+          // Still reload to update UI
+          await loadTransfers();
+          await loadWallet();
+        }
       } else {
         // Error setting up the request
         errorMsg = e.message || 'Error creating transfer';
       }
       
-      toast.error(errorMsg);
+      if (!transferWasCreated) {
+        toast.error(errorMsg);
+      }
     } finally {
       setCreating(false);
     }
