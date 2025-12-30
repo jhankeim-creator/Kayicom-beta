@@ -2222,14 +2222,14 @@ async def admin_adjust_wallet(req: AdminWalletAdjustRequest):
     if req.action not in ["credit", "debit"]:
         raise HTTPException(status_code=400, detail="Invalid action")
 
+    # Case-insensitive regex for customer_id and email
     ident_regex = {"$regex": f"^{re.escape(ident)}$", "$options": "i"}
+    # Try exact match first for id (it should be case-sensitive), then case-insensitive for customer_id and email
     user = await db.users.find_one(
         {"$or": [
-            {"id": ident},
-            {"customer_id": ident},
-            {"customer_id": ident_regex},
-            {"email": ident},
-            {"email": ident_regex},
+            {"id": ident},  # user_id should be exact match
+            {"customer_id": ident_regex},  # Case-insensitive match for customer_id
+            {"email": ident_regex},  # Case-insensitive match for email
         ]},
         {"_id": 0}
     )
@@ -2238,10 +2238,23 @@ async def admin_adjust_wallet(req: AdminWalletAdjustRequest):
 
     delta = amt if req.action == "credit" else -amt
     # If debit, prevent negative balance
-    if delta < 0 and float(user.get("wallet_balance", 0.0)) + 1e-9 < abs(delta):
+    current_balance = float(user.get("wallet_balance", 0.0))
+    if delta < 0 and current_balance + 1e-9 < abs(delta):
         raise HTTPException(status_code=400, detail="Insufficient wallet balance")
 
-    await db.users.update_one({"id": user["id"]}, {"$inc": {"wallet_balance": float(delta)}})
+    # Update wallet balance using $inc (atomic operation)
+    update_result = await db.users.update_one(
+        {"id": user["id"]}, 
+        {"$inc": {"wallet_balance": float(delta)}}
+    )
+    
+    if update_result.matched_count == 0:
+        raise HTTPException(status_code=500, detail=f"Failed to update wallet: user not found in update operation")
+    
+    # modified_count can be 0 if the field didn't exist and was created, or in rare edge cases
+    # We'll verify by fetching the user after update
+    
+    # Insert transaction record
     await db.wallet_transactions.insert_one({
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
@@ -2252,9 +2265,29 @@ async def admin_adjust_wallet(req: AdminWalletAdjustRequest):
         "reason": req.reason or f"Admin wallet {req.action}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
+    
+    logging.info(f"Admin wallet adjust: user_id={user['id']}, identifier={ident}, action={req.action}, amount={amt}, delta={delta}, old_balance={current_balance}")
 
+    # Fetch updated user to return new balance and verify the update
     updated = await db.users.find_one({"id": user["id"]}, {"_id": 0})
-    return {"user_id": user["id"], "customer_id": user.get("customer_id"), "wallet_balance": float(updated.get("wallet_balance", 0.0))}
+    if not updated:
+        raise HTTPException(status_code=500, detail="Failed to retrieve updated user")
+    
+    new_balance = float(updated.get("wallet_balance", 0.0))
+    expected_balance = current_balance + delta
+    
+    # Verify the balance was updated correctly (allow small floating point differences)
+    if abs(new_balance - expected_balance) > 0.01:
+        logging.error(f"Wallet balance mismatch! user_id={user['id']}, expected={expected_balance}, actual={new_balance}")
+        # Still return the actual balance, but log the issue
+    
+    logging.info(f"Admin wallet adjust: user_id={user['id']}, identifier={ident}, action={req.action}, amount={amt}, delta={delta}, old_balance={current_balance}, new_balance={new_balance}")
+    
+    return JSONResponse({
+        "user_id": user["id"], 
+        "customer_id": user.get("customer_id"), 
+        "wallet_balance": new_balance
+    })
 
 
 @api_router.get("/credits/balance")
@@ -2419,7 +2452,39 @@ async def create_wallet_topup(topup: WalletTopupCreate, user_id: str, user_email
             "instructions": gateway.get("instructions", "")
         }
 
-    return {"topup": doc, "payment_info": payment_info}
+    # Ensure all values are JSON-serializable and return with JSONResponse for proper CORS headers
+    try:
+        clean_doc = {
+            "id": doc.get("id"),
+            "user_id": doc.get("user_id"),
+            "user_email": doc.get("user_email"),
+            "amount": doc.get("amount"),
+            "payment_method": doc.get("payment_method"),
+            "payment_status": doc.get("payment_status"),
+            "transaction_id": doc.get("transaction_id"),
+            "payment_proof_url": doc.get("payment_proof_url"),
+            "plisio_invoice_id": doc.get("plisio_invoice_id"),
+            "plisio_invoice_url": doc.get("plisio_invoice_url"),
+            "credited": doc.get("credited"),
+            "created_at": doc.get("created_at"),
+            "updated_at": doc.get("updated_at"),
+        }
+        return JSONResponse({
+            "topup": clean_doc,
+            "payment_info": payment_info
+        })
+    except Exception as e:
+        logging.error(f"Error serializing wallet topup response: {e}")
+        # Return minimal response if serialization fails
+        return JSONResponse({
+            "topup": {
+                "id": topup_id,
+                "user_id": user_id,
+                "amount": float(topup.amount),
+                "payment_status": doc.get("payment_status", "pending")
+            },
+            "payment_info": payment_info
+        })
 
 @api_router.get("/wallet/topups/user/{user_id}")
 async def get_user_wallet_topups(user_id: str):
